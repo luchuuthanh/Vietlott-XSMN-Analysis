@@ -24,7 +24,7 @@ def load_xsmn(file):
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["province"] = df["province"].astype(str).str.strip()
     df["prize"] = df["prize"].astype(str).str.strip()
-    df["number"] = df["number"].astype(str).str.replace(r"\\D", "", regex=True).str.zfill(2)
+    df["number"] = df["number"].astype(str).str.replace(r"\D", "", regex=True).str.zfill(2)
     df = df.dropna(subset=["date"])
     df = df[df["number"].str.len().between(2, 6)]
     df["last2"] = df["number"].str[-2:].astype(int)
