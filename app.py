@@ -16,7 +16,12 @@ with st.sidebar:
     st.divider()
     st.caption("Mẫu CSV nằm trong thư mục data/ của repository.")
 
-if mode == "Chứng khoán Việt Nam":\n    from stock_dashboard import render_stock_dashboard\n    render_stock_dashboard()\n    st.stop()\n\nif upload is None and mode == "XSMN":
+if mode == "Chứng khoán Việt Nam":
+    from stock_dashboard import render_stock_dashboard
+    render_stock_dashboard()
+    st.stop()
+
+if upload is None and mode == "XSMN":
     st.info("XSMN: hiện cần tải CSV kết quả theo mẫu data/xsmn_template.csv. Kết nối nguồn tự động cho XSMN đang được hoàn thiện.")
     st.stop()
 
