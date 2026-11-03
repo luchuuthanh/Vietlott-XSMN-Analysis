@@ -14,23 +14,23 @@ def _clean(values):
             continue
     return out
 
-def frequency_table(values, universe):
+def frequency_table(values, universe, start=1):
     counts = Counter(_clean(values))
-    df = pd.DataFrame({"Số": range(1, universe + 1)})
+    df = pd.DataFrame({"Số": range(start, universe + 1)})
     df["Số lần"] = df["Số"].map(counts).fillna(0).astype(int)
     total = int(df["Số lần"].sum())
     df["Tỷ lệ (%)"] = (df["Số lần"] / total * 100).round(2) if total else 0
     return df.sort_values(["Số lần", "Số"], ascending=[False, True]).reset_index(drop=True)
 
-def gap_table(draws, universe):
+def gap_table(draws, universe, start=1):
     last = {}
     for idx, draw in enumerate(draws):
         for n in set(_clean(draw)):
-            if 1 <= n <= universe:
+            if start <= n <= universe:
                 last[n] = idx
     size = len(draws)
     rows = [{"Số": n, "Số kỳ vắng": size - 1 - last[n] if n in last else size,
-             "Đã xuất hiện": n in last} for n in range(1, universe + 1)]
+             "Đã xuất hiện": n in last} for n in range(start, universe + 1)]
     return pd.DataFrame(rows).sort_values(["Số kỳ vắng", "Số"], ascending=[False, True])
 
 def pair_table(draws, top=30):
@@ -59,7 +59,7 @@ def score_candidates(freq_df, gap_df, universe, count, recent_draws=None):
     fmax = max(float(f.max()), 1.0)
     gmax = max(float(g.max()), 1.0)
     rows = []
-    for n in range(1, universe + 1):
+    for n in range(start, universe + 1):
         score = 0.55 * (float(f.get(n, 0)) / fmax) + 0.45 * (float(g.get(n, 0)) / gmax)
         rows.append({"Số": n, "Điểm tham khảo": round(score * 100, 2),
                      "Tần suất": int(f.get(n, 0)), "Kỳ vắng": int(g.get(n, 0))})
