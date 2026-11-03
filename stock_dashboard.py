@@ -68,7 +68,8 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["MOM14"] = (out["close"] / out["close"].shift(14) - 1) * 100
     return out
 
-def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int = 260, progress=None) -> tuple[pd.DataFrame, dict]:
+@st.cache_data(ttl=21600, show_spinner=False)
+def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int = 260, _progress=None) -> tuple[pd.DataFrame, dict]:
     start = (date.today() - timedelta(days=lookback_days)).isoformat()
     end = date.today().isoformat()
     rows, errors = [], []
@@ -91,8 +92,8 @@ def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int =
                 })
         except Exception as exc:
             errors.append(f"{symbol}: {exc}")
-        if progress:
-            progress((i + 1) / max(len(symbols), 1), text=f"Đang quét {symbol} ({i+1}/{len(symbols)})")
+        if _progress:
+            _progress((i + 1) / max(len(symbols), 1), text=f"Đang quét {symbol} ({i+1}/{len(symbols)})")
     result = pd.DataFrame(rows)
     if not result.empty:
         result = result.sort_values(["Đạt bộ lọc", "MOM14 (%)"], ascending=[False, False]).reset_index(drop=True)
@@ -125,6 +126,16 @@ def render_stock_dashboard():
             st.info("Kiểm tra quyền truy cập API, access token và giới hạn truy vấn của FireAnt.")
     result = st.session_state.get("fireant_scan")
     stats = st.session_state.get("fireant_scan_stats")
+    # Reuse Streamlit's shared cache when a browser session is recreated.
+    if result is None:
+        try:
+            with st.spinner("Đang tải kết quả quét đã lưu (nếu có)…"):
+                instruments = fetch_instruments(token)
+                result, stats = scan_market(instruments, token, days)
+                st.session_state["fireant_scan"] = result
+                st.session_state["fireant_scan_stats"] = stats
+        except Exception as exc:
+            st.info(f"Chưa có kết quả quét được lưu hoặc chưa kết nối được FireAnt: {exc}")
     if result is not None:
         if stats:
             st.write(f"Đã quét {stats['scanned']} mã; nhận dữ liệu hợp lệ {stats['success']} mã.")
