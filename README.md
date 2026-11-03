@@ -1,24 +1,28 @@
-# Vietlott & XSMN Analysis
+# Vietlott & XSMN Analysis Lab
 
-Hệ thống phân tích thống kê kết quả Vietlott và xổ số miền Nam (XSMN).
+Ứng dụng Streamlit phân tích dữ liệu lịch sử Vietlott và XSMN.
 
-## Mục tiêu
-- Nhập dữ liệu lịch sử từ CSV.
-- Chuẩn hóa và kiểm tra dữ liệu trước khi phân tích.
-- Thống kê tần suất, số lâu chưa xuất hiện, chẵn/lẻ, tổng, khoảng cách (delta), cặp và bộ số.
-- Phân tích riêng Power 6/55, Mega 6/45 và XSMN.
-- Xuất bảng kết quả CSV để kiểm tra và lưu trữ.
+## Tính năng hiện có
+- Đọc CSV, kiểm tra cột và chuẩn hóa dữ liệu.
+- Vietlott: Power 6/55, Mega 6/45 hoặc game có cấu trúc 6 số.
+- Tần suất, tỷ lệ, gan theo số kỳ, cặp số, tổng, chẵn/lẻ, Delta.
+- XSMN: thống kê lô tô 2 số theo tỉnh, theo giải, tần suất và gan theo kỳ/ngày có dữ liệu.
+- Xếp hạng ứng viên theo điểm thống kê và tạo bộ số tham khảo.
+- Xuất CSV đã chuẩn hóa và bảng kết quả.
 
-> Lưu ý: Thống kê quá khứ không dự đoán chắc chắn kết quả tương lai. Các bộ số gợi ý chỉ mang tính tham khảo.
+## Chạy trên máy
+    pip install -r requirements.txt
+    streamlit run app.py
 
-## Chạy ứng dụng
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+## Định dạng dữ liệu
 
-## Dữ liệu
-Đưa CSV vào thư mục `data/` hoặc tải trực tiếp trong giao diện. Xem `data/template.csv` để biết định dạng mẫu.
+### Vietlott — data/vietlott_template.csv
+Cột bắt buộc: date,game,draw_id,n1,n2,n3,n4,n5,n6. Cột special tùy chọn. Mỗi dòng là một kỳ quay; 6 số chính nằm ở n1–n6. Tên game khuyến nghị POWER655 hoặc MEGA645.
 
-## Nguyên tắc dữ liệu
-Không tự tạo hoặc suy diễn kỳ quay còn thiếu. Luôn ghi rõ nguồn, ngày cập nhật và số kỳ đã nạp.
+### XSMN — data/xsmn_template.csv
+Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết quả giải của một tỉnh trong ngày. Ứng dụng lấy hai chữ số cuối để thống kê lô tô.
+
+## Quan trọng
+- Repository hiện chỉ có tệp mẫu, không có bộ dữ liệu lịch sử đầy đủ.
+- Người dùng cần tải CSV lịch sử thực tế để phân tích. Không tự tạo kết quả còn thiếu.
+- Điểm xếp hạng và bộ số tạo ra chỉ là thống kê tham khảo; xổ số có tính ngẫu nhiên và không thể bảo đảm trúng.
