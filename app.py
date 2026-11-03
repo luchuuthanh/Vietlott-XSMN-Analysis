@@ -1,74 +1,107 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from pathlib import Path
+from analytics import frequency_table, gap_table, pair_table, draw_metrics, score_candidates
+from data_loader import load_vietlott, load_xsmn
+from generator import make_sets
 
-st.set_page_config(page_title="Vietlott & XSMN Analysis", page_icon="📊", layout="wide")
-st.title("📊 Hệ thống phân tích Vietlott & XSMN")
-st.caption("Phân tích thống kê dữ liệu lịch sử — không đảm bảo dự đoán kết quả.")
+st.set_page_config(page_title="Vietlott & XSMN Lab", page_icon="📊", layout="wide")
+st.title("📊 VIETLOTT & XSMN ANALYSIS LAB")
+st.caption("Nền tảng thống kê dữ liệu xổ số lịch sử. Không có phương pháp nào bảo đảm dự đoán kết quả ngẫu nhiên.")
 
-REQUIRED = ["date", "game", "draw_id", "n1", "n2", "n3", "n4", "n5", "n6"]
+with st.sidebar:
+    st.header("Nguồn dữ liệu")
+    mode = st.radio("Chọn hệ thống", ["Vietlott", "XSMN"])
+    upload = st.file_uploader("Tải CSV lịch sử", type=["csv"])
+    st.divider()
+    st.caption("Mẫu CSV nằm trong thư mục data/ của repository.")
 
-def load_data(uploaded):
-    if uploaded is not None:
-        return pd.read_csv(uploaded)
-    path = Path("data/history.csv")
-    if path.exists():
-        return pd.read_csv(path)
-    return pd.DataFrame(columns=REQUIRED)
-
-uploaded = st.sidebar.file_uploader("Tải dữ liệu CSV", type=["csv"])
-df = load_data(uploaded)
-if df.empty:
-    st.info("Chưa có dữ liệu lịch sử. Hãy tải tệp CSV theo mẫu trong thư mục data/template.csv.")
+if upload is None:
+    st.info("Bắt đầu bằng cách tải CSV lịch sử của bạn. Chưa có dữ liệu thật được nạp sẵn nên hệ thống không tự bịa kết quả.")
+    st.markdown("**Mẫu dữ liệu:**")
+    st.markdown("- Vietlott: data/vietlott_template.csv")
+    st.markdown("- XSMN: data/xsmn_template.csv")
     st.stop()
 
-missing = [c for c in REQUIRED if c not in df.columns]
-if missing:
-    st.error("Thiếu cột bắt buộc: " + ", ".join(missing))
-    st.stop()
-
-df["date"] = pd.to_datetime(df["date"], errors="coerce")
-for c in REQUIRED[3:]:
-    df[c] = pd.to_numeric(df[c], errors="coerce")
-df = df.dropna(subset=["date", "game", "draw_id"] + REQUIRED[3:]).copy()
-game = st.sidebar.selectbox("Loại xổ số", sorted(df["game"].astype(str).unique()))
-data = df[df["game"].astype(str) == game].sort_values("date").reset_index(drop=True)
-if data.empty:
-    st.warning("Không có dữ liệu cho loại xổ số đã chọn.")
-    st.stop()
-
-number_cols = REQUIRED[3:]
-numbers = data[number_cols].astype(int)
-flat = numbers.to_numpy().ravel()
-max_n = int(flat.max()) if len(flat) else 55
-freq = pd.Series(flat).value_counts().reindex(range(1, max_n + 1), fill_value=0)
-last_seen = {}
-for n in range(1, max_n + 1):
-    hits = np.where((numbers == n).any(axis=1))[0]
-    last_seen[n] = len(data) - 1 - hits[-1] if len(hits) else len(data)
-
-c1, c2, c3 = st.columns(3)
-c1.metric("Số kỳ dữ liệu", f"{len(data):,}")
-c2.metric("Ngày mới nhất", data["date"].max().strftime("%d/%m/%Y"))
-c3.metric("Số lượng số khác nhau", f"{len(set(flat)):,}")
-
-st.subheader("Tần suất xuất hiện")
-freq_df = pd.DataFrame({"Số": freq.index, "Lần xuất hiện": freq.values})
-st.bar_chart(freq_df.set_index("Số"))
-st.dataframe(freq_df.sort_values(["Lần xuất hiện", "Số"], ascending=[False, True]), use_container_width=True)
-
-st.subheader("Số lâu chưa xuất hiện")
-gap_df = pd.DataFrame({"Số": list(last_seen), "Số kỳ vắng": list(last_seen.values())})
-st.dataframe(gap_df.sort_values(["Số kỳ vắng", "Số"], ascending=[False, True]), use_container_width=True)
-
-st.subheader("Phân tích từng kỳ")
-analysis = data.copy()
-analysis["Tổng"] = numbers.sum(axis=1)
-analysis["Chẵn"] = (numbers % 2 == 0).sum(axis=1)
-analysis["Lẻ"] = 6 - analysis["Chẵn"]
-analysis["Delta"] = numbers.max(axis=1) - numbers.min(axis=1)
-st.dataframe(analysis.sort_values("date", ascending=False), use_container_width=True)
-
-st.download_button("Tải bảng tần suất CSV", freq_df.to_csv(index=False).encode("utf-8-sig"),
-                   file_name=f"{game.lower()}_frequency.csv", mime="text/csv")
+try:
+    if mode == "Vietlott":
+        raw = load_vietlott(upload)
+        games = sorted(raw["game"].unique().tolist())
+        selected = st.sidebar.selectbox("Loại vé", games)
+        data = raw[raw["game"] == selected].copy()
+        cols = ["n1","n2","n3","n4","n5","n6"]
+        universe = 55 if "655" in selected else 45 if "645" in selected else max(45, int(data[cols].max().max()))
+        recent_n = st.slider("Số kỳ gần nhất đưa vào thống kê", 10, max(10, len(data)), min(200, max(10,len(data))))
+        subset = data.tail(recent_n)
+        draws = subset[cols].astype(int).values.tolist()
+        flat = [n for d in draws for n in d]
+        freq = frequency_table(flat, universe)
+        gaps = gap_table(draws, universe)
+        st.subheader(f"Phân tích {selected}")
+        st.caption(f"Phạm vi dữ liệu: {data['date'].min():%d/%m/%Y} – {data['date'].max():%d/%m/%Y}")
+        c1,c2,c3,c4=st.columns(4)
+        c1.metric("Số kỳ đã nạp",f"{len(data):,}")
+        c2.metric("Kỳ đang phân tích",f"{len(subset):,}")
+        c3.metric("Số lớn nhất",universe)
+        c4.metric("Kỳ mới nhất",str(data.iloc[-1]["draw_id"]))
+        t1,t2,t3,t4,t5=st.tabs(["Tần suất & gan","Cặp số","Cấu trúc kỳ quay","Bộ số tham khảo","Dữ liệu"])
+        with t1:
+            a,b=st.columns(2)
+            with a:
+                st.markdown("**Tần suất cao nhất**")
+                st.dataframe(freq.head(20),use_container_width=True,hide_index=True)
+            with b:
+                st.markdown("**Số lâu chưa xuất hiện**")
+                st.dataframe(gaps.head(20),use_container_width=True,hide_index=True)
+            st.bar_chart(freq.set_index("Số")["Số lần"])
+        with t2:
+            st.dataframe(pair_table(draws,30),use_container_width=True,hide_index=True)
+        with t3:
+            metrics=draw_metrics(draws)
+            st.dataframe(metrics.tail(100).iloc[::-1],use_container_width=True,hide_index=True)
+            st.bar_chart(metrics.set_index("Kỳ")[["Tổng","Delta"]])
+        with t4:
+            ranked=score_candidates(freq,gaps,universe,universe)
+            st.caption("Điểm là công thức xếp hạng thống kê nội bộ, không phải xác suất trúng.")
+            st.dataframe(ranked.head(20),use_container_width=True,hide_index=True)
+            n=st.selectbox("Số lượng số mỗi bộ",[6,7,8],index=0)
+            k=st.slider("Số bộ muốn tạo",1,10,5)
+            sets=make_sets(ranked,count=n,sets=k)
+            st.dataframe(pd.DataFrame(sets),use_container_width=True,hide_index=True)
+            if sets:
+                st.download_button("Tải bộ số CSV",pd.DataFrame(sets).to_csv(index=False).encode("utf-8-sig"),"bo_so_tham_khao.csv","text/csv")
+        with t5:
+            st.dataframe(data.sort_values("date",ascending=False),use_container_width=True,hide_index=True)
+            st.download_button("Tải dữ liệu đã chuẩn hóa",data.to_csv(index=False).encode("utf-8-sig"),"vietlott_clean.csv","text/csv")
+    else:
+        raw=load_xsmn(upload)
+        provinces=sorted(raw["province"].unique().tolist())
+        province=st.sidebar.selectbox("Tỉnh",provinces)
+        data=raw[raw["province"]==province].copy()
+        dates=sorted(data["date"].dropna().unique())
+        recent_n=st.slider("Số ngày/kỳ gần nhất",10,max(10,len(dates)),min(90,max(10,len(dates))))
+        chosen_dates=set(dates[-recent_n:])
+        subset=data[data["date"].isin(chosen_dates)].copy()
+        draws=subset.groupby("date")["last2"].apply(list).tolist()
+        flat=subset["last2"].astype(int).tolist()
+        freq=frequency_table(flat,99)
+        gaps=gap_table(draws,99)
+        c1,c2,c3=st.columns(3)
+        c1.metric("Tỉnh đã chọn",province)
+        c2.metric("Ngày có dữ liệu",len(dates))
+        c3.metric("Số kết quả",len(subset))
+        t1,t2,t3=st.tabs(["Lô tô 2 số","Theo giải","Dữ liệu"])
+        with t1:
+            a,b=st.columns(2)
+            with a: st.dataframe(freq.head(20),use_container_width=True,hide_index=True)
+            with b: st.dataframe(gaps.head(20),use_container_width=True,hide_index=True)
+            st.bar_chart(freq.set_index("Số")["Số lần"])
+            st.caption("Gan tính theo số ngày/kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
+        with t2:
+            by_prize=subset.groupby("prize")["number"].count().sort_values(ascending=False).rename("Số kết quả")
+            st.dataframe(by_prize,use_container_width=True)
+        with t3:
+            st.dataframe(data.sort_values(["date","prize"],ascending=[False,True]),use_container_width=True,hide_index=True)
+            st.download_button("Tải dữ liệu tỉnh CSV",data.to_csv(index=False).encode("utf-8-sig"),"xsmn_clean.csv","text/csv")
+except Exception as exc:
+    st.error(f"Không đọc được dữ liệu: {exc}")
+    st.info("Kiểm tra tên cột và định dạng theo hai tệp mẫu CSV trong thư mục data/.")
