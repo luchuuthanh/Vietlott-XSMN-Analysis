@@ -11,8 +11,8 @@ st.caption("Phân tích Vietlott, XSMN và cổ phiếu Việt Nam.")
 
 with st.sidebar:
     st.header("Nguồn dữ liệu")
-    mode = st.radio("Chọn hệ thống", ["Vietlott", "XSMN"])
-    upload = st.file_uploader("Tải CSV lịch sử", type=["csv"])
+    mode = st.radio("Chọn hệ thống", ["Vietlott", "XSMN", "Chứng khoán Việt Nam"])
+    upload = None if mode == "Chứng khoán Việt Nam" else st.file_uploader("Tải CSV lịch sử", type=["csv"])
     st.divider()
     st.caption("Mẫu CSV nằm trong thư mục data/ của repository.")
 
