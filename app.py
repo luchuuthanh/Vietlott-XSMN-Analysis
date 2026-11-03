@@ -53,6 +53,12 @@ try:
                 st.markdown("**Số lâu chưa xuất hiện**")
                 st.dataframe(gaps.head(20),use_container_width=True,hide_index=True)
             st.bar_chart(freq.set_index("Số")["Số lần"])
+            if "special" in subset.columns:
+                special = pd.to_numeric(subset["special"], errors="coerce").dropna().astype(int)
+                if not special.empty:
+                    st.markdown("**Thống kê số đặc biệt (nếu có)**")
+                    special_freq = special.value_counts().rename_axis("Số đặc biệt").reset_index(name="Số lần")
+                    st.dataframe(special_freq, use_container_width=True, hide_index=True)
         with t2:
             st.dataframe(pair_table(draws,30),use_container_width=True,hide_index=True)
         with t3:
