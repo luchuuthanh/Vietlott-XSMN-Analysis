@@ -3,6 +3,7 @@ import pandas as pd
 from analytics import frequency_table, gap_table, pair_table, draw_metrics, score_candidates
 from data_loader import load_vietlott, load_xsmn
 from generator import make_sets
+from data_sources import fetch_vietlott
 
 st.set_page_config(page_title="Vietlott & XSMN Lab", page_icon="📊", layout="wide")
 st.title("📊 VIETLOTT & XSMN ANALYSIS LAB")
@@ -15,16 +16,13 @@ with st.sidebar:
     st.divider()
     st.caption("Mẫu CSV nằm trong thư mục data/ của repository.")
 
-if upload is None:
-    st.info("Bắt đầu bằng cách tải CSV lịch sử của bạn. Chưa có dữ liệu thật được nạp sẵn nên hệ thống không tự bịa kết quả.")
-    st.markdown("**Mẫu dữ liệu:**")
-    st.markdown("- Vietlott: data/vietlott_template.csv")
-    st.markdown("- XSMN: data/xsmn_template.csv")
+if upload is None and mode == "XSMN":
+    st.info("XSMN: hiện cần tải CSV kết quả theo mẫu data/xsmn_template.csv. Kết nối nguồn tự động cho XSMN đang được hoàn thiện.")
     st.stop()
 
 try:
     if mode == "Vietlott":
-        raw = load_vietlott(upload)
+        raw = load_vietlott(upload) if upload is not None else pd.concat([fetch_vietlott("POWER655"), fetch_vietlott("MEGA645")], ignore_index=True)
         games = sorted(raw["game"].unique().tolist())
         selected = st.sidebar.selectbox("Loại vé", games)
         data = raw[raw["game"] == selected].copy()
