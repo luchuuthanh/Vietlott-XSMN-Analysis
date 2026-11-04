@@ -146,18 +146,33 @@ def render_stock_dashboard():
         min_volume = st.number_input("Khối lượng tối thiểu (cổ phiếu)", min_value=0, value=50000, step=10000)
     mom_floor = st.number_input("MOM14 tối thiểu (%)", value=4.0, step=0.5)
     require_ema = st.checkbox("Chỉ lấy giá đóng cửa ≥ EMA100", value=True)
+    has_api_key = bool(os.getenv("VNSTOCK_API_KEY", "").strip())
+    batch_options = [100, 200, 300, 500, 1000, 2000]
+    batch_default = 500 if has_api_key else 200
+    scan_limit = st.selectbox("Số mã quét mỗi lượt", batch_options, index=batch_options.index(batch_default))
+    st.caption("Quét từng lượt để tránh vượt hạn mức dữ liệu. Sau mỗi lượt, nhấn nút để tiếp tục nhóm mã kế tiếp.")
 
     if st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True):
         try:
             instruments = fetch_instruments()
-            st.info(f"Đang quét {len(instruments):,} mã HOSE, HNX và UPCoM. Quá trình có thể mất vài phút.")
+            offset = int(st.session_state.get("vnstock_scan_offset", 0))
+            if offset >= len(instruments):
+                offset = 0
+            batch = instruments.iloc[offset:offset + scan_limit].copy()
+            st.info(f"Đang quét lượt {offset // scan_limit + 1}: {len(batch):,}/{len(instruments):,} mã HOSE, HNX và UPCoM.")
             progress = st.progress(0)
-            result, stats = scan_market(instruments, days, progress.progress)
-            st.session_state["vnstock_scan"] = result
-            st.session_state["vnstock_scan_stats"] = stats
+            result, stats = scan_market(batch, days, progress.progress)
+            prior = st.session_state.get("vnstock_scan_all")
+            combined = pd.concat([prior, result], ignore_index=True) if isinstance(prior, pd.DataFrame) and not prior.empty else result
+            combined = combined.drop_duplicates("Mã", keep="last")
+            st.session_state["vnstock_scan_all"] = combined
+            st.session_state["vnstock_scan"] = combined
+            next_offset = offset + len(batch)
+            st.session_state["vnstock_scan_offset"] = 0 if next_offset >= len(instruments) else next_offset
+            st.session_state["vnstock_scan_stats"] = {"scanned": min(next_offset, len(instruments)), "success": len(combined), "errors": stats["errors"]}
             st.session_state["vnstock_instruments"] = instruments
-            
             st.session_state["vnstock_days"] = days
+            st.success(f"Đã quét lượt này {len(batch)} mã. Tổng số mã đã có kết quả: {len(combined)}.")
         except Exception as exc:
             st.error(f"Không thể quét dữ liệu Vnstock: {exc}")
             st.stop()
