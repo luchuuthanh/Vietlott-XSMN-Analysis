@@ -60,11 +60,77 @@ def read_cophieu68_file(upload) -> pd.DataFrame:
         raise ValueError("File không có dòng OHLCV hợp lệ sau khi đọc.")
     return df[["symbol","date","open","high","low","close","volume"]].sort_values(["symbol","date"])
 
+def fetch_cophieu68_history(symbol: str, max_pages: int = 10) -> pd.DataFrame:
+    """Read public paginated OHLCV history from Cophieu68."""
+    import requests
+    symbol = symbol.strip().upper()
+    if not symbol.isalnum() or not 3 <= len(symbol) <= 6:
+        raise ValueError("Mã cổ phiếu không hợp lệ")
+    frames = []
+    session = requests.Session()
+    session.headers.update({"User-Agent": "Mozilla/5.0", "Referer": "https://cophieu68.vn/"})
+    for page in range(1, max_pages + 1):
+        params = {"id": symbol}
+        if page > 1:
+            params["cP"] = page
+        response = session.get("https://cophieu68.vn/quote/history.php", params=params, timeout=25)
+        response.raise_for_status()
+        found = False
+        for table in pd.read_html(response.text):
+            table.columns = [" ".join(map(str, c)).strip() if isinstance(c, tuple) else str(c).strip() for c in table.columns]
+            normalized = {_key(c): c for c in table.columns}
+            def col(*parts):
+                return next((v for k, v in normalized.items() if any(p in k for p in parts)), None)
+            d, close, vol = col("ngay", "date"), col("gia khop", "close"), col("khoi luong", "volume")
+            op, hi, lo = col("mo cua", "open"), col("cao nhat", "high"), col("thap nhat", "low")
+            if not all((d, close, vol, op, hi, lo)):
+                continue
+            part = pd.DataFrame({
+                "symbol": symbol,
+                "date": pd.to_datetime(table[d], errors="coerce", dayfirst=True),
+                "open": pd.to_numeric(table[op].astype(str).str.replace(",", "", regex=False), errors="coerce"),
+                "high": pd.to_numeric(table[hi].astype(str).str.replace(",", "", regex=False), errors="coerce"),
+                "low": pd.to_numeric(table[lo].astype(str).str.replace(",", "", regex=False), errors="coerce"),
+                "close": pd.to_numeric(table[close].astype(str).str.replace(",", "", regex=False), errors="coerce"),
+                "volume": pd.to_numeric(table[vol].astype(str).str.replace(",", "", regex=False), errors="coerce")
+            }).dropna(subset=["date", "open", "high", "low", "close", "volume"])
+            if not part.empty:
+                frames.append(part)
+                found = True
+                break
+        if not found:
+            break
+    if not frames:
+        raise ValueError("Không đọc được bảng lịch sử OHLCV từ Cophieu68")
+    return pd.concat(frames, ignore_index=True).drop_duplicates("date").sort_values("date")
+
+
 def render_cophieu68_import():
     st.divider()
     st.header("📥 Nhập dữ liệu Cophieu68")
-    st.caption("Dùng file CSV/TXT xuất từ Cophieu68 hoặc AmiBroker/MetaStock. Dữ liệu được xử lý ngay trong phiên ứng dụng; chưa tự động tải trực tiếp từ website.")
-    uploads = st.file_uploader("Chọn file dữ liệu Cophieu68", type=["csv","txt"], accept_multiple_files=True, key="cophieu68_files")
+    st.caption("Lấy lịch sử trực tiếp từ Cophieu68 theo từng mã hoặc nhập file CSV/TXT của AmiBroker.")
+    symbols_text = st.text_input("Mã cổ phiếu lấy trực tiếp (phân cách dấu phẩy)", value="FPT,HPG,VCB", key="cp68_direct_symbols")
+    max_pages = st.selectbox("Số trang lịch sử mỗi mã", [2, 5, 10, 20], index=2, key="cp68_pages")
+    if st.button("🌐 Tải lịch sử trực tiếp từ Cophieu68", key="cp68_fetch_direct"):
+        symbols = list(dict.fromkeys(s.strip().upper() for s in symbols_text.split(",") if s.strip()))[:50]
+        direct_frames, direct_errors = [], []
+        progress = st.progress(0)
+        for i, symbol in enumerate(symbols):
+            try:
+                direct_frames.append(fetch_cophieu68_history(symbol, int(max_pages)))
+            except Exception as exc:
+                direct_errors.append(f"{symbol}: {exc}")
+            progress.progress((i + 1) / max(1, len(symbols)))
+        if direct_frames:
+            st.session_state["cp68_direct_data"] = pd.concat(direct_frames, ignore_index=True)
+        st.session_state["cp68_direct_errors"] = direct_errors
+    direct_data = st.session_state.get("cp68_direct_data")
+    if isinstance(direct_data, pd.DataFrame) and not direct_data.empty:
+        st.success(f"Đã lấy {len(direct_data):,} phiên của {direct_data['symbol'].nunique()} mã trực tiếp từ Cophieu68.")
+        st.download_button("Tải dữ liệu lịch sử CSV", direct_data.to_csv(index=False).encode("utf-8-sig"), "cophieu68_history.csv", "text/csv", key="cp68_direct_download")
+    for err in st.session_state.get("cp68_direct_errors", []):
+        st.warning(err)
+    uploads = st.file_uploader("Hoặc chọn file CSV/TXT xuất từ Cophieu68/AmiBroker", type=["csv","txt"], accept_multiple_files=True, key="cophieu68_files")
     if not uploads:
         st.info("Tải file dữ liệu lên để StockLab tính MOM14, EMA100 và khối lượng trung bình 20 phiên.")
         return
