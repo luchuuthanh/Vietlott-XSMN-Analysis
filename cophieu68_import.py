@@ -63,6 +63,39 @@ def read_cophieu68_file(upload) -> pd.DataFrame:
         raise ValueError("File không có dòng OHLCV hợp lệ sau khi đọc.")
     return df[["symbol","date","open","high","low","close","volume"]].sort_values(["symbol","date"])
 
+def fetch_cophieu68_listing() -> pd.DataFrame:
+    """Fetch listed tickers directly from Cophieu68 HOSE/HNX/UPCOM boards."""
+    import re
+    import requests
+    frames = []
+    session = requests.Session()
+    session.headers.update({"User-Agent": "Mozilla/5.0", "Referer": "https://cophieu68.vn/"})
+    for exchange, stcid in (("HOSE", "1"), ("HNX", "2"), ("UPCOM", "3")):
+        response = session.get("https://www.cophieu68.vn/stockonline.php",
+                               params={"stcid": stcid}, timeout=30)
+        response.raise_for_status()
+        tables = pd.read_html(StringIO(response.text))
+        found = set()
+        for table in tables:
+            if table.empty:
+                continue
+            first = table.iloc[:, 0].astype(str).str.strip().str.upper()
+            found.update(x for x in first if re.fullmatch(r"[A-Z0-9]{3,6}", x))
+        if not found:
+            # Some Cophieu68 pages expose symbols only as ticker links.
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.text, "html.parser")
+            for anchor in soup.find_all("a", href=True):
+                label = anchor.get_text(" ", strip=True).upper()
+                href = anchor["href"].lower()
+                if re.fullmatch(r"[A-Z0-9]{3,6}", label) and ("quote" in href or "stock" in href):
+                    found.add(label)
+        if not found:
+            raise ValueError(f"Cophieu68 không trả danh sách mã {exchange}")
+        frames.append(pd.DataFrame({"symbol": sorted(found), "exchange": exchange}))
+    return pd.concat(frames, ignore_index=True).drop_duplicates("symbol").reset_index(drop=True)
+
+
 def fetch_cophieu68_history(symbol: str, max_pages: int = 10) -> pd.DataFrame:
     """Read public paginated OHLCV history from Cophieu68."""
     import requests
