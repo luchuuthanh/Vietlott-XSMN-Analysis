@@ -126,7 +126,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["MACD_HIST"] = out["MACD"] - out["MACD_SIGNAL"]
     return out
 
-@st.cache_data(ttl=21600, show_spinner=False)
+# Deliberately not cached: scan_market updates a live Streamlit progress element.
 def scan_market(instruments: pd.DataFrame, lookback_days: int = 260, _progress=None) -> tuple[pd.DataFrame, dict]:
     start = (date.today() - timedelta(days=lookback_days)).isoformat()
     end = date.today().isoformat()
