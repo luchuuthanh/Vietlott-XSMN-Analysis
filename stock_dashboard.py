@@ -33,46 +33,12 @@ def _vnstock_classes():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_instruments() -> pd.DataFrame:
-    """Build the exchange universe only from Guest-accessible group listings."""
-    errors = []
-    # Vnstock documents reference.market.symbols_by_group as Guest-accessible
-    # for VCI/KBS. Avoid symbols_by_exchange/all_symbols and their source
-    # fallback here so a locked route cannot block the whole market scan.
-    for source in ("vci", "kbs"):
-        try:
-            from vnstock import Listing
-            listing = Listing(source=source)
-            frames = []
-            for exchange in ("HOSE", "HNX", "UPCOM"):
-                try:
-                    raw = listing.symbols_by_group(exchange)
-                    if isinstance(raw, pd.DataFrame):
-                        group = raw.copy()
-                        if "symbol" not in group.columns:
-                            group = group.reset_index()
-                            if "symbol" not in group.columns and len(group.columns):
-                                group = group.rename(columns={group.columns[0]: "symbol"})
-                        symbols = group["symbol"] if "symbol" in group.columns else pd.Series(dtype=str)
-                    elif isinstance(raw, pd.Series):
-                        symbols = raw
-                    else:
-                        symbols = pd.Series(raw)
-                    group = pd.DataFrame({"symbol": symbols.astype(str).str.upper().str.strip()})
-                    group = group[group["symbol"].str.fullmatch(r"[A-Z0-9]{3,6}", na=False)]
-                    group["exchange"] = exchange
-                    if not group.empty:
-                        frames.append(group)
-                except Exception as exc:
-                    errors.append(f"{source}/{exchange}: {exc}")
-            if frames:
-                combined = pd.concat(frames, ignore_index=True)
-                return combined.drop_duplicates("symbol").reset_index(drop=True)
-        except Exception as exc:
-            errors.append(f"{source}: {exc}")
-    raise MarketDataError(
-        "Không lấy được danh sách mã theo nhóm HOSE/HNX/UPCOM từ tuyến Vnstock dành cho Khách. "
-        + " | ".join(errors)
-    )
+    """Build HOSE/HNX/UPCOM universe from Cophieu68 public listings."""
+    from cophieu68_import import fetch_cophieu68_listing
+    try:
+        return fetch_cophieu68_listing()
+    except Exception as exc:
+        raise MarketDataError(f"Không lấy được danh sách mã từ Cophieu68: {exc}") from exc
 
 def _normalize_quotes(payload) -> pd.DataFrame:
     df = pd.DataFrame(payload).copy()
