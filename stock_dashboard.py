@@ -206,11 +206,7 @@ def render_stock_dashboard():
         min_volume = st.number_input("Khối lượng tối thiểu (cổ phiếu)", min_value=0, value=50000, step=10000)
     mom_floor = st.number_input("MOM14 tối thiểu (%)", value=4.0, step=0.5)
     require_ema = st.checkbox("Chỉ lấy giá đóng cửa ≥ EMA100", value=True)
-    has_api_key = bool(os.getenv("VNSTOCK_API_KEY", "").strip())
-    batch_options = [100, 200, 300, 500, 1000, 2000]
-    batch_default = 500 if has_api_key else 200
-    scan_limit = st.selectbox("Số mã quét mỗi lượt", batch_options, index=batch_options.index(batch_default))
-    st.caption("Quét từng lượt để tránh vượt hạn mức dữ liệu. Sau mỗi lượt, nhấn nút để tiếp tục nhóm mã kế tiếp.")
+    st.caption("Dữ liệu thị trường được cập nhật tự động từ Cophieu68. Nút bên dưới chỉ nạp lại bản quét đầy đủ, không gọi Vnstock hàng loạt.")
 
     scan_col, reset_col = st.columns([3, 1])
     with reset_col:
