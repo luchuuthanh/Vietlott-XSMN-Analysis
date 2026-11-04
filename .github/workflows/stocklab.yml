@@ -76,7 +76,7 @@ jobs:
                       return None, f"{ticker}: insufficient history"
                   row = valid.iloc[-1]
                   return {"symbol": ticker, "exchange": item.exchange, "date": row["date"],
-                          "close": row["close"], "EMA100": row["EMA100"],
+                          "close": row["close"], "volume": row["volume"], "EMA100": row["EMA100"],
                           "MOM14": row["MOM14"], "VOL20": row["VOL20"]}, None
               except Exception as exc:
                   return None, f"{ticker}: {exc}"
