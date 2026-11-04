@@ -348,11 +348,10 @@ def render_stock_dashboard():
         available = filtered["Mã"].tolist() or result["Mã"].tolist()
         selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
         try:
-            timeframe = st.selectbox("Khung biểu đồ", ["1D", "1H"], index=0, key="stocklab_timeframe")
-            has_api_key = bool(os.getenv("VNSTOCK_API_KEY", "").strip())
-            effective_days = min(chart_days, 90 if timeframe == "1H" and not has_api_key else 365 if timeframe == "1H" else chart_days)
-            if effective_days < chart_days:
-                st.caption(f"Khung {timeframe} đang giới hạn {effective_days} ngày theo hạn mức Vnstock hiện tại.")
+            # Keep H1 unavailable until the D1 chart is fully validated in the live app.
+            timeframe = "1D"
+            st.caption("Đang hoàn thiện và kiểm thử biểu đồ D1. Khung H1 sẽ được mở sau.")
+            effective_days = chart_days
             start = (date.today() - timedelta(days=effective_days)).isoformat()
             raw_chart, chart_source = fetch_chart_quotes(selected, start, date.today().isoformat(), interval=timeframe)
             st.caption(f"Nguồn dữ liệu biểu đồ: {chart_source}. Bộ lọc khối lượng dùng bình quân 20 phiên.")
