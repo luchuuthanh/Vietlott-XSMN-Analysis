@@ -152,8 +152,8 @@ def render_stock_dashboard():
             st.error(f"Không thể quét dữ liệu Vnstock: {exc}")
             st.stop()
 
-    result = st.session_state.get("fireant_scan")
-    stats = st.session_state.get("fireant_scan_stats")
+    result = st.session_state.get("vnstock_scan")
+    stats = st.session_state.get("vnstock_scan_stats")
     if result is None or result.empty:
         st.info("Chưa có dữ liệu quét. Nhấn nút 'Cập nhật dữ liệu và quét thị trường' để bắt đầu.")
         return
@@ -184,9 +184,9 @@ def render_stock_dashboard():
         )
 
     with tab_chart:
-        instruments = st.session_state.get("fireant_instruments")
+        instruments = st.session_state.get("vnstock_instruments")
         
-        chart_days = st.session_state.get("fireant_days", days)
+        chart_days = st.session_state.get("vnstock_days", days)
         available = filtered["Mã"].tolist() or result["Mã"].tolist()
         selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
         start = (date.today() - timedelta(days=chart_days)).isoformat()
