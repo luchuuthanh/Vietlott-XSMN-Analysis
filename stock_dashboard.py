@@ -226,6 +226,12 @@ def render_stock_dashboard():
             # Start a clean scan whenever any scan setting changes; never mix
             # partial results produced with different filters or lookback windows.
             scan_config = (int(days), int(min_volume), float(mom_floor), bool(require_ema), int(scan_limit))
+            # A manual Vnstock scan must start clean; never merge it with the
+            # previous scheduled Cophieu68 snapshot.
+            if st.session_state.get("vnstock_scan_source") == "automatic":
+                for key in ("vnstock_scan", "vnstock_scan_all", "vnstock_scan_stats"):
+                    st.session_state.pop(key, None)
+                st.session_state.pop("vnstock_scan_source", None)
             if st.session_state.get("vnstock_scan_config") != scan_config:
                 st.session_state["vnstock_scan_config"] = scan_config
                 st.session_state["vnstock_scan_offset"] = 0
@@ -304,8 +310,8 @@ def render_stock_dashboard():
         a.metric("Mã đã quét", f"{stats['scanned']:,}", help=f"Tổng danh sách: {stats.get('total', stats['scanned']):,}")
         b.metric("Mã có dữ liệu", f"{stats['success']:,}")
         c.metric("Mã đạt bộ lọc", f"{len(filtered):,}")
-        if stats.get("complete"):
-            st.success("Đã quét hết danh sách mã hiện tại. Muốn chạy chu kỳ mới, nhấn Xóa kết quả trước.")
+        if stats.get("complete") and not stats.get("source"):
+            st.success("Đã quét hết danh sách mã hiện tại.")
         else:
             remaining = max(0, stats.get("total", stats["scanned"]) - stats["scanned"])
             st.info(f"Còn {remaining:,} mã chưa quét. Nhấn nút cập nhật để tiếp tục lượt kế tiếp.")
@@ -320,7 +326,7 @@ def render_stock_dashboard():
         if top20.empty:
             st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
         else:
-            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
             filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
