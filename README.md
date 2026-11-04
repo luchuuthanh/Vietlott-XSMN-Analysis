@@ -1,6 +1,6 @@
-# Vietlott & XSMN Analysis Lab
+# Bộ ứng dụng phân tích xổ số Việt Nam
 
-Ứng dụng Streamlit phân tích dữ liệu lịch sử Vietlott và XSMN.
+Repository chứa hai ứng dụng Streamlit độc lập: Vietlott và XSMN. Mỗi ứng dụng có entrypoint, giao diện và URL triển khai riêng.
 
 ## Tính năng hiện có
 - Đọc CSV, kiểm tra cột và chuẩn hóa dữ liệu.
@@ -12,7 +12,16 @@
 
 ## Chạy trên máy
     pip install -r requirements.txt
-    streamlit run app.py
+    streamlit run app.py  # Vietlott
+
+    streamlit run xsmn_app.py  # XSMN
+
+## Tách ứng dụng và triển khai riêng
+
+- **Vietlott:** entrypoint `app.py`. Ứng dụng cũ đang dùng `app.py` trên Streamlit Cloud sẽ chuyển sang giao diện Vietlott riêng sau khi Cloud tự redeploy.
+- **XSMN:** entrypoint `xsmn_app.py`. Tạo một ứng dụng Streamlit Cloud mới từ cùng repository, branch `main`, chọn Main file path là `xsmn_app.py` để có URL riêng.
+- Hai ứng dụng dùng chung module xử lý dữ liệu (`analytics.py`, `data_loader.py`) nhưng không còn chung màn hình hoặc menu chọn hệ thống.
+- XSMN hiện nhận CSV lịch sử do người dùng tải lên; nguồn kết quả tự động chưa được kết nối.
 
 ## Định dạng dữ liệu
 
