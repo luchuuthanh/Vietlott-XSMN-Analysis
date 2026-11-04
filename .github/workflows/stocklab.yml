@@ -44,7 +44,7 @@ jobs:
           print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; VOL20={latest['VOL20']:.0f}")
           PY
       - name: Live Vietnam market scan via Cophieu68
-        timeout-minutes: 25
+        timeout-minutes: 60
         run: |
           python - <<'PY'
           from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -93,33 +93,6 @@ jobs:
           print("TOP 3 FILTERED:")
           print(passed.head(3).to_string(index=False))
           print(f"CSV files saved. Sample errors: {errors[:10]}")
-          PY
-      - name: Inspect Cophieu68 listing pagination
-        run: |
-          python - <<'PY'
-          import requests
-          from bs4 import BeautifulSoup
-          u="https://cophieu68.vn/stockonline.php?stcid=1"
-          r=requests.get(u,headers={"User-Agent":"Mozilla/5.0"},timeout=30)
-          print("URL",r.url,"STATUS",r.status_code,"LENGTH",len(r.text))
-          s=BeautifulSoup(r.text,"html.parser")
-          for f in s.find_all("form"):
-              print("FORM",f.get("action"),f.get("method"))
-              for x in f.find_all(["select","input"]):
-                  print("CONTROL",x.name,x.get("name"),x.get("value"),[(o.get("value"),o.get_text(" ",strip=True)) for o in x.find_all("option")])
-          for a in s.find_all("a",href=True):
-              if any(k in a.get("href","").lower() for k in ["page","limit","show","stcid","stockonline"]):
-                  print("LINK",a.get_text(" ",strip=True),a["href"])
-          PY
-      - name: Inspect listing size selector script
-        run: |
-          python - <<'PY'
-          import requests,re
-          t=requests.get("https://cophieu68.vn/stockonline.php?stcid=all",headers={"User-Agent":"Mozilla/5.0"},timeout=30).text
-          for pat in ["Hiển thị","Tất cả","200","100","50","stcid"]:
-              print("\\nPATTERN",pat)
-              for m in list(re.finditer(pat,t,re.I))[:5]:
-                  print(t[max(0,m.start()-250):m.start()+500].replace("\\n"," ")[:800])
           PY
       - name: Check Vnstock API and sample data (optional)
         env:
