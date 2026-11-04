@@ -13,3 +13,22 @@
 ## Chạy kiểm thử
     pip install -r requirements.txt
     python -m unittest discover -s tests
+
+
+## Triển khai ứng dụng chứng khoán riêng (StockLab)
+
+Có thể triển khai StockLab thành một ứng dụng Streamlit riêng, dùng chung repository nhưng không thay thế ứng dụng Vietlott/XSMN:
+
+1. Mở https://share.streamlit.io/ và đăng nhập bằng GitHub có quyền truy cập repository.
+2. Chọn **Create app** → **Yup, I have an app**.
+3. Repository: `luchuuthanh/Vietlott-XSMN-Analysis`.
+4. Branch: `main`.
+5. Main file path: `stock_app.py`.
+6. Custom subdomain: `stocklab-vn` (nếu còn khả dụng).
+7. Chọn **Deploy**.
+
+Streamlit sẽ tạo URL riêng theo subdomain được chọn. Nếu subdomain đã có người dùng, chọn tên khác. Ứng dụng chứng khoán dùng `stock_app.py`; ứng dụng cũ vẫn dùng `app.py`.
+
+### Nguồn dữ liệu StockLab
+
+StockLab dùng Vnstock 5.0.1. Cấu hình cài đặt nằm trong `requirements.txt`; bộ lấy dữ liệu thử VCI trước và KBS dự phòng. Khả năng truy cập và độ đầy đủ của dữ liệu phải được xác minh sau khi app khởi động trên Streamlit Cloud.
