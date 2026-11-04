@@ -152,7 +152,15 @@ def render_stock_dashboard():
     scan_limit = st.selectbox("Số mã quét mỗi lượt", batch_options, index=batch_options.index(batch_default))
     st.caption("Quét từng lượt để tránh vượt hạn mức dữ liệu. Sau mỗi lượt, nhấn nút để tiếp tục nhóm mã kế tiếp.")
 
-    if st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True):
+    scan_col, reset_col = st.columns([3, 1])
+    with reset_col:
+        if st.button("Xóa kết quả", use_container_width=True):
+            for key in ("vnstock_scan_offset", "vnstock_scan_all", "vnstock_scan", "vnstock_scan_stats", "vnstock_instruments", "vnstock_days"):
+                st.session_state.pop(key, None)
+            st.rerun()
+    with scan_col:
+        scan_clicked = st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True)
+    if scan_clicked:
         try:
             instruments = fetch_instruments()
             offset = int(st.session_state.get("vnstock_scan_offset", 0))
