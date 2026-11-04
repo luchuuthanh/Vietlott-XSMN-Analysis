@@ -1,0 +1,45 @@
+name: StockLab validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "stock_app.py"
+      - "stock_dashboard.py"
+      - "requirements.txt"
+      - ".github/workflows/stocklab.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Check Python syntax
+        run: python -m py_compile stock_app.py stock_dashboard.py
+      - name: Check Vnstock API and sample data
+        run: |
+          python - <<'PY'
+          from datetime import date, timedelta
+          from vnstock import Listing, Quote
+          import pandas as pd
+
+          listing = pd.DataFrame(Listing(source="vci").symbols_by_exchange())
+          assert {"symbol", "exchange"}.issubset(listing.columns), listing.columns.tolist()
+          assert listing["exchange"].astype(str).str.upper().isin(["HOSE", "HNX", "UPCOM"]).any()
+
+          end = date.today()
+          start = end - timedelta(days=30)
+          history = Quote(source="vci", symbol="FPT").history(
+              start=start.isoformat(), end=end.isoformat()
+          )
+          assert isinstance(history, pd.DataFrame) and not history.empty
+          assert {"time", "open", "high", "low", "close", "volume"}.issubset(history.columns), history.columns.tolist()
+          print(f"Vnstock smoke test OK: {len(listing)} symbols; {len(history)} FPT candles")
+          PY
