@@ -181,40 +181,47 @@ def render_cophieu68_import():
         st.warning(err)
     st.subheader("Quét thị trường bằng dữ liệu Cophieu68")
     st.caption("Danh sách mã lấy từ HOSE/HNX/UPCOM; dữ liệu giá và khối lượng của từng mã được tải từ Cophieu68 theo từng lượt 25 mã.")
-    if st.button("▶ Quét tiếp 25 mã", key="cp68_market_scan"):
+    if st.button("▶ Quét toàn bộ thị trường (HOSE/HNX/UPCOM)", key="cp68_market_scan"):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         try:
-            from stock_dashboard import fetch_instruments
-            universe = fetch_instruments()
-            offset = int(st.session_state.get("cp68_market_offset", 0))
-            batch = universe.iloc[offset:offset + 25]
+            universe = fetch_cophieu68_listing()
             scan_rows, scan_errors = [], []
-            bar = st.progress(0)
-            for idx, item in enumerate(batch.to_dict("records")):
-                ticker = item["symbol"]
+            progress = st.progress(0)
+            status = st.empty()
+            def scan_one(item):
+                ticker = item.symbol
                 try:
-                    hist = fetch_cophieu68_history(ticker, 5).sort_values("date")
+                    hist = fetch_cophieu68_history(ticker, 2).sort_values("date")
                     hist["EMA100"] = hist["close"].ewm(span=100, adjust=False, min_periods=100).mean()
                     hist["MOM14"] = (hist["close"] / hist["close"].shift(14) - 1) * 100
                     hist["VOL20"] = hist["volume"].rolling(20, min_periods=20).mean()
                     valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
-                    if not valid.empty:
-                        last = valid.iloc[-1]
-                        scan_rows.append({"Mã": ticker, "Sàn": item.get("exchange", ""),
-                            "Ngày": last["date"], "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
-                            "MOM14 (%)": last["MOM14"], "KL trung bình 20 phiên": last["VOL20"]})
+                    if valid.empty:
+                        return None, f"{ticker}: insufficient history"
+                    last = valid.iloc[-1]
+                    return {"Mã": ticker, "Sàn": item.exchange, "Ngày": last["date"],
+                            "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
+                            "MOM14 (%)": last["MOM14"], "KL trung bình 20 phiên": last["VOL20"]}, None
                 except Exception as exc:
-                    scan_errors.append(f"{ticker}: {exc}")
-                bar.progress((idx + 1) / max(1, len(batch)))
-            previous = st.session_state.get("cp68_market_rows", [])
-            st.session_state["cp68_market_rows"] = previous + scan_rows
+                    return None, f"{ticker}: {exc}"
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                futures = [pool.submit(scan_one, item) for item in universe.itertuples(index=False)]
+                for i, future in enumerate(as_completed(futures), 1):
+                    row, error = future.result()
+                    if row is not None:
+                        scan_rows.append(row)
+                    if error:
+                        scan_errors.append(error)
+                    if i % 25 == 0 or i == len(futures):
+                        progress.progress(i / max(1, len(futures)))
+                        status.caption(f"Đã xử lý {i}/{len(futures)} mã · dữ liệu hợp lệ {len(scan_rows)} · lỗi {len(scan_errors)}")
+            st.session_state["cp68_market_rows"] = scan_rows
             st.session_state["cp68_market_errors"] = scan_errors
-            next_offset = offset + len(batch)
-            st.session_state["cp68_market_offset"] = 0 if next_offset >= len(universe) else next_offset
             st.session_state["cp68_market_total"] = len(universe)
-            st.session_state["cp68_market_scanned"] = min(next_offset, len(universe))
-            st.success(f"Đã quét lượt này {len(batch)} mã; tổng cộng {min(next_offset, len(universe))}/{len(universe)} mã.")
+            st.session_state["cp68_market_scanned"] = len(universe)
+            st.success(f"Quét xong {len(universe)} mã từ Cophieu68; dữ liệu hợp lệ {len(scan_rows)}; lỗi {len(scan_errors)}.")
         except Exception as exc:
-            st.error(f"Không lấy được danh sách mã hoặc dữ liệu: {exc}")
+            st.error(f"Không quét được thị trường: {exc}")
     market_rows = st.session_state.get("cp68_market_rows", [])
     if market_rows:
         market_df = pd.DataFrame(market_rows).drop_duplicates("Mã", keep="last")
