@@ -33,22 +33,64 @@ def _vnstock_classes():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_instruments() -> pd.DataFrame:
+    """Load the public all-symbols reference, then classify exchange via public group routes.
+
+    symbols_by_exchange() is an expanded Vnstock entitlement route and is not
+    available to Guest accounts. all_symbols() and symbols_by_group() are
+    public routes, so use those instead.
+    """
     Listing, _ = _vnstock_classes()
     errors = []
     for source in DATA_SOURCES:
         try:
-            raw = Listing(source=source).symbols_by_exchange()
-            df = pd.DataFrame(raw)
-            if df.empty or "symbol" not in df.columns or "exchange" not in df.columns:
-                raise MarketDataError(f"Nguồn {source} không trả đủ cột symbol/exchange.")
-            df["exchange"] = df["exchange"].astype(str).str.upper().str.strip()
-            df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
-            df = df[df["exchange"].isin(EXCHANGES)].drop_duplicates("symbol")
+            listing = Listing(source=source)
+            raw = listing.all_symbols()
+            all_df = pd.DataFrame(raw)
+            if all_df.empty or "symbol" not in all_df.columns:
+                raise MarketDataError(f"Nguồn {source}: all_symbols() không trả cột symbol.")
+
+            all_df["symbol"] = all_df["symbol"].astype(str).str.upper().str.strip()
+            all_df = all_df[all_df["symbol"].str.fullmatch(r"[A-Z0-9]{3,6}", na=False)]
+            all_df = all_df.drop_duplicates("symbol")
+            if all_df.empty:
+                raise MarketDataError(f"Nguồn {source}: danh sách mã rỗng sau chuẩn hóa.")
+
+            # Exchange membership uses the Guest-accessible symbols_by_group route.
+            exchange_frames = []
+            for exchange in sorted(EXCHANGES):
+                try:
+                    group_raw = listing.symbols_by_group(exchange)
+                    if isinstance(group_raw, pd.DataFrame):
+                        group_df = group_raw.copy()
+                        if "symbol" not in group_df.columns:
+                            group_df = group_df.reset_index()
+                            if "symbol" not in group_df.columns and len(group_df.columns):
+                                group_df = group_df.rename(columns={group_df.columns[0]: "symbol"})
+                    else:
+                        group_df = pd.DataFrame({"symbol": list(group_raw)})
+                    if "symbol" in group_df.columns and not group_df.empty:
+                        group_df = group_df[["symbol"]].copy()
+                        group_df["symbol"] = group_df["symbol"].astype(str).str.upper().str.strip()
+                        group_df["exchange"] = exchange
+                        exchange_frames.append(group_df)
+                except Exception as group_exc:
+                    errors.append(f"{source}/{exchange}: {group_exc}")
+
+            if exchange_frames:
+                membership = pd.concat(exchange_frames, ignore_index=True).drop_duplicates("symbol")
+                df = all_df.merge(membership, on="symbol", how="inner")
+            else:
+                # Still allow scanning all public symbols if exchange grouping is
+                # temporarily unavailable; do not silently claim an exchange.
+                df = all_df.copy()
+                df["exchange"] = "Chưa phân loại"
+
             if not df.empty:
                 return df.reset_index(drop=True)
+            errors.append(f"{source}: không ghép được mã với sàn.")
         except Exception as exc:
             errors.append(f"{source}: {exc}")
-    raise MarketDataError("Không lấy được danh sách mã từ Vnstock. " + " | ".join(errors))
+    raise MarketDataError("Không lấy được danh sách mã công khai từ Vnstock. " + " | ".join(errors))
 
 def _normalize_quotes(payload) -> pd.DataFrame:
     df = pd.DataFrame(payload).copy()
