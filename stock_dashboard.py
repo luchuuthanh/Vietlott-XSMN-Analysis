@@ -342,3 +342,6 @@ def render_stock_dashboard():
         if stats and stats.get("errors"):
             with st.expander(f"Lỗi ở {len(stats['errors'])} mã"):
                 st.code("\n".join(stats["errors"][:100]))
+
+    from cophieu68_import import render_cophieu68_import
+    render_cophieu68_import()
