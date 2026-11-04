@@ -129,7 +129,9 @@ def render_stock_dashboard():
     st.header("📈 STOCKLAB VIỆT NAM")
     st.caption("Bảng giá · Bộ lọc cổ phiếu · Biểu đồ nến · EMA · RSI · MACD · Khối lượng")
 
-    st.caption("Dữ liệu nến ngày từ Vnstock; tự thử VCI rồi KBS khi nguồn đầu gặp lỗi.")\n\n    left, right = st.columns([1, 1])
+    st.caption("Dữ liệu nến ngày từ Vnstock; tự thử VCI rồi KBS khi nguồn đầu gặp lỗi.")
+
+    left, right = st.columns([1, 1])
     with left:
         days = st.selectbox("Số ngày lịch sử", [260, 365, 520, 730], index=1)
     with right:
