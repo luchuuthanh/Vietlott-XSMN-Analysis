@@ -174,7 +174,7 @@ def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
             "Giá đóng cửa": raw["close"],
             "EMA100": raw["EMA100"],
             "MOM14 (%)": raw["MOM14"],
-            "Khối lượng": pd.NA,
+            "Khối lượng": pd.to_numeric(raw["volume"], errors="coerce") if "volume" in raw.columns else pd.NA,
             "KLGD TB20": raw["VOL20"],
             "Ngày dữ liệu": raw["date"],
         })
@@ -326,7 +326,7 @@ def render_stock_dashboard():
         if top20.empty:
             st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
         else:
-            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
             filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
