@@ -163,9 +163,20 @@ def render_stock_dashboard():
     if scan_clicked:
         try:
             instruments = fetch_instruments()
+            # Start a clean scan whenever any scan setting changes; never mix
+            # partial results produced with different filters or lookback windows.
+            scan_config = (int(days), int(min_volume), float(mom_floor), bool(require_ema), int(scan_limit))
+            if st.session_state.get("vnstock_scan_config") != scan_config:
+                st.session_state["vnstock_scan_config"] = scan_config
+                st.session_state["vnstock_scan_offset"] = 0
+                st.session_state.pop("vnstock_scan_all", None)
+                st.session_state.pop("vnstock_scan", None)
+                st.session_state.pop("vnstock_scan_stats", None)
             offset = int(st.session_state.get("vnstock_scan_offset", 0))
             if offset >= len(instruments):
                 offset = 0
+                st.session_state["vnstock_scan_offset"] = 0
+                st.session_state.pop("vnstock_scan_all", None)
             batch = instruments.iloc[offset:offset + scan_limit].copy()
             st.info(f"Đang quét lượt {offset // scan_limit + 1}: {len(batch):,}/{len(instruments):,} mã HOSE, HNX và UPCoM.")
             progress = st.progress(0)
@@ -177,7 +188,15 @@ def render_stock_dashboard():
             st.session_state["vnstock_scan"] = combined
             next_offset = offset + len(batch)
             st.session_state["vnstock_scan_offset"] = 0 if next_offset >= len(instruments) else next_offset
-            st.session_state["vnstock_scan_stats"] = {"scanned": min(next_offset, len(instruments)), "success": len(combined), "errors": stats["errors"]}
+            previous_stats = st.session_state.get("vnstock_scan_stats") or {}
+            accumulated_errors = list(previous_stats.get("errors", [])) + list(stats["errors"])
+            st.session_state["vnstock_scan_stats"] = {
+                "scanned": min(next_offset, len(instruments)),
+                "success": len(combined),
+                "errors": accumulated_errors,
+                "total": len(instruments),
+                "complete": next_offset >= len(instruments),
+            }
             st.session_state["vnstock_instruments"] = instruments
             st.session_state["vnstock_days"] = days
             st.success(f"Đã quét lượt này {len(batch)} mã. Tổng số mã đã có kết quả: {len(combined)}.")
@@ -203,9 +222,17 @@ def render_stock_dashboard():
 
     if stats:
         a, b, c = st.columns(3)
-        a.metric("Mã đã quét", f"{stats['scanned']:,}")
+        a.metric("Mã đã quét", f"{stats['scanned']:,}", help=f"Tổng danh sách: {stats.get('total', stats['scanned']):,}")
         b.metric("Mã có dữ liệu", f"{stats['success']:,}")
         c.metric("Mã đạt bộ lọc", f"{len(filtered):,}")
+        if stats.get("complete"):
+            st.success("Đã quét hết danh sách mã hiện tại. Muốn chạy chu kỳ mới, nhấn Xóa kết quả trước.")
+        else:
+            remaining = max(0, stats.get("total", stats["scanned"]) - stats["scanned"])
+            st.info(f"Còn {remaining:,} mã chưa quét. Nhấn nút cập nhật để tiếp tục lượt kế tiếp.")
+        if stats.get("errors"):
+            with st.expander(f"Lỗi dữ liệu trong các lượt quét ({len(stats['errors'])})"):
+                st.write(stats["errors"][-50:])
 
     tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
     with tab_scan:
