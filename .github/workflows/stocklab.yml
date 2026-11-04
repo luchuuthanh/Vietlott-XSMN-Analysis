@@ -23,8 +23,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Check Python syntax
         run: python -m py_compile stock_app.py stock_dashboard.py
-      - name: Check Vnstock API and sample data (requires free API key)
-        if: ${{ secrets.VNSTOCK_API_KEY != '' }}
+      - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
         run: |
@@ -35,6 +34,9 @@ jobs:
           from vnstock import Listing, Quote
           import pandas as pd
 
+          if not os.environ.get("VNSTOCK_API_KEY"):
+              print("Skipping live-data smoke test: VNSTOCK_API_KEY is not configured.")
+              raise SystemExit(0)
           vnstock.login(os.environ["VNSTOCK_API_KEY"])
           listing = pd.DataFrame(Listing(source="kbs").symbols_by_exchange())
           assert {"symbol", "exchange"}.issubset(listing.columns), listing.columns.tolist()
