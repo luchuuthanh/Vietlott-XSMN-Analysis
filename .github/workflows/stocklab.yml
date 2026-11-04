@@ -27,13 +27,21 @@ jobs:
       - name: Live Cophieu68 history smoke test
         run: |
           python - <<'PY'
+          import pandas as pd
           from cophieu68_import import fetch_cophieu68_history
           df = fetch_cophieu68_history("FPT", max_pages=2)
           required = {"symbol", "date", "open", "high", "low", "close", "volume"}
           assert required.issubset(df.columns), df.columns.tolist()
           assert len(df) >= 20, f"Too few history rows: {len(df)}"
           assert df["date"].notna().all()
+          df = df.sort_values("date").copy()
+          df["EMA100"] = df["close"].ewm(span=100, adjust=False, min_periods=100).mean()
+          df["MOM14"] = (df["close"] / df["close"].shift(14) - 1) * 100
+          df["VOL20"] = df["volume"].rolling(20, min_periods=20).mean()
+          latest = df.dropna(subset=["EMA100", "MOM14", "VOL20"]).iloc[-1]
+          assert pd.notna(latest["EMA100"]) and pd.notna(latest["MOM14"]) and pd.notna(latest["VOL20"])
           print(f"Cophieu68 live test OK: {len(df)} FPT rows; latest={df['date'].max()}")
+          print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; VOL20={latest['VOL20']:.0f}")
           PY
       - name: Check Vnstock API and sample data (optional)
         env:
