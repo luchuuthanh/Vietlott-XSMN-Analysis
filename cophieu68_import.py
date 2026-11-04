@@ -179,8 +179,8 @@ def render_cophieu68_import():
         st.download_button("Tải dữ liệu lịch sử CSV", direct_data.to_csv(index=False).encode("utf-8-sig"), "cophieu68_history.csv", "text/csv", key="cp68_direct_download")
     for err in st.session_state.get("cp68_direct_errors", []):
         st.warning(err)
-    st.subheader("Quét thị trường bằng dữ liệu Cophieu68")
-    st.caption("Danh sách mã lấy từ HOSE/HNX/UPCOM; dữ liệu giá và khối lượng của từng mã được tải từ Cophieu68 theo từng lượt 25 mã.")
+    st.subheader("Quét toàn bộ thị trường bằng dữ liệu Cophieu68")
+    st.caption("Tự động lấy danh sách đầy đủ (tối đa 2.000 mã mỗi sàn) từ Cophieu68 và quét toàn bộ HOSE/HNX/UPCOM trong một lần bấm.")
     if st.button("▶ Quét toàn bộ thị trường (HOSE/HNX/UPCOM)", key="cp68_market_scan"):
         from concurrent.futures import ThreadPoolExecutor, as_completed
         try:
