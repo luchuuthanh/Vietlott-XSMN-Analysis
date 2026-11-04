@@ -16,6 +16,11 @@ on:
 permissions:
   contents: write
 
+# Serialize scheduled and push-triggered scans so their CSV commits cannot conflict.
+concurrency:
+  group: stocklab-market-scan
+  cancel-in-progress: false
+
 jobs:
   validate:
     runs-on: ubuntu-latest
