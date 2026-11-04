@@ -107,6 +107,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
           git add stocklab_market_all.csv stocklab_market_passed.csv
           if ! git diff --cached --quiet; then
             git commit -m "Update daily StockLab market scan"
