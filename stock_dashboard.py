@@ -150,6 +150,49 @@ def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260
         result = result.sort_values(["Đạt bộ lọc", "MOM14 (%)"], ascending=[False, False]).reset_index(drop=True)
     return result, {"scanned": len(symbols), "success": len(rows), "errors": errors}
 
+def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
+    """Load the latest automated Cophieu68 scan committed by GitHub Actions."""
+    from pathlib import Path
+    path = Path(__file__).resolve().parent / "stocklab_market_all.csv"
+    passed_path = Path(__file__).resolve().parent / "stocklab_market_passed.csv"
+    if not path.exists():
+        return None, None
+    try:
+        raw = pd.read_csv(path)
+        required = {"symbol", "exchange", "date", "close", "EMA100", "MOM14", "VOL20"}
+        if raw.empty or not required.issubset(raw.columns):
+            raise ValueError("CSV thiếu cột bắt buộc hoặc không có dữ liệu")
+        raw["date"] = pd.to_datetime(raw["date"], errors="coerce")
+        for col in ("close", "EMA100", "MOM14", "VOL20"):
+            raw[col] = pd.to_numeric(raw[col], errors="coerce")
+        raw = raw.dropna(subset=["symbol", "date", "close", "EMA100", "MOM14", "VOL20"])
+        if raw.empty:
+            raise ValueError("Không còn dòng OHLCV hợp lệ sau khi chuẩn hóa")
+        result = pd.DataFrame({
+            "Mã": raw["symbol"].astype(str).str.upper(),
+            "Sàn": raw["exchange"].astype(str).str.upper(),
+            "Giá đóng cửa": raw["close"],
+            "EMA100": raw["EMA100"],
+            "MOM14 (%)": raw["MOM14"],
+            "Khối lượng": pd.NA,
+            "KLGD TB20": raw["VOL20"],
+            "Ngày dữ liệu": raw["date"],
+        })
+        updated = str(raw["updated_at_utc"].iloc[0]) if "updated_at_utc" in raw.columns else "không rõ"
+        passed_count = None
+        if passed_path.exists():
+            passed = pd.read_csv(passed_path)
+            passed_count = len(passed)
+        stats = {
+            "scanned": len(raw), "success": len(raw), "total": len(raw),
+            "complete": True, "errors": [], "source": "GitHub Actions · Cophieu68",
+            "updated_at_utc": updated, "saved_passed_count": passed_count,
+        }
+        return result, stats
+    except Exception as exc:
+        raise MarketDataError(f"Không đọc được bản quét tự động ({path.name}): {exc}") from exc
+
+
 def render_stock_dashboard():
     st.header("📈 STOCKLAB VIỆT NAM")
     st.caption("Bảng giá · Bộ lọc cổ phiếu · Biểu đồ nến · EMA · RSI · MACD · Khối lượng")
@@ -224,8 +267,27 @@ def render_stock_dashboard():
     result = st.session_state.get("vnstock_scan")
     stats = st.session_state.get("vnstock_scan_stats")
     if result is None or result.empty:
-        st.info("Chưa có dữ liệu quét. Nhấn nút 'Cập nhật dữ liệu và quét thị trường' để bắt đầu.")
+        try:
+            result, stats = load_saved_market_scan()
+            if result is not None:
+                st.session_state["vnstock_scan"] = result
+                st.session_state["vnstock_scan_stats"] = stats
+                st.session_state["vnstock_scan_all"] = result
+                st.session_state["vnstock_scan_source"] = "automatic"
+        except MarketDataError as exc:
+            st.warning(str(exc))
+    if result is None or result.empty:
+        st.info("Chưa có bản quét tự động. Workflow GitHub Actions sẽ cập nhật theo lịch ngày giao dịch; mày cũng có thể nhấn nút cập nhật để quét thủ công.")
+        from cophieu68_import import render_cophieu68_import
+        render_cophieu68_import()
         return
+
+    if stats and stats.get("source"):
+        st.success(
+            f"Bản quét tự động: {stats['success']:,}/{stats['total']:,} mã có dữ liệu · "
+            f"{stats.get('saved_passed_count', '—')} mã đạt bộ lọc mặc định · "
+            f"cập nhật UTC: {stats.get('updated_at_utc', 'không rõ')}"
+        )
 
     result = result.copy()
     result["Đạt MOM14"] = result["MOM14 (%)"] >= mom_floor
