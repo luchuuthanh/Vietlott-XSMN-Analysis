@@ -24,6 +24,17 @@ jobs:
         run: pip install -r requirements.txt
       - name: Check Python syntax
         run: python -m py_compile stock_app.py stock_dashboard.py cophieu68_import.py
+      - name: Live Cophieu68 history smoke test
+        run: |
+          python - <<'PY'
+          from cophieu68_import import fetch_cophieu68_history
+          df = fetch_cophieu68_history("FPT", max_pages=2)
+          required = {"symbol", "date", "open", "high", "low", "close", "volume"}
+          assert required.issubset(df.columns), df.columns.tolist()
+          assert len(df) >= 20, f"Too few history rows: {len(df)}"
+          assert df["date"].notna().all()
+          print(f"Cophieu68 live test OK: {len(df)} FPT rows; latest={df['date'].max()}")
+          PY
       - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
