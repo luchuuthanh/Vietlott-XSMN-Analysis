@@ -1,6 +1,6 @@
 """Import Cophieu68 CSV/TXT exports into StockLab without requiring a paid API."""
 from __future__ import annotations
-from io import BytesIO
+from io import BytesIO, StringIO
 import unicodedata
 import pandas as pd
 import streamlit as st
@@ -79,7 +79,7 @@ def fetch_cophieu68_history(symbol: str, max_pages: int = 10) -> pd.DataFrame:
         response = session.get("https://cophieu68.vn/quote/history.php", params=params, timeout=25)
         response.raise_for_status()
         found = False
-        for table in pd.read_html(response.text):
+        for table in pd.read_html(StringIO(response.text)):
             table.columns = [" ".join(map(str, c)).strip() if isinstance(c, tuple) else str(c).strip() for c in table.columns]
             normalized = {_key(c): c for c in table.columns}
             def col(*parts):
