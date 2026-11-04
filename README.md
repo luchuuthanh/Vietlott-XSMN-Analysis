@@ -21,7 +21,7 @@ Repository chứa hai ứng dụng Streamlit độc lập: Vietlott và XSMN. M�
 - **Vietlott:** entrypoint `app.py`. Ứng dụng cũ đang dùng `app.py` trên Streamlit Cloud sẽ chuyển sang giao diện Vietlott riêng sau khi Cloud tự redeploy.
 - **XSMN:** entrypoint `xsmn_app.py`. Tạo một ứng dụng Streamlit Cloud mới từ cùng repository, branch `main`, chọn Main file path là `xsmn_app.py` để có URL riêng.
 - Hai ứng dụng dùng chung module xử lý dữ liệu (`analytics.py`, `data_loader.py`) nhưng không còn chung màn hình hoặc menu chọn hệ thống.
-- XSMN hiện nhận CSV lịch sử do người dùng tải lên; nguồn kết quả tự động chưa được kết nối.
+- XSMN có bộ nạp kho SQLite lịch sử theo quý, mục tiêu 5 năm từ 04/11/2021; vẫn hỗ trợ CSV dự phòng. Ứng dụng hiển thị trạng thái từng quý, số kết quả và tỉnh tải được. Cần kiểm tra độ phủ và đối chiếu nguồn trước khi xác nhận đủ 5 năm.
 
 ## Định dạng dữ liệu
 
