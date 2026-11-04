@@ -143,13 +143,13 @@ def render_stock_dashboard():
             st.info(f"Đang quét {len(instruments):,} mã HOSE, HNX và UPCoM. Quá trình có thể mất vài phút.")
             progress = st.progress(0)
             result, stats = scan_market(instruments, days, progress.progress)
-            st.session_state["fireant_scan"] = result
-            st.session_state["fireant_scan_stats"] = stats
-            st.session_state["fireant_instruments"] = instruments
+            st.session_state["vnstock_scan"] = result
+            st.session_state["vnstock_scan_stats"] = stats
+            st.session_state["vnstock_instruments"] = instruments
             
-            st.session_state["fireant_days"] = days
+            st.session_state["vnstock_days"] = days
         except Exception as exc:
-            st.error(f"Không thể quét dữ liệu FireAnt: {exc}")
+            st.error(f"Không thể quét dữ liệu Vnstock: {exc}")
             st.stop()
 
     result = st.session_state.get("fireant_scan")
