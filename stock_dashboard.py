@@ -238,11 +238,15 @@ def render_stock_dashboard():
                 st.session_state.pop("vnstock_scan_all", None)
                 st.session_state.pop("vnstock_scan", None)
                 st.session_state.pop("vnstock_scan_stats", None)
+            # A completed scan starts a fresh cycle on the next click.
+            # Do not retain old rows while resetting the offset to the first batch.
+            previous_stats = st.session_state.get("vnstock_scan_stats") or {}
             offset = int(st.session_state.get("vnstock_scan_offset", 0))
-            if offset >= len(instruments):
+            if previous_stats.get("complete") or offset >= len(instruments):
                 offset = 0
                 st.session_state["vnstock_scan_offset"] = 0
-                st.session_state.pop("vnstock_scan_all", None)
+                for key in ("vnstock_scan_all", "vnstock_scan", "vnstock_scan_stats"):
+                    st.session_state.pop(key, None)
             batch = instruments.iloc[offset:offset + scan_limit].copy()
             st.info(f"Đang quét lượt {offset // scan_limit + 1}: {len(batch):,}/{len(instruments):,} mã HOSE, HNX và UPCoM.")
             with st.spinner(f"Đang tải dữ liệu cho {len(batch)} mã cổ phiếu..."):
