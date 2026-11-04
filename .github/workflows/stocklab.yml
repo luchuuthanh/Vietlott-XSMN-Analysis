@@ -115,8 +115,15 @@ jobs:
           git add stocklab_market_all.csv stocklab_market_passed.csv
           if ! git diff --cached --quiet; then
             git commit -m "Update daily StockLab market scan"
-            git pull --rebase origin main
-            git push
+            git fetch origin main
+            # A newer code commit may update the tracked CSVs while this scan runs.
+            # Keep this run's freshly generated scan outputs if those CSVs conflict.
+            if ! git rebase origin/main; then
+              git checkout --theirs -- stocklab_market_all.csv stocklab_market_passed.csv
+              git add stocklab_market_all.csv stocklab_market_passed.csv
+              GIT_EDITOR=true git rebase --continue
+            fi
+            git push origin HEAD:main
           else
             echo "Market scan files unchanged."
           fi
