@@ -201,6 +201,12 @@ def render_stock_dashboard():
 
     tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
     with tab_scan:
+        st.subheader("Top 3 cổ phiếu có MOM14 cao nhất")
+        top3 = filtered.head(3)
+        if top3.empty:
+            st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
+        else:
+            st.dataframe(top3[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
             filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]],
