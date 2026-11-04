@@ -261,7 +261,7 @@ def render_stock_dashboard():
             st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
-            filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]],
+            filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
             use_container_width=True, hide_index=True
         )
         st.download_button(
