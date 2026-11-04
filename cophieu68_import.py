@@ -1,6 +1,7 @@
 """Import Cophieu68 CSV/TXT exports into StockLab without requiring a paid API."""
 from __future__ import annotations
 from io import BytesIO
+import unicodedata
 import pandas as pd
 import streamlit as st
 
@@ -15,7 +16,9 @@ ALIASES = {
 }
 
 def _key(value):
-    return str(value).strip().lower().replace("_"," ").replace("-"," ").replace("."," ")
+    value = unicodedata.normalize("NFKD", str(value).strip().lower())
+    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    return value.replace("_"," ").replace("-"," ").replace("."," ")
 
 def read_cophieu68_file(upload) -> pd.DataFrame:
     raw = upload.getvalue()
@@ -70,7 +73,7 @@ def fetch_cophieu68_history(symbol: str, max_pages: int = 10) -> pd.DataFrame:
     session = requests.Session()
     session.headers.update({"User-Agent": "Mozilla/5.0", "Referer": "https://cophieu68.vn/"})
     for page in range(1, max_pages + 1):
-        params = {"id": symbol}
+        params = {"id": symbol, "cP": 1}
         if page > 1:
             params["cP"] = page
         response = session.get("https://cophieu68.vn/quote/history.php", params=params, timeout=25)
