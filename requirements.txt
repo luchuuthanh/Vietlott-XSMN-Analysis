@@ -5,3 +5,6 @@ requests>=2.31
 plotly>=5.20
 --extra-index-url https://vnstocks.com/api/packages
 vnstock==5.0.3
+
+lxml>=5.0
+beautifulsoup4>=4.12
