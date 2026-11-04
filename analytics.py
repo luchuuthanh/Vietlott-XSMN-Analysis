@@ -52,7 +52,7 @@ def draw_metrics(draws):
                      "Delta": max(nums) - min(nums) if nums else 0})
     return pd.DataFrame(rows)
 
-def score_candidates(freq_df, gap_df, universe, count, recent_draws=None):
+def score_candidates(freq_df, gap_df, universe, count, recent_draws=None, start=1):
     """Điểm cân bằng tần suất + độ vắng; chỉ dùng để xếp hạng tham khảo."""
     f = freq_df.set_index("Số")["Số lần"]
     g = gap_df.set_index("Số")["Số kỳ vắng"]
