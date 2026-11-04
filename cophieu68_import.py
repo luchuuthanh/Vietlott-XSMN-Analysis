@@ -80,7 +80,7 @@ def fetch_cophieu68_listing() -> pd.DataFrame:
             if table.empty:
                 continue
             first = table.iloc[:, 0].astype(str).str.strip().str.upper()
-            found.update(x for x in first if re.fullmatch(r"[A-Z0-9]{3,6}", x))
+            found.update(str(x) for x in first if re.fullmatch(r"[A-Z0-9]{3,6}", str(x)))
         if not found:
             # Some Cophieu68 pages expose symbols only as ticker links.
             from bs4 import BeautifulSoup
