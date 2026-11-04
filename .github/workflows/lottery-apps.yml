@@ -9,7 +9,8 @@ on:
       - "analytics.py"
       - "data_loader.py"
       - "generator.py"
-      - "data_sources.py"\n      - "xsmn_archive.py"
+      - "data_sources.py"
+      - "xsmn_archive.py"
       - ".github/workflows/lottery-apps.yml"
   workflow_dispatch:
 
@@ -24,7 +25,7 @@ jobs:
       - name: Install app dependencies
         run: pip install -r requirements.txt
       - name: Compile both entrypoints and shared modules
-        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py
+        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py
       - name: Smoke-test shared analytics
         run: |
           python - <<'PY'
