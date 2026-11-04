@@ -1,65 +1,79 @@
-"""FireAnt stock scanner: daily OHLCV, EMA100 and 14-session momentum."""
+"""Vietnam stock scanner using Vnstock data sources with VCI/KBS fallback."""
 from __future__ import annotations
 
 from datetime import date, timedelta
-import requests
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-BASE_URL = "https://restv2.fireant.vn"
 EXCHANGES = {"HOSE", "HNX", "UPCOM"}
+DATA_SOURCES = ("vci", "kbs")
 
-class FireAntError(RuntimeError):
+class MarketDataError(RuntimeError):
     pass
 
-def _headers(token: str | None) -> dict:
-    h = {"Accept": "application/json", "User-Agent": "VietnamStockScanner/1.0"}
-    if token and token.strip():
-        h["Authorization"] = f"Bearer {token.strip()}"
-    return h
+def _vnstock_classes():
+    try:
+        from vnstock import Listing, Quote
+        return Listing, Quote
+    except Exception as exc:
+        raise MarketDataError(
+            "Không nạp được Vnstock. Hãy kiểm tra gói vnstock trong requirements.txt "
+            "và khởi động lại ứng dụng. Chi tiết: " + str(exc)
+        ) from exc
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def fetch_instruments(token: str = "") -> pd.DataFrame:
-    r = requests.get(f"{BASE_URL}/instruments", headers=_headers(token), timeout=30)
-    if r.status_code in (401, 403):
-        raise FireAntError("FireAnt từ chối truy cập danh sách mã. Hãy kiểm tra access token/quyền symbols-read.")
-    r.raise_for_status()
-    payload = r.json()
-    df = pd.DataFrame(payload if isinstance(payload, list) else payload.get("items", []))
-    required = {"symbol", "exchange"}
-    if df.empty or not required.issubset(df.columns):
-        raise FireAntError("FireAnt trả về danh sách mã không đúng cấu trúc dự kiến.")
-    df["exchange"] = df["exchange"].astype(str).str.upper().str.strip()
-    df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
-    return df[df["exchange"].isin(EXCHANGES)].drop_duplicates("symbol").reset_index(drop=True)
+def fetch_instruments() -> pd.DataFrame:
+    Listing, _ = _vnstock_classes()
+    errors = []
+    for source in DATA_SOURCES:
+        try:
+            raw = Listing(source=source).symbols_by_exchange()
+            df = pd.DataFrame(raw)
+            if df.empty or "symbol" not in df.columns or "exchange" not in df.columns:
+                raise MarketDataError(f"Nguồn {source} không trả đủ cột symbol/exchange.")
+            df["exchange"] = df["exchange"].astype(str).str.upper().str.strip()
+            df["symbol"] = df["symbol"].astype(str).str.upper().str.strip()
+            df = df[df["exchange"].isin(EXCHANGES)].drop_duplicates("symbol")
+            if not df.empty:
+                return df.reset_index(drop=True)
+        except Exception as exc:
+            errors.append(f"{source}: {exc}")
+    raise MarketDataError("Không lấy được danh sách mã từ Vnstock. " + " | ".join(errors))
 
 def _normalize_quotes(payload) -> pd.DataFrame:
-    df = pd.DataFrame(payload if isinstance(payload, list) else payload.get("items", []))
-    mapping = {
-        "date": "date", "priceOpen": "open", "priceHigh": "high",
-        "priceLow": "low", "priceClose": "close", "totalVolume": "volume",
-    }
-    df = df.rename(columns=mapping)
-    missing = [c for c in mapping.values() if c not in df.columns]
+    df = pd.DataFrame(payload).copy()
+    mapping = {"time": "date", "date": "date", "open": "open",
+               "high": "high", "low": "low", "close": "close", "volume": "volume"}
+    df = df.rename(columns={k: v for k, v in mapping.items() if k in df.columns})
+    required = ["date", "open", "high", "low", "close", "volume"]
+    missing = [c for c in required if c not in df.columns]
     if missing:
-        raise FireAntError("Thiếu trường dữ liệu giá: " + ", ".join(missing))
-    df = df[list(mapping.values())].copy()
-    df["date"] = pd.to_datetime(df["date"], errors="coerce", utc=True).dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None)
+        raise MarketDataError("Thiếu trường dữ liệu OHLCV: " + ", ".join(missing))
+    df = df[required].copy()
+    df["date"] = pd.to_datetime(df["date"], errors="coerce", utc=True)
+    # Vnstock may return timezone-aware Vietnam timestamps or naive timestamps.
+    if df["date"].dt.tz is not None:
+        df["date"] = df["date"].dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None)
     for c in ["open", "high", "low", "close", "volume"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
-    return df.dropna(subset=["date", "close"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
+    return df.dropna(subset=["date", "open", "high", "low", "close"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
 
 @st.cache_data(ttl=900, show_spinner=False)
-def fetch_daily_quotes(symbol: str, start_date: str, end_date: str, token: str = "") -> pd.DataFrame:
-    url = f"{BASE_URL}/symbols/{symbol}/historical-quotes"
-    params = {"startDate": f"{start_date}T00:00:00Z", "endDate": f"{end_date}T23:59:59Z", "offset": 0, "limit": 1000}
-    r = requests.get(url, params=params, headers=_headers(token), timeout=30)
-    if r.status_code in (401, 403):
-        raise FireAntError(f"FireAnt không cho phép đọc lịch sử {symbol}. Kiểm tra access token/quyền symbols-read.")
-    r.raise_for_status()
-    return _normalize_quotes(r.json())
+def fetch_daily_quotes(symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+    _, Quote = _vnstock_classes()
+    errors = []
+    for source in DATA_SOURCES:
+        try:
+            raw = Quote(source=source, symbol=symbol).history(start=start_date, end=end_date)
+            df = _normalize_quotes(raw)
+            if not df.empty:
+                return df
+            errors.append(f"{source}: không có dữ liệu")
+        except Exception as exc:
+            errors.append(f"{source}: {exc}")
+    raise MarketDataError(f"Không tải được lịch sử {symbol}. " + " | ".join(errors))
 
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
@@ -81,7 +95,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 @st.cache_data(ttl=21600, show_spinner=False)
-def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int = 260, _progress=None) -> tuple[pd.DataFrame, dict]:
+def scan_market(instruments: pd.DataFrame, lookback_days: int = 260, _progress=None) -> tuple[pd.DataFrame, dict]:
     start = (date.today() - timedelta(days=lookback_days)).isoformat()
     end = date.today().isoformat()
     rows, errors = [], []
@@ -89,7 +103,7 @@ def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int =
     for i, item in enumerate(symbols):
         symbol = item["symbol"]
         try:
-            hist = add_indicators(fetch_daily_quotes(symbol, start, end, token))
+            hist = add_indicators(fetch_daily_quotes(symbol, start, end))
             valid = hist.dropna(subset=["EMA100", "MOM14"])
             if not valid.empty:
                 last = valid.iloc[-1]
@@ -112,17 +126,10 @@ def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int =
     return result, {"scanned": len(symbols), "success": len(rows), "errors": errors}
 
 def render_stock_dashboard():
-    st.header("📈 AMIBROKER-STYLE — CHỨNG KHOÁN VIỆT NAM")
+    st.header("📈 STOCKLAB VIỆT NAM")
     st.caption("Bảng giá · Bộ lọc cổ phiếu · Biểu đồ nến · EMA · RSI · MACD · Khối lượng")
 
-    with st.expander("Kết nối dữ liệu FireAnt", expanded=True):
-        token = st.text_input(
-            "FireAnt access token (nếu API yêu cầu)", type="password",
-            help="Token chỉ dùng trong phiên hiện tại; không gửi token trong chat và không lưu vào GitHub."
-        )
-        st.caption("Dữ liệu giá hiện lấy theo ngày (D1).")
-
-    left, right = st.columns([1, 1])
+    st.caption("Dữ liệu nến ngày từ Vnstock; tự thử VCI rồi KBS khi nguồn đầu gặp lỗi.")\n\n    left, right = st.columns([1, 1])
     with left:
         days = st.selectbox("Số ngày lịch sử", [260, 365, 520, 730], index=1)
     with right:
@@ -132,14 +139,14 @@ def render_stock_dashboard():
 
     if st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True):
         try:
-            instruments = fetch_instruments(token)
+            instruments = fetch_instruments()
             st.info(f"Đang quét {len(instruments):,} mã HOSE, HNX và UPCoM. Quá trình có thể mất vài phút.")
             progress = st.progress(0)
-            result, stats = scan_market(instruments, token, days, progress.progress)
+            result, stats = scan_market(instruments, days, progress.progress)
             st.session_state["fireant_scan"] = result
             st.session_state["fireant_scan_stats"] = stats
             st.session_state["fireant_instruments"] = instruments
-            st.session_state["fireant_token"] = token
+            
             st.session_state["fireant_days"] = days
         except Exception as exc:
             st.error(f"Không thể quét dữ liệu FireAnt: {exc}")
@@ -178,13 +185,13 @@ def render_stock_dashboard():
 
     with tab_chart:
         instruments = st.session_state.get("fireant_instruments")
-        token_used = st.session_state.get("fireant_token", token)
+        
         chart_days = st.session_state.get("fireant_days", days)
         available = filtered["Mã"].tolist() or result["Mã"].tolist()
         selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
         start = (date.today() - timedelta(days=chart_days)).isoformat()
         try:
-            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), token_used))
+            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat()))
             chart = chart.dropna(subset=["date", "open", "high", "low", "close"])
             if chart.empty:
                 st.warning("Chưa có dữ liệu OHLC hợp lệ cho mã này.")
