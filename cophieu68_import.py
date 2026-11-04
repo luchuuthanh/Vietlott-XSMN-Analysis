@@ -72,7 +72,7 @@ def fetch_cophieu68_listing() -> pd.DataFrame:
     session.headers.update({"User-Agent": "Mozilla/5.0", "Referer": "https://cophieu68.vn/"})
     for exchange, stcid in (("HOSE", "1"), ("HNX", "2"), ("UPCOM", "3")):
         response = session.get("https://www.cophieu68.vn/stockonline.php",
-                               params={"stcid": stcid}, timeout=30)
+                               params={"stcid": stcid, "nd": 2000}, timeout=30)
         response.raise_for_status()
         tables = pd.read_html(StringIO(response.text))
         found = set()
