@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+import os
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
@@ -9,13 +10,20 @@ from plotly.subplots import make_subplots
 
 EXCHANGES = {"HOSE", "HNX", "UPCOM"}
 DATA_SOURCES = ("vci", "kbs")
+_VNSTOCK_AUTH_READY = False
 
 class MarketDataError(RuntimeError):
     pass
 
 def _vnstock_classes():
+    global _VNSTOCK_AUTH_READY
     try:
+        import vnstock
         from vnstock import Listing, Quote
+        api_key = os.getenv("VNSTOCK_API_KEY", "").strip()
+        if api_key and not _VNSTOCK_AUTH_READY:
+            vnstock.login(api_key)
+            _VNSTOCK_AUTH_READY = True
         return Listing, Quote
     except Exception as exc:
         raise MarketDataError(
@@ -129,7 +137,7 @@ def render_stock_dashboard():
     st.header("📈 STOCKLAB VIỆT NAM")
     st.caption("Bảng giá · Bộ lọc cổ phiếu · Biểu đồ nến · EMA · RSI · MACD · Khối lượng")
 
-    st.caption("Dữ liệu nến ngày từ Vnstock; tự thử VCI rồi KBS khi nguồn đầu gặp lỗi.")
+    st.caption("Dữ liệu từ Vnstock (VCI/KBS). Có thể chạy chế độ Khách; đặt VNSTOCK_API_KEY trong Secrets để dùng hạn mức tài khoản Cộng đồng.")
 
     left, right = st.columns([1, 1])
     with left:
