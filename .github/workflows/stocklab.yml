@@ -13,6 +13,9 @@ on:
   schedule:
     - cron: '30 9 * * 1-5'
 
+permissions:
+  contents: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -89,6 +92,9 @@ jobs:
               raise SystemExit(f"No usable market data. Errors: {errors[:20]}")
           passed = data[(data["MOM14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
           passed = passed.sort_values("MOM14", ascending=False)
+          from datetime import datetime, timezone
+          data["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
+          passed["updated_at_utc"] = data["updated_at_utc"].iloc[0]
           data.to_csv("stocklab_market_all.csv", index=False)
           passed.to_csv("stocklab_market_passed.csv", index=False)
           print(f"SCAN COMPLETE: scanned={len(universe)}; usable={len(data)}; errors={len(errors)}; passed={len(passed)}")
@@ -96,6 +102,18 @@ jobs:
           print(passed.head(3).to_string(index=False))
           print(f"CSV files saved. Sample errors: {errors[:10]}")
           PY
+      - name: Publish latest market scan for StockLab
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stocklab_market_all.csv stocklab_market_passed.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "Update daily StockLab market scan"
+            git push
+          else
+            echo "Market scan files unchanged."
+          fi
       - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
