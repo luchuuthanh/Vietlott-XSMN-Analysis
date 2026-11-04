@@ -222,56 +222,30 @@ def render_stock_dashboard():
         scan_clicked = st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True)
     if scan_clicked:
         try:
-            instruments = fetch_instruments()
-            # Start a clean scan whenever any scan setting changes; never mix
-            # partial results produced with different filters or lookback windows.
-            scan_config = (int(days), int(min_volume), float(mom_floor), bool(require_ema), int(scan_limit))
-            # A manual Vnstock scan must start clean; never merge it with the
-            # previous scheduled Cophieu68 snapshot.
-            if st.session_state.get("vnstock_scan_source") == "automatic":
-                for key in ("vnstock_scan", "vnstock_scan_all", "vnstock_scan_stats"):
-                    st.session_state.pop(key, None)
-                st.session_state.pop("vnstock_scan_source", None)
-            if st.session_state.get("vnstock_scan_config") != scan_config:
-                st.session_state["vnstock_scan_config"] = scan_config
-                st.session_state["vnstock_scan_offset"] = 0
-                st.session_state.pop("vnstock_scan_all", None)
-                st.session_state.pop("vnstock_scan", None)
-                st.session_state.pop("vnstock_scan_stats", None)
-            # A completed scan starts a fresh cycle on the next click.
-            # Do not retain old rows while resetting the offset to the first batch.
-            previous_stats = st.session_state.get("vnstock_scan_stats") or {}
-            offset = int(st.session_state.get("vnstock_scan_offset", 0))
-            if previous_stats.get("complete") or offset >= len(instruments):
-                offset = 0
-                st.session_state["vnstock_scan_offset"] = 0
-                for key in ("vnstock_scan_all", "vnstock_scan", "vnstock_scan_stats"):
-                    st.session_state.pop(key, None)
-            batch = instruments.iloc[offset:offset + scan_limit].copy()
-            st.info(f"Đang quét lượt {offset // scan_limit + 1}: {len(batch):,}/{len(instruments):,} mã HOSE, HNX và UPCoM.")
-            with st.spinner(f"Đang tải dữ liệu cho {len(batch)} mã cổ phiếu..."):
-                result, stats = _scan_market_uncached_v2(batch, days)
-            prior = st.session_state.get("vnstock_scan_all")
-            combined = pd.concat([prior, result], ignore_index=True) if isinstance(prior, pd.DataFrame) and not prior.empty else result
-            combined = combined.drop_duplicates("Mã", keep="last")
-            st.session_state["vnstock_scan_all"] = combined
-            st.session_state["vnstock_scan"] = combined
-            next_offset = offset + len(batch)
-            st.session_state["vnstock_scan_offset"] = 0 if next_offset >= len(instruments) else next_offset
-            previous_stats = st.session_state.get("vnstock_scan_stats") or {}
-            accumulated_errors = list(previous_stats.get("errors", [])) + list(stats["errors"])
-            st.session_state["vnstock_scan_stats"] = {
-                "scanned": min(next_offset, len(instruments)),
-                "success": len(combined),
-                "errors": accumulated_errors,
-                "total": len(instruments),
-                "complete": next_offset >= len(instruments),
-            }
-            st.session_state["vnstock_instruments"] = instruments
-            st.session_state["vnstock_days"] = days
-            st.success(f"Đã quét lượt này {len(batch)} mã. Tổng số mã đã có kết quả: {len(combined)}.")
+            # Prefer the complete scheduled Cophieu68 snapshot. Do not start
+            # hundreds of Vnstock requests from a mobile button: that quickly
+            # exhausts the per-minute quota and leaves a misleading partial scan.
+            saved_result, saved_stats = load_saved_market_scan()
+            if saved_result is None or saved_result.empty:
+                raise MarketDataError(
+                    "Chưa có dữ liệu quét tự động. Hãy chờ GitHub Actions cập nhật dữ liệu thị trường."
+                )
+            for key in (
+                "vnstock_scan_offset", "vnstock_scan_all", "vnstock_scan",
+                "vnstock_scan_stats", "vnstock_scan_config", "vnstock_instruments",
+                "vnstock_days", "vnstock_scan_source",
+            ):
+                st.session_state.pop(key, None)
+            st.session_state["vnstock_scan"] = saved_result
+            st.session_state["vnstock_scan_all"] = saved_result
+            st.session_state["vnstock_scan_stats"] = saved_stats
+            st.session_state["vnstock_scan_source"] = "automatic"
+            st.success(
+                f"Đã nạp dữ liệu quét tự động: {len(saved_result):,} mã có dữ liệu. "
+                "Không gọi Vnstock hàng loạt nên không tiêu hao hạn mức API."
+            )
         except Exception as exc:
-            st.error(f"Không thể quét dữ liệu Vnstock: {exc}")
+            st.error(f"Không thể nạp dữ liệu quét tự động: {exc}")
             st.stop()
 
     result = st.session_state.get("vnstock_scan")
