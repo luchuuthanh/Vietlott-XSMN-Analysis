@@ -5,6 +5,8 @@ from datetime import date, timedelta
 import requests
 import pandas as pd
 import streamlit as st
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 BASE_URL = "https://restv2.fireant.vn"
 EXCHANGES = {"HOSE", "HNX", "UPCOM"}
@@ -66,6 +68,16 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["EMA100"] = out["close"].ewm(span=100, adjust=False, min_periods=100).mean()
     # MOM14 is expressed as percentage change from 14 trading sessions earlier.
     out["MOM14"] = (out["close"] / out["close"].shift(14) - 1) * 100
+    delta = out["close"].diff()
+    gain = delta.clip(lower=0).ewm(alpha=1/14, adjust=False, min_periods=14).mean()
+    loss = (-delta.clip(upper=0)).ewm(alpha=1/14, adjust=False, min_periods=14).mean()
+    rs = gain / loss.replace(0, float("nan"))
+    out["RSI14"] = 100 - (100 / (1 + rs))
+    ema12 = out["close"].ewm(span=12, adjust=False).mean()
+    ema26 = out["close"].ewm(span=26, adjust=False).mean()
+    out["MACD"] = ema12 - ema26
+    out["MACD_SIGNAL"] = out["MACD"].ewm(span=9, adjust=False).mean()
+    out["MACD_HIST"] = out["MACD"] - out["MACD_SIGNAL"]
     return out
 
 @st.cache_data(ttl=21600, show_spinner=False)
@@ -100,62 +112,130 @@ def scan_market(instruments: pd.DataFrame, token: str = "", lookback_days: int =
     return result, {"scanned": len(symbols), "success": len(rows), "errors": errors}
 
 def render_stock_dashboard():
-    st.header("📈 CHỨNG KHOÁN VIỆT NAM — FIREANT")
-    st.caption("Quét HOSE, HNX, UPCoM · MOM14 ≥ 4% · Giá đóng cửa ≥ EMA100")
-    with st.expander("Kết nối FireAnt", expanded=True):
-        token = st.text_input("FireAnt access token (nếu API yêu cầu)", type="password",
-                              help="Lấy token theo quyền đọc dữ liệu. Không gửi token trong chat và không lưu vào GitHub.")
-        st.caption("Token chỉ được dùng trong phiên ứng dụng này. Có thể cần quyền symbols-read.")
-    c1, c2 = st.columns(2)
-    with c1:
-        days = st.selectbox("Lịch sử dùng để tính EMA100", [260, 365, 520, 730], index=1)
-    with c2:
-        view = st.selectbox("Khung biểu đồ", ["D1 (ngày)", "H1 (giờ — chưa xác minh endpoint)"])
-    if view.startswith("H1"):
-        st.warning("Tài liệu FireAnt REST v1 công khai xác nhận historical-quotes nhưng chưa mô tả tham số nến 1 giờ. Vì vậy chưa bật H1 để tránh hiển thị dữ liệu sai. D1 dùng dữ liệu lịch sử đã xác nhận.")
-    if st.button("🔄 Thu thập và quét toàn thị trường", type="primary", use_container_width=True):
+    st.header("📈 AMIBROKER-STYLE — CHỨNG KHOÁN VIỆT NAM")
+    st.caption("Bảng giá · Bộ lọc cổ phiếu · Biểu đồ nến · EMA · RSI · MACD · Khối lượng")
+
+    with st.expander("Kết nối dữ liệu FireAnt", expanded=True):
+        token = st.text_input(
+            "FireAnt access token (nếu API yêu cầu)", type="password",
+            help="Token chỉ dùng trong phiên hiện tại; không gửi token trong chat và không lưu vào GitHub."
+        )
+        st.caption("Dữ liệu giá hiện lấy theo ngày (D1).")
+
+    left, right = st.columns([1, 1])
+    with left:
+        days = st.selectbox("Số ngày lịch sử", [260, 365, 520, 730], index=1)
+    with right:
+        min_volume = st.number_input("Khối lượng tối thiểu (cổ phiếu)", min_value=0, value=50000, step=10000)
+    mom_floor = st.number_input("MOM14 tối thiểu (%)", value=4.0, step=0.5)
+    require_ema = st.checkbox("Chỉ lấy giá đóng cửa ≥ EMA100", value=True)
+
+    if st.button("🔄 Cập nhật dữ liệu và quét thị trường", type="primary", use_container_width=True):
         try:
             instruments = fetch_instruments(token)
-            st.success(f"Đã lấy danh sách {len(instruments):,} mã thuộc HOSE, HNX và UPCoM.")
-            bar = st.progress(0)
-            result, stats = scan_market(instruments, token, days, bar.progress)
+            st.info(f"Đang quét {len(instruments):,} mã HOSE, HNX và UPCoM. Quá trình có thể mất vài phút.")
+            progress = st.progress(0)
+            result, stats = scan_market(instruments, token, days, progress.progress)
             st.session_state["fireant_scan"] = result
             st.session_state["fireant_scan_stats"] = stats
+            st.session_state["fireant_instruments"] = instruments
+            st.session_state["fireant_token"] = token
+            st.session_state["fireant_days"] = days
         except Exception as exc:
-            st.error(f"Không thể hoàn tất quét FireAnt: {exc}")
-            st.info("Kiểm tra quyền truy cập API, access token và giới hạn truy vấn của FireAnt.")
+            st.error(f"Không thể quét dữ liệu FireAnt: {exc}")
+            st.stop()
+
     result = st.session_state.get("fireant_scan")
     stats = st.session_state.get("fireant_scan_stats")
-    # Reuse Streamlit's shared cache when a browser session is recreated.
-    if result is None:
+    if result is None or result.empty:
+        st.info("Chưa có dữ liệu quét. Nhấn nút 'Cập nhật dữ liệu và quét thị trường' để bắt đầu.")
+        return
+
+    filtered = result.copy()
+    filtered = filtered[filtered["MOM14 (%)"] >= mom_floor]
+    if require_ema:
+        filtered = filtered[filtered["Giá đóng cửa"] >= filtered["EMA100"]]
+    filtered = filtered[filtered["Khối lượng"] >= min_volume]
+    filtered = filtered.sort_values("MOM14 (%)", ascending=False).reset_index(drop=True)
+
+    if stats:
+        a, b, c = st.columns(3)
+        a.metric("Mã đã quét", f"{stats['scanned']:,}")
+        b.metric("Mã có dữ liệu", f"{stats['success']:,}")
+        c.metric("Mã đạt bộ lọc", f"{len(filtered):,}")
+
+    tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
+    with tab_scan:
+        st.subheader("Danh sách cổ phiếu đạt điều kiện")
+        st.dataframe(
+            filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]],
+            use_container_width=True, hide_index=True
+        )
+        st.download_button(
+            "Tải danh sách CSV", filtered.to_csv(index=False).encode("utf-8-sig"),
+            "co_phieu_dat_bo_loc.csv", "text/csv"
+        )
+
+    with tab_chart:
+        instruments = st.session_state.get("fireant_instruments")
+        token_used = st.session_state.get("fireant_token", token)
+        chart_days = st.session_state.get("fireant_days", days)
+        available = filtered["Mã"].tolist() or result["Mã"].tolist()
+        selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
+        start = (date.today() - timedelta(days=chart_days)).isoformat()
         try:
-            with st.spinner("Đang tải kết quả quét đã lưu (nếu có)…"):
-                instruments = fetch_instruments(token)
-                result, stats = scan_market(instruments, token, days)
-                st.session_state["fireant_scan"] = result
-                st.session_state["fireant_scan_stats"] = stats
-        except Exception as exc:
-            st.info(f"Chưa có kết quả quét được lưu hoặc chưa kết nối được FireAnt: {exc}")
-    if result is not None:
-        if stats:
-            st.write(f"Đã quét {stats['scanned']} mã; nhận dữ liệu hợp lệ {stats['success']} mã.")
-        passed = result[result["Đạt bộ lọc"]]
-        st.subheader(f"Cổ phiếu đạt điều kiện: {len(passed)} mã")
-        st.dataframe(passed, use_container_width=True, hide_index=True)
-        st.download_button("Tải danh sách đạt điều kiện CSV", passed.to_csv(index=False).encode("utf-8-sig"),
-                           "fireant_stocks_mom14_ema100.csv", "text/csv")
-        st.subheader("Tra cứu biểu đồ từng mã")
-        symbols = result["Mã"].tolist()
-        selected = st.selectbox("Chọn mã cổ phiếu", symbols)
-        instrument = instruments[instruments["symbol"] == selected].iloc[0] if "instruments" in locals() else None
-        start = (date.today() - timedelta(days=days)).isoformat()
-        try:
-            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), token))
-            st.line_chart(chart.set_index("date")[["close", "EMA20", "EMA50", "EMA100"]], use_container_width=True)
-            st.line_chart(chart.set_index("date")[["MOM14"]], use_container_width=True)
-            st.dataframe(chart.tail(30).sort_values("date", ascending=False), use_container_width=True, hide_index=True)
+            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), token_used))
+            chart = chart.dropna(subset=["date", "open", "high", "low", "close"])
+            if chart.empty:
+                st.warning("Chưa có dữ liệu OHLC hợp lệ cho mã này.")
+            else:
+                last = chart.iloc[-1]
+                p1, p2, p3, p4 = st.columns(4)
+                p1.metric("Giá đóng cửa", f"{last['close']:,.2f}")
+                p2.metric("MOM14", f"{last['MOM14']:.2f}%" if pd.notna(last["MOM14"]) else "—")
+                p3.metric("RSI14", f"{last['RSI14']:.1f}" if pd.notna(last["RSI14"]) else "—")
+                p4.metric("Khối lượng", f"{last['volume']:,.0f}")
+                fig = make_subplots(
+                    rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.035,
+                    row_heights=[0.62, 0.18, 0.20],
+                    specs=[[{"secondary_y": False}], [{"secondary_y": False}], [{"secondary_y": False}]]
+                )
+                fig.add_trace(go.Candlestick(
+                    x=chart["date"], open=chart["open"], high=chart["high"],
+                    low=chart["low"], close=chart["close"], name="Giá"
+                ), row=1, col=1)
+                for col, label in [("EMA20", "EMA20"), ("EMA50", "EMA50"), ("EMA100", "EMA100")]:
+                    fig.add_trace(go.Scatter(x=chart["date"], y=chart[col], mode="lines", name=label), row=1, col=1)
+                fig.add_trace(go.Bar(x=chart["date"], y=chart["volume"], name="Khối lượng"), row=2, col=1)
+                fig.add_trace(go.Scatter(x=chart["date"], y=chart["RSI14"], name="RSI14"), row=3, col=1)
+                fig.add_hline(y=70, line_dash="dot", row=3, col=1)
+                fig.add_hline(y=30, line_dash="dot", row=3, col=1)
+                fig.update_layout(
+                    height=820, template="plotly_dark", xaxis_rangeslider_visible=False,
+                    margin=dict(l=10, r=10, t=35, b=10), legend=dict(orientation="h", y=1.02),
+                    hovermode="x unified"
+                )
+                fig.update_yaxes(title_text="Giá", row=1, col=1)
+                fig.update_yaxes(title_text="KL", row=2, col=1)
+                fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+                st.plotly_chart(fig, use_container_width=True)
+                macd_fig = go.Figure()
+                macd_fig.add_trace(go.Bar(x=chart["date"], y=chart["MACD_HIST"], name="MACD Histogram"))
+                macd_fig.add_trace(go.Scatter(x=chart["date"], y=chart["MACD"], name="MACD"))
+                macd_fig.add_trace(go.Scatter(x=chart["date"], y=chart["MACD_SIGNAL"], name="Signal"))
+                macd_fig.update_layout(height=260, template="plotly_dark", margin=dict(l=10,r=10,t=20,b=10), hovermode="x unified")
+                st.plotly_chart(macd_fig, use_container_width=True)
+                st.dataframe(chart.tail(30).sort_values("date", ascending=False), use_container_width=True, hide_index=True)
         except Exception as exc:
             st.error(f"Không tải được biểu đồ {selected}: {exc}")
-        if stats and stats["errors"]:
+
+    with tab_all:
+        st.subheader("Bảng dữ liệu toàn thị trường")
+        st.dataframe(result, use_container_width=True, hide_index=True)
+        st.download_button(
+            "Tải toàn bộ kết quả quét CSV", result.to_csv(index=False).encode("utf-8-sig"),
+            "ket_qua_quet_thi_truong.csv", "text/csv"
+        )
+        if stats and stats.get("errors"):
             with st.expander(f"Lỗi ở {len(stats['errors'])} mã"):
                 st.code("\n".join(stats["errors"][:100]))
