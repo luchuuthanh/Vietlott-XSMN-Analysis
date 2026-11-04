@@ -26,3 +26,29 @@ Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết qu�
 - Repository hiện chỉ có tệp mẫu, không có bộ dữ liệu lịch sử đầy đủ.
 - Người dùng cần tải CSV lịch sử thực tế để phân tích. Không tự tạo kết quả còn thiếu.
 - Điểm xếp hạng và bộ số tạo ra chỉ là thống kê tham khảo; xổ số có tính ngẫu nhiên và không thể bảo đảm trúng.
+
+## StockLab Việt Nam
+
+StockLab là màn hình riêng cho phân tích cổ phiếu Việt Nam, dùng chung repository nhưng không thay đổi luồng Vietlott/XSMN.
+
+### Chạy StockLab
+```bash
+pip install -r requirements.txt
+streamlit run stock_app.py
+```
+
+Có thể chạy từ `app.py` bằng cách chọn **Chứng khoán Việt Nam** ở thanh bên.
+
+### Nguồn dữ liệu và hạn mức
+- Dữ liệu qua Vnstock, tự thử VCI rồi KBS.
+- Chạy không có khóa ở cấp Khách bị giới hạn lượt gọi; ứng dụng quét theo từng nhóm mã để giảm nguy cơ vượt hạn mức.
+- Để tăng hạn mức, tạo khóa API Vnstock cấp Cộng đồng miễn phí và cấu hình biến môi trường `VNSTOCK_API_KEY`. Không ghi khóa vào mã nguồn hoặc commit Git.
+- Trên Streamlit Community Cloud: mở ứng dụng → Settings → Secrets và thêm:
+  ```toml
+  VNSTOCK_API_KEY = "khoa_api_cua_ban"
+  ```
+- Bộ lọc mặc định: MOM14 từ 4%, giá đóng cửa trên EMA100, khối lượng tối thiểu 50.000 cổ phiếu. Có thể thay đổi các ngưỡng trong giao diện.
+- Biểu đồ hỗ trợ 1D và 1H. Dữ liệu H1 có giới hạn lịch sử theo cấp tài khoản và nguồn dữ liệu.
+
+### Triển khai Streamlit Cloud
+Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Main file path** là `stock_app.py`. Không dùng `app.py` làm entrypoint nếu muốn mở thẳng StockLab.
