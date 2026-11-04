@@ -6,6 +6,7 @@ on:
     paths:
       - "stock_app.py"
       - "stock_dashboard.py"
+      - "cophieu68_import.py"
       - "requirements.txt"
       - ".github/workflows/stocklab.yml"
   workflow_dispatch:
@@ -22,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Check Python syntax
-        run: python -m py_compile stock_app.py stock_dashboard.py
+        run: python -m py_compile stock_app.py stock_dashboard.py cophieu68_import.py
       - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
