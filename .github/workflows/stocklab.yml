@@ -111,6 +111,16 @@ jobs:
               if any(k in a.get("href","").lower() for k in ["page","limit","show","stcid","stockonline"]):
                   print("LINK",a.get_text(" ",strip=True),a["href"])
           PY
+      - name: Inspect listing size selector script
+        run: |
+          python - <<'PY'
+          import requests,re
+          t=requests.get("https://cophieu68.vn/stockonline.php?stcid=all",headers={"User-Agent":"Mozilla/5.0"},timeout=30).text
+          for pat in ["Hiển thị","Tất cả","200","100","50","stcid"]:
+              print("\\nPATTERN",pat)
+              for m in list(re.finditer(pat,t,re.I))[:5]:
+                  print(t[max(0,m.start()-250):m.start()+500].replace("\\n"," ")[:800])
+          PY
       - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
