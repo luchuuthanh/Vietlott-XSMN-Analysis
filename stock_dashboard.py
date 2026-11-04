@@ -73,6 +73,32 @@ def fetch_daily_quotes(symbol: str, start_date: str, end_date: str, interval: st
             errors.append(f"{source}: {exc}")
     raise MarketDataError(f"Không tải được lịch sử {symbol}. " + " | ".join(errors))
 
+@st.cache_data(ttl=900, show_spinner=False)
+def fetch_chart_quotes(symbol: str, start_date: str, end_date: str, interval: str = "1D") -> tuple[pd.DataFrame, str]:
+    """Use public Cophieu68 daily history first; use Vnstock for intraday candles."""
+    if interval == "1D":
+        try:
+            from cophieu68_import import fetch_cophieu68_history
+            history = fetch_cophieu68_history(symbol, max_pages=30)
+            history = history.rename(columns={"date": "date"})
+            history["date"] = pd.to_datetime(history["date"], errors="coerce")
+            start = pd.to_datetime(start_date)
+            end = pd.to_datetime(end_date)
+            history = history[(history["date"] >= start) & (history["date"] <= end)]
+            normalized = _normalize_quotes(history)
+            if len(normalized) >= 20:
+                return normalized, "Cophieu68 · dữ liệu ngày"
+        except Exception as exc:
+            cp68_error = str(exc)
+        else:
+            cp68_error = "Cophieu68 trả về không đủ dữ liệu"
+    else:
+        cp68_error = "Cophieu68 chỉ dùng cho biểu đồ ngày 1D"
+    try:
+        return fetch_daily_quotes(symbol, start_date, end_date, interval), "Vnstock VCI/KBS"
+    except Exception as exc:
+        raise MarketDataError(f"Cophieu68: {cp68_error}. Vnstock: {exc}") from exc
+
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     out["EMA20"] = out["close"].ewm(span=20, adjust=False, min_periods=20).mean()
@@ -80,11 +106,14 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["EMA100"] = out["close"].ewm(span=100, adjust=False, min_periods=100).mean()
     # MOM14 is expressed as percentage change from 14 trading sessions earlier.
     out["MOM14"] = (out["close"] / out["close"].shift(14) - 1) * 100
+    out["VOL20"] = out["volume"].rolling(20, min_periods=20).mean()
     delta = out["close"].diff()
     gain = delta.clip(lower=0).ewm(alpha=1/14, adjust=False, min_periods=14).mean()
     loss = (-delta.clip(upper=0)).ewm(alpha=1/14, adjust=False, min_periods=14).mean()
     rs = gain / loss.replace(0, float("nan"))
     out["RSI14"] = 100 - (100 / (1 + rs))
+    out.loc[(loss == 0) & (gain > 0), "RSI14"] = 100
+    out.loc[(loss == 0) & (gain == 0), "RSI14"] = 50
     ema12 = out["close"].ewm(span=12, adjust=False).mean()
     ema26 = out["close"].ewm(span=26, adjust=False).mean()
     out["MACD"] = ema12 - ema26
@@ -102,14 +131,14 @@ def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260
         symbol = item["symbol"]
         try:
             hist = add_indicators(fetch_daily_quotes(symbol, start, end))
-            valid = hist.dropna(subset=["EMA100", "MOM14"])
+            valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
             if not valid.empty:
                 last = valid.iloc[-1]
                 rows.append({
                     "Mã": symbol, "Sàn": item.get("exchange", ""),
                     "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
                     "MOM14 (%)": last["MOM14"], "Khối lượng": last["volume"],
-                    "Ngày dữ liệu": last["date"],
+                    "KLGD TB20": last["VOL20"], "Ngày dữ liệu": last["date"],
                     "Đạt MOM14": bool(last["MOM14"] >= 4),
                     "Đạt EMA100": bool(last["close"] >= last["EMA100"]),
                     "Đạt bộ lọc": bool(last["MOM14"] >= 4 and last["close"] >= last["EMA100"]),
@@ -201,7 +230,7 @@ def render_stock_dashboard():
     result = result.copy()
     result["Đạt MOM14"] = result["MOM14 (%)"] >= mom_floor
     result["Đạt EMA100"] = result["Giá đóng cửa"] >= result["EMA100"]
-    result["Đạt khối lượng"] = result["Khối lượng"] >= min_volume
+    result["Đạt khối lượng"] = result["KLGD TB20"] >= min_volume
     result["Đạt bộ lọc"] = result["Đạt MOM14"] & result["Đạt khối lượng"]
     if require_ema:
         result["Đạt bộ lọc"] = result["Đạt bộ lọc"] & result["Đạt EMA100"]
@@ -229,7 +258,7 @@ def render_stock_dashboard():
         if top20.empty:
             st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
         else:
-            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
             filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "Ngày dữ liệu"]],
@@ -253,7 +282,9 @@ def render_stock_dashboard():
             if effective_days < chart_days:
                 st.caption(f"Khung {timeframe} đang giới hạn {effective_days} ngày theo hạn mức Vnstock hiện tại.")
             start = (date.today() - timedelta(days=effective_days)).isoformat()
-            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), interval=timeframe))
+            raw_chart, chart_source = fetch_chart_quotes(selected, start, date.today().isoformat(), interval=timeframe)
+            st.caption(f"Nguồn dữ liệu biểu đồ: {chart_source}. Bộ lọc khối lượng dùng bình quân 20 phiên.")
+            chart = add_indicators(raw_chart)
             chart = chart.dropna(subset=["date", "open", "high", "low", "close"])
             if chart.empty:
                 st.warning("Chưa có dữ liệu OHLC hợp lệ cho mã này.")
