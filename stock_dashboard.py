@@ -202,9 +202,13 @@ def render_stock_dashboard():
         chart_days = st.session_state.get("vnstock_days", days)
         available = filtered["Mã"].tolist() or result["Mã"].tolist()
         selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
-        start = (date.today() - timedelta(days=chart_days)).isoformat()
         try:
             timeframe = st.selectbox("Khung biểu đồ", ["1D", "1H"], index=0, key="stocklab_timeframe")
+            has_api_key = bool(os.getenv("VNSTOCK_API_KEY", "").strip())
+            effective_days = min(chart_days, 90 if timeframe == "1H" and not has_api_key else 365 if timeframe == "1H" else chart_days)
+            if effective_days < chart_days:
+                st.caption(f"Khung {timeframe} đang giới hạn {effective_days} ngày theo hạn mức Vnstock hiện tại.")
+            start = (date.today() - timedelta(days=effective_days)).isoformat()
             chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), interval=timeframe))
             chart = chart.dropna(subset=["date", "open", "high", "low", "close"])
             if chart.empty:
