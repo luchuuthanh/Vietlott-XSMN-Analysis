@@ -190,7 +190,7 @@ def render_cophieu68_import():
             if not auto_df.empty:
                 updated = auto_df["updated_at_utc"].iloc[0] if "updated_at_utc" in auto_df.columns else "chưa rõ"
                 st.success(f"Dữ liệu quét tự động gần nhất · {len(auto_all)} mã có dữ liệu · {len(auto_df)} mã đạt điều kiện · cập nhật UTC: {updated}")
-                st.dataframe(auto_df.sort_values("MOM14", ascending=False).head(3), use_container_width=True, hide_index=True)
+                st.dataframe(auto_df.sort_values("MOM14", ascending=False).head(20), use_container_width=True, hide_index=True)
                 st.download_button("Tải toàn bộ mã đạt bộ lọc (CSV)", auto_df.to_csv(index=False).encode("utf-8-sig"),
                                    "stocklab_auto_market_passed.csv", "text/csv", key="cp68_auto_download")
             else:
@@ -254,7 +254,7 @@ def render_cophieu68_import():
             selected = selected[selected["Giá đóng cửa"] >= selected["EMA100"]]
         selected = selected.sort_values("MOM14 (%)", ascending=False)
         st.metric("Số mã đạt điều kiện Cophieu68", len(selected))
-        st.dataframe(selected.head(3), use_container_width=True, hide_index=True)
+        st.dataframe(selected.head(20), use_container_width=True, hide_index=True)
         st.dataframe(selected, use_container_width=True, hide_index=True)
         st.download_button("Tải kết quả quét thị trường CSV", selected.to_csv(index=False).encode("utf-8-sig"),
                            "stocklab_cophieu68_market.csv", "text/csv", key="cp68_market_download")
@@ -307,8 +307,8 @@ def render_cophieu68_import():
         passed = passed[passed["Giá đóng cửa"] >= passed["EMA100"]]
     passed = passed.sort_values("MOM14 (%)", ascending=False)
     st.metric("Số mã đạt bộ lọc", f"{len(passed):,}")
-    st.subheader("Top 3 Cophieu68")
-    st.dataframe(passed.head(3), use_container_width=True, hide_index=True)
+    st.subheader("Top 20 Cophieu68 · xếp MOM14 từ cao xuống thấp")
+    st.dataframe(passed.head(20), use_container_width=True, hide_index=True)
     st.subheader("Toàn bộ mã đạt điều kiện")
     st.dataframe(passed, use_container_width=True, hide_index=True)
     st.download_button("Tải kết quả Cophieu68 CSV", passed.to_csv(index=False).encode("utf-8-sig"),
