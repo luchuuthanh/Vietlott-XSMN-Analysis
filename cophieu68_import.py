@@ -179,6 +179,26 @@ def render_cophieu68_import():
         st.download_button("Tải dữ liệu lịch sử CSV", direct_data.to_csv(index=False).encode("utf-8-sig"), "cophieu68_history.csv", "text/csv", key="cp68_direct_download")
     for err in st.session_state.get("cp68_direct_errors", []):
         st.warning(err)
+    st.subheader("Kết quả tự động cập nhật gần nhất")
+    from pathlib import Path
+    saved_result = Path(__file__).resolve().parent / "stocklab_market_passed.csv"
+    saved_all = Path(__file__).resolve().parent / "stocklab_market_all.csv"
+    if saved_result.exists():
+        try:
+            auto_df = pd.read_csv(saved_result)
+            auto_all = pd.read_csv(saved_all) if saved_all.exists() else pd.DataFrame()
+            if not auto_df.empty:
+                updated = auto_df["updated_at_utc"].iloc[0] if "updated_at_utc" in auto_df.columns else "chưa rõ"
+                st.success(f"Dữ liệu quét tự động gần nhất · {len(auto_all)} mã có dữ liệu · {len(auto_df)} mã đạt điều kiện · cập nhật UTC: {updated}")
+                st.dataframe(auto_df.sort_values("MOM14", ascending=False).head(3), use_container_width=True, hide_index=True)
+                st.download_button("Tải toàn bộ mã đạt bộ lọc (CSV)", auto_df.to_csv(index=False).encode("utf-8-sig"),
+                                   "stocklab_auto_market_passed.csv", "text/csv", key="cp68_auto_download")
+            else:
+                st.info("Lần cập nhật tự động gần nhất chưa có mã đạt bộ lọc.")
+        except Exception as exc:
+            st.warning(f"Chưa đọc được dữ liệu tự động: {exc}")
+    else:
+        st.info("Chưa có bản quét tự động đầu tiên. Workflow sẽ tạo dữ liệu sau lần chạy theo lịch.")
     st.subheader("Quét toàn bộ thị trường bằng dữ liệu Cophieu68")
     st.caption("Tự động lấy danh sách đầy đủ (tối đa 2.000 mã mỗi sàn) từ Cophieu68 và quét toàn bộ HOSE/HNX/UPCOM trong một lần bấm.")
     if st.button("▶ Quét toàn bộ thị trường (HOSE/HNX/UPCOM)", key="cp68_market_scan"):
