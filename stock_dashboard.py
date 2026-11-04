@@ -61,12 +61,12 @@ def _normalize_quotes(payload) -> pd.DataFrame:
     return df.dropna(subset=["date", "open", "high", "low", "close"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
 
 @st.cache_data(ttl=900, show_spinner=False)
-def fetch_daily_quotes(symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+def fetch_daily_quotes(symbol: str, start_date: str, end_date: str, interval: str = "1D") -> pd.DataFrame:
     _, Quote = _vnstock_classes()
     errors = []
     for source in DATA_SOURCES:
         try:
-            raw = Quote(source=source, symbol=symbol).history(start=start_date, end=end_date)
+            raw = Quote(source=source, symbol=symbol).history(start=start_date, end=end_date, interval=interval)
             df = _normalize_quotes(raw)
             if not df.empty:
                 return df
@@ -196,7 +196,8 @@ def render_stock_dashboard():
         selected = st.selectbox("Chọn mã cổ phiếu", available, key="amibroker_symbol")
         start = (date.today() - timedelta(days=chart_days)).isoformat()
         try:
-            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat()))
+            timeframe = st.selectbox("Khung biểu đồ", ["1D", "1H"], index=0, key="stocklab_timeframe")
+            chart = add_indicators(fetch_daily_quotes(selected, start, date.today().isoformat(), interval=timeframe))
             chart = chart.dropna(subset=["date", "open", "high", "low", "close"])
             if chart.empty:
                 st.warning("Chưa có dữ liệu OHLC hợp lệ cho mã này.")
@@ -223,7 +224,7 @@ def render_stock_dashboard():
                 fig.add_hline(y=70, line_dash="dot", row=3, col=1)
                 fig.add_hline(y=30, line_dash="dot", row=3, col=1)
                 fig.update_layout(
-                    height=820, template="plotly_dark", xaxis_rangeslider_visible=False,
+                    title=f"{selected} · {timeframe}", height=820, template="plotly_dark", xaxis_rangeslider_visible=False,
                     margin=dict(l=10, r=10, t=35, b=10), legend=dict(orientation="h", y=1.02),
                     hovermode="x unified"
                 )
