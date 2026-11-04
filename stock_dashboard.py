@@ -127,7 +127,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 # Deliberately not cached: scan_market updates a live Streamlit progress element.
-def scan_market(instruments: pd.DataFrame, lookback_days: int = 260, _progress=None) -> tuple[pd.DataFrame, dict]:
+def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260) -> tuple[pd.DataFrame, dict]:
     start = (date.today() - timedelta(days=lookback_days)).isoformat()
     end = date.today().isoformat()
     rows, errors = [], []
@@ -150,8 +150,6 @@ def scan_market(instruments: pd.DataFrame, lookback_days: int = 260, _progress=N
                 })
         except Exception as exc:
             errors.append(f"{symbol}: {exc}")
-        if _progress:
-            _progress((i + 1) / max(len(symbols), 1), text=f"Đang quét {symbol} ({i+1}/{len(symbols)})")
     result = pd.DataFrame(rows)
     if not result.empty:
         result = result.sort_values(["Đạt bộ lọc", "MOM14 (%)"], ascending=[False, False]).reset_index(drop=True)
@@ -203,8 +201,8 @@ def render_stock_dashboard():
                 st.session_state.pop("vnstock_scan_all", None)
             batch = instruments.iloc[offset:offset + scan_limit].copy()
             st.info(f"Đang quét lượt {offset // scan_limit + 1}: {len(batch):,}/{len(instruments):,} mã HOSE, HNX và UPCoM.")
-            progress = st.progress(0)
-            result, stats = scan_market(batch, days, progress.progress)
+            with st.spinner(f"Đang tải dữ liệu cho {len(batch)} mã cổ phiếu..."):
+                result, stats = _scan_market_uncached_v2(batch, days)
             prior = st.session_state.get("vnstock_scan_all")
             combined = pd.concat([prior, result], ignore_index=True) if isinstance(prior, pd.DataFrame) and not prior.empty else result
             combined = combined.drop_duplicates("Mã", keep="last")
