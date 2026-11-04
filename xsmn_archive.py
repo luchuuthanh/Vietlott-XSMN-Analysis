@@ -107,7 +107,7 @@ def fetch_xsmn_five_years(end_iso: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         data["date"] = pd.to_datetime(data["date"], errors="coerce")
         data["province"] = data["province"].astype(str).str.strip()
         data["prize"] = data["prize"].astype(str)
-        data["number"] = data["number"].astype(str).str.replace(r"\\D", "", regex=True)
+        data["number"] = data["number"].astype(str).str.replace(r"\D", "", regex=True)
         data = data.dropna(subset=["date"])
         data = data[(data["date"] >= pd.Timestamp(start_iso)) &
                     (data["date"] <= pd.Timestamp(end.isoformat()))]
