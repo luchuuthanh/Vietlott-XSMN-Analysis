@@ -26,6 +26,19 @@ jobs:
         run: pip install -r requirements.txt
       - name: Compile both entrypoints and shared modules
         run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py
+      - name: Smoke-test five-year XSMN archive ingestion
+        run: |
+          python - <<'PY'
+          from datetime import date
+          from xsmn_archive import fetch_xsmn_five_years
+          data, status = fetch_xsmn_five_years(date.today().isoformat())
+          print(status.to_string(index=False))
+          print(f"Rows: {len(data)} | Provinces: {data['province'].nunique() if not data.empty else 0}")
+          if data.empty:
+              raise SystemExit("No XSMN archive data loaded")
+          if status["Trạng thái"].astype(str).str.startswith("Lỗi:").any():
+              raise SystemExit("One or more archive quarters failed; inspect status above")
+          PY
       - name: Smoke-test shared analytics
         run: |
           python - <<'PY'
