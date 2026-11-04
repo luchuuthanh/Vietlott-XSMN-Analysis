@@ -160,11 +160,14 @@ def render_stock_dashboard():
         st.info("Chưa có dữ liệu quét. Nhấn nút 'Cập nhật dữ liệu và quét thị trường' để bắt đầu.")
         return
 
-    filtered = result.copy()
-    filtered = filtered[filtered["MOM14 (%)"] >= mom_floor]
+    result = result.copy()
+    result["Đạt MOM14"] = result["MOM14 (%)"] >= mom_floor
+    result["Đạt EMA100"] = result["Giá đóng cửa"] >= result["EMA100"]
+    result["Đạt khối lượng"] = result["Khối lượng"] >= min_volume
+    result["Đạt bộ lọc"] = result["Đạt MOM14"] & result["Đạt khối lượng"]
     if require_ema:
-        filtered = filtered[filtered["Giá đóng cửa"] >= filtered["EMA100"]]
-    filtered = filtered[filtered["Khối lượng"] >= min_volume]
+        result["Đạt bộ lọc"] = result["Đạt bộ lọc"] & result["Đạt EMA100"]
+    filtered = result[result["Đạt bộ lọc"]].copy()
     filtered = filtered.sort_values("MOM14 (%)", ascending=False).reset_index(drop=True)
 
     if stats:
