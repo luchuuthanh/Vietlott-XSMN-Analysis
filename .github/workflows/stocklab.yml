@@ -53,6 +53,33 @@ jobs:
           print(f"Cophieu68 live test OK: {len(df)} FPT rows; latest={df['date'].max()}")
           print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; VOL20={latest['VOL20']:.0f}")
           PY
+      - name: D1 chart pipeline smoke test
+        timeout-minutes: 5
+        run: |
+          python - <<'PY'
+          from datetime import date, timedelta
+          import pandas as pd
+          from stock_dashboard import fetch_chart_quotes, add_indicators
+
+          start = (date.today() - timedelta(days=365)).isoformat()
+          end = date.today().isoformat()
+          candles, source = fetch_chart_quotes("FPT", start, end, interval="1D")
+          assert not candles.empty, "D1 chart returned no candles"
+          required = {"date", "open", "high", "low", "close", "volume"}
+          assert required.issubset(candles.columns), candles.columns.tolist()
+          candles = candles.sort_values("date").reset_index(drop=True)
+          assert candles["date"].is_monotonic_increasing, "D1 dates are not ascending"
+          assert candles["date"].duplicated().sum() == 0, "Duplicate D1 dates"
+          assert (candles["high"] >= candles[["open", "close", "low"]].max(axis=1)).all(), "Invalid D1 high"
+          assert (candles["low"] <= candles[["open", "close", "high"]].min(axis=1)).all(), "Invalid D1 low"
+          assert len(candles) >= 100, f"Need >=100 D1 candles for EMA100, got {len(candles)}"
+          chart = add_indicators(candles)
+          latest = chart.iloc[-1]
+          for col in ("EMA20", "EMA50", "EMA100", "MOM14", "VOL20", "RSI14", "MACD", "MACD_SIGNAL", "MACD_HIST"):
+              assert pd.notna(latest[col]), f"Latest D1 indicator missing: {col}"
+          print(f"D1 pipeline OK: source={source}; candles={len(chart)}; latest={latest['date']}")
+          print(f"FPT D1: close={latest['close']:.2f}; EMA20={latest['EMA20']:.2f}; EMA50={latest['EMA50']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; RSI14={latest['RSI14']:.1f}; volume={latest['volume']:.0f}")
+          PY
       - name: Live Vietnam market scan via Cophieu68
         timeout-minutes: 60
         run: |
