@@ -9,7 +9,7 @@ on:
       - "analytics.py"
       - "data_loader.py"
       - "generator.py"
-      - "data_sources.py"
+      - "data_sources.py"\n      - "xsmn_archive.py"
       - ".github/workflows/lottery-apps.yml"
   workflow_dispatch:
 
