@@ -133,6 +133,61 @@ def render_cophieu68_import():
         st.download_button("Tải dữ liệu lịch sử CSV", direct_data.to_csv(index=False).encode("utf-8-sig"), "cophieu68_history.csv", "text/csv", key="cp68_direct_download")
     for err in st.session_state.get("cp68_direct_errors", []):
         st.warning(err)
+    st.subheader("Quét thị trường bằng dữ liệu Cophieu68")
+    st.caption("Danh sách mã lấy từ HOSE/HNX/UPCOM; dữ liệu giá và khối lượng của từng mã được tải từ Cophieu68 theo từng lượt 25 mã.")
+    if st.button("▶ Quét tiếp 25 mã", key="cp68_market_scan"):
+        try:
+            from stock_dashboard import fetch_instruments
+            universe = fetch_instruments()
+            offset = int(st.session_state.get("cp68_market_offset", 0))
+            batch = universe.iloc[offset:offset + 25]
+            scan_rows, scan_errors = [], []
+            bar = st.progress(0)
+            for idx, item in enumerate(batch.to_dict("records")):
+                ticker = item["symbol"]
+                try:
+                    hist = fetch_cophieu68_history(ticker, 5).sort_values("date")
+                    hist["EMA100"] = hist["close"].ewm(span=100, adjust=False, min_periods=100).mean()
+                    hist["MOM14"] = (hist["close"] / hist["close"].shift(14) - 1) * 100
+                    hist["VOL20"] = hist["volume"].rolling(20, min_periods=20).mean()
+                    valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
+                    if not valid.empty:
+                        last = valid.iloc[-1]
+                        scan_rows.append({"Mã": ticker, "Sàn": item.get("exchange", ""),
+                            "Ngày": last["date"], "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
+                            "MOM14 (%)": last["MOM14"], "KL trung bình 20 phiên": last["VOL20"]})
+                except Exception as exc:
+                    scan_errors.append(f"{ticker}: {exc}")
+                bar.progress((idx + 1) / max(1, len(batch)))
+            previous = st.session_state.get("cp68_market_rows", [])
+            st.session_state["cp68_market_rows"] = previous + scan_rows
+            st.session_state["cp68_market_errors"] = scan_errors
+            next_offset = offset + len(batch)
+            st.session_state["cp68_market_offset"] = 0 if next_offset >= len(universe) else next_offset
+            st.session_state["cp68_market_total"] = len(universe)
+            st.session_state["cp68_market_scanned"] = min(next_offset, len(universe))
+            st.success(f"Đã quét lượt này {len(batch)} mã; tổng cộng {min(next_offset, len(universe))}/{len(universe)} mã.")
+        except Exception as exc:
+            st.error(f"Không lấy được danh sách mã hoặc dữ liệu: {exc}")
+    market_rows = st.session_state.get("cp68_market_rows", [])
+    if market_rows:
+        market_df = pd.DataFrame(market_rows).drop_duplicates("Mã", keep="last")
+        st.caption(f"Đã có dữ liệu {len(market_df)} mã · {st.session_state.get('cp68_market_scanned', 0)}/{st.session_state.get('cp68_market_total', 0)} mã đã xử lý")
+        m1 = st.number_input("MOM14 tối thiểu (%) · quét thị trường", value=4.0, step=0.5, key="cp68_market_mom")
+        v1 = st.number_input("Khối lượng TB20 tối thiểu · quét thị trường", value=50000, step=10000, key="cp68_market_vol")
+        e1 = st.checkbox("Giá đóng cửa ≥ EMA100 · quét thị trường", value=True, key="cp68_market_ema")
+        selected = market_df[(market_df["MOM14 (%)"] >= m1) & (market_df["KL trung bình 20 phiên"] >= v1)]
+        if e1:
+            selected = selected[selected["Giá đóng cửa"] >= selected["EMA100"]]
+        selected = selected.sort_values("MOM14 (%)", ascending=False)
+        st.metric("Số mã đạt điều kiện Cophieu68", len(selected))
+        st.dataframe(selected.head(3), use_container_width=True, hide_index=True)
+        st.dataframe(selected, use_container_width=True, hide_index=True)
+        st.download_button("Tải kết quả quét thị trường CSV", selected.to_csv(index=False).encode("utf-8-sig"),
+                           "stocklab_cophieu68_market.csv", "text/csv", key="cp68_market_download")
+    for err in st.session_state.get("cp68_market_errors", []):
+        st.caption(err)
+
     uploads = st.file_uploader("Hoặc chọn file CSV/TXT xuất từ Cophieu68/AmiBroker", type=["csv","txt"], accept_multiple_files=True, key="cophieu68_files")
     if not uploads:
         st.info("Tải file dữ liệu lên để StockLab tính MOM14, EMA100 và khối lượng trung bình 20 phiên.")
