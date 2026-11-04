@@ -43,6 +43,57 @@ jobs:
           print(f"Cophieu68 live test OK: {len(df)} FPT rows; latest={df['date'].max()}")
           print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; VOL20={latest['VOL20']:.0f}")
           PY
+      - name: Live Vietnam market scan via Cophieu68
+        timeout-minutes: 25
+        run: |
+          python - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import pandas as pd
+          from stock_dashboard import fetch_instruments
+          from cophieu68_import import fetch_cophieu68_history
+
+          universe = fetch_instruments()
+          print(f"Universe: {len(universe)} symbols across {universe['exchange'].nunique()} exchanges")
+          def scan(item):
+              ticker = item.symbol
+              try:
+                  hist = fetch_cophieu68_history(ticker, max_pages=2).sort_values("date")
+                  hist["EMA100"] = hist["close"].ewm(span=100, adjust=False, min_periods=100).mean()
+                  hist["MOM14"] = (hist["close"] / hist["close"].shift(14) - 1) * 100
+                  hist["VOL20"] = hist["volume"].rolling(20, min_periods=20).mean()
+                  valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
+                  if valid.empty:
+                      return None, f"{ticker}: insufficient history"
+                  row = valid.iloc[-1]
+                  return {"symbol": ticker, "exchange": item.exchange, "date": row["date"],
+                          "close": row["close"], "EMA100": row["EMA100"],
+                          "MOM14": row["MOM14"], "VOL20": row["VOL20"]}, None
+              except Exception as exc:
+                  return None, f"{ticker}: {exc}"
+
+          rows, errors = [], []
+          with ThreadPoolExecutor(max_workers=8) as pool:
+              futures = [pool.submit(scan, item) for item in universe.itertuples(index=False)]
+              for n, future in enumerate(as_completed(futures), 1):
+                  row, error = future.result()
+                  if row:
+                      rows.append(row)
+                  if error:
+                      errors.append(error)
+                  if n % 25 == 0:
+                      print(f"Progress: {n}/{len(futures)}; usable={len(rows)}; errors={len(errors)}")
+          data = pd.DataFrame(rows)
+          if data.empty:
+              raise SystemExit(f"No usable market data. Errors: {errors[:20]}")
+          passed = data[(data["MOM14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
+          passed = passed.sort_values("MOM14", ascending=False)
+          data.to_csv("stocklab_market_all.csv", index=False)
+          passed.to_csv("stocklab_market_passed.csv", index=False)
+          print(f"SCAN COMPLETE: scanned={len(universe)}; usable={len(data)}; errors={len(errors)}; passed={len(passed)}")
+          print("TOP 3 FILTERED:")
+          print(passed.head(3).to_string(index=False))
+          print(f"CSV files saved. Sample errors: {errors[:10]}")
+          PY
       - name: Check Vnstock API and sample data (optional)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
