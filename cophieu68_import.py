@@ -86,16 +86,29 @@ def fetch_cophieu68_history(symbol: str, max_pages: int = 10) -> pd.DataFrame:
                 return next((v for k, v in normalized.items() if any(p in k for p in parts)), None)
             d, close, vol = col("ngay", "date"), col("gia khop", "close"), col("khoi luong", "volume")
             op, hi, lo = col("mo cua", "open"), col("cao nhat", "high"), col("thap nhat", "low")
-            if not all((d, close, vol, op, hi, lo)):
+            # Cophieu68's history table may have blank/merged headers. Its
+            # observed row layout is date, close, volume, open, high, low, ...
+            if all((d, close, vol, op, hi, lo)):
+                date_s, close_s, vol_s = table[d], table[close], table[vol]
+                open_s, high_s, low_s = table[op], table[hi], table[lo]
+            elif table.shape[1] >= 6:
+                date_s, close_s, vol_s = table.iloc[:, 0], table.iloc[:, 1], table.iloc[:, 2]
+                open_s, high_s, low_s = table.iloc[:, 3], table.iloc[:, 4], table.iloc[:, 5]
+            else:
+                continue
+            def numeric(series):
+                return pd.to_numeric(series.astype(str).str.replace(",", "", regex=False).str.replace(" ", "", regex=False), errors="coerce")
+            parsed_date = pd.to_datetime(date_s, errors="coerce", dayfirst=True)
+            if parsed_date.notna().sum() < 5:
                 continue
             part = pd.DataFrame({
                 "symbol": symbol,
-                "date": pd.to_datetime(table[d], errors="coerce", dayfirst=True),
-                "open": pd.to_numeric(table[op].astype(str).str.replace(",", "", regex=False), errors="coerce"),
-                "high": pd.to_numeric(table[hi].astype(str).str.replace(",", "", regex=False), errors="coerce"),
-                "low": pd.to_numeric(table[lo].astype(str).str.replace(",", "", regex=False), errors="coerce"),
-                "close": pd.to_numeric(table[close].astype(str).str.replace(",", "", regex=False), errors="coerce"),
-                "volume": pd.to_numeric(table[vol].astype(str).str.replace(",", "", regex=False), errors="coerce")
+                "date": parsed_date,
+                "open": numeric(open_s),
+                "high": numeric(high_s),
+                "low": numeric(low_s),
+                "close": numeric(close_s),
+                "volume": numeric(vol_s)
             }).dropna(subset=["date", "open", "high", "low", "close", "volume"])
             if not part.empty:
                 frames.append(part)
