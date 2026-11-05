@@ -61,5 +61,25 @@ class Power655TicketCheckerTests(unittest.TestCase):
         self.assertEqual(summary["total_tickets"], 2)
         self.assertEqual(len(detail), 2)
 
+    def test_mega645_jackpot_and_no_special_number(self):
+        result = classify_ticket([3, 12, 20, 30, 38, 45], [3, 12, 20, 30, 38, 45], game="MEGA645")
+        self.assertEqual(result["tier"], "JACKPOT")
+        self.assertFalse(result["special_unknown"])
+        self.assertFalse(result["special_match"])
+
+    def test_mega645_prize_tiers_and_universe(self):
+        self.assertEqual(classify_ticket([1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6], game="MEGA645")["tier"], "JACKPOT")
+        self.assertEqual(classify_ticket([1, 2, 3, 4, 5, 7], [1, 2, 3, 4, 5, 6], game="MEGA645")["tier"], "FIRST")
+        self.assertEqual(classify_ticket([1, 2, 3, 4, 7, 8], [1, 2, 3, 4, 5, 6], game="MEGA645")["tier"], "SECOND")
+        self.assertEqual(classify_ticket([1, 2, 3, 7, 8, 9], [1, 2, 3, 4, 5, 6], game="MEGA645")["tier"], "THIRD")
+        with self.assertRaises(ValueError):
+            normalize_ticket([1, 2, 3, 4, 5, 46], universe=45)
+        self.assertEqual(len(expand_ticket([1, 2, 3, 4, 5], universe=45)), 40)
+
+    def test_shared_checker_uses_selected_game(self):
+        rows = check_tickets([[1, 2, 3, 4, 5, 6]], [1, 2, 3, 4, 5, 6], game="MEGA645")
+        self.assertEqual(rows[0]["Mã giải"], "JACKPOT")
+        self.assertEqual(rows[0]["Trùng số đặc biệt"], "Không áp dụng")
+
 if __name__ == "__main__":
     unittest.main()
