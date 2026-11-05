@@ -66,7 +66,8 @@ def write_csv(path, rows):
         path.write_text("", encoding="utf-8")
         return
     with path.open("w", newline="", encoding="utf-8-sig") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        fieldnames = list(dict.fromkeys(key for row in rows for key in row.keys()))
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
