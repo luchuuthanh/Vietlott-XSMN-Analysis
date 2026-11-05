@@ -1,0 +1,34 @@
+name: Lotto 5/35 isolated validation and package
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lotto535_analyzer.py"
+      - "scripts/package_power535.py"
+      - "tests/test_lotto535.py"
+      - "data/vietlott/power535.jsonl"
+      - ".github/workflows/lotto535-isolated.yml"
+  workflow_dispatch:
+jobs:
+  build-lotto535:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install analysis dependency
+        run: pip install pandas
+      - name: Compile isolated 5/35 modules
+        run: python -m py_compile lotto535_analyzer.py scripts/package_power535.py
+      - name: Run Lotto 5/35 tests
+        run: python -m unittest discover -s tests -p "test_lotto535.py" -v
+      - name: Build Lotto 5/35 package and historical backtest
+        run: python scripts/package_power535.py
+      - name: Upload isolated Lotto 5/35 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: lotto535-final-package-${{ github.run_number }}
+          path: reports/power535_final_package/
+          if-no-files-found: error
+          retention-days: 90
