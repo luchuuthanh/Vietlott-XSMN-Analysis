@@ -1,6 +1,13 @@
 name: XSMN archive audit
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xsmn-archive-audit.yml'
+      - 'scripts/audit_xsmn_archive.py'
+      - 'scripts/validate_383_xsmn_supplement.py'
+      - 'scripts/normalize_xsmn_five_year.py'
   schedule:
     - cron: "30 19 * * 0"
 permissions:
