@@ -30,15 +30,21 @@ For 2026-09-06 the full tables agree across XSKT.net, QuetKQXS, KQXSMT.net, Minh
 - https://xskt.com.vn/xsmn/ngay-6-9-2026
 - https://xsketqua.com/xsmn-06-09-2026.html
 
+## Full row-by-row comparison completed — additional dates
+For 2026-09-07 and 2026-09-08, transcribed the full nine-prize tables from the daily QuetKQXS pages and compared every prize class against the normalized CSV. Comparison was by station and prize class, ignoring display order and preserving leading zeroes.
+- 2026-09-07: TP. Hồ Chí Minh, Đồng Tháp, Cà Mau — 3 station-days / 54 numbers.
+- 2026-09-08: Bến Tre, Vũng Tàu, Bạc Liêu — 3 station-days / 54 numbers.
+- All 108 numbers match; no discrepancies.
+
 ## Partial checks for remaining dates
-For 2026-09-07 through 2026-09-14, only station roster, DB and G8 have been compared:
-- 24 station-days; DB 24/24 match; G8 24/24 match.
-- G1–G7 for these 24 station-days still require row-by-row comparison.
-- These 432 numbers are not counted as fully verified.
+For 2026-09-09 through 2026-09-14, only station roster, DB and G8 have been compared:
+- 18 station-days; DB 18/18 match; G8 18/18 match.
+- G1–G7 for these 18 station-days still require row-by-row comparison.
+- These 324 numbers are not counted as fully verified.
 
 ## Status
-- Fully verified: 7/31 station-days (22.58%), 126/558 numbers (22.58%).
-- Partial checks only: 24/31 station-days (DB and G8 only).
+- Fully verified: 13/31 station-days (41.94%), 234/558 numbers (41.94%).
+- Partial checks only: 18/31 station-days (DB and G8 only).
 - Discrepancies in the fully compared subset: 0.
 - Batch is not complete.
 
