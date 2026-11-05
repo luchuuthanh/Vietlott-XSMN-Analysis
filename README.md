@@ -32,7 +32,7 @@ Cột bắt buộc: date,game,draw_id,n1,n2,n3,n4,n5,n6. Cột special tùy ch�
 Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết quả giải của một tỉnh trong ngày. Ứng dụng lấy hai chữ số cuối để thống kê lô tô.
 
 ## Quan trọng
-- Kho lịch sử Vietlott 7 game đã được đồng bộ tại `data/vietlott/`; trạng thái chất lượng và phạm vi dữ liệu nằm trong `data/vietlott/manifest.json`.
+- Kho lịch sử Vietlott 6 game đã được đồng bộ tại `data/vietlott/`; trạng thái chất lượng và phạm vi dữ liệu nằm trong `data/vietlott/manifest.json`.
 - Kho XSMN vẫn có quy trình nạp dữ liệu riêng; không suy diễn rằng dữ liệu XSMN đã hoàn chỉnh chỉ từ các tệp mẫu.
 - Không tự tạo kết quả còn thiếu. Các bản ghi có cảnh báo phải được đối chiếu nguồn trước khi dùng.
 - Điểm xếp hạng và bộ số tạo ra chỉ là thống kê tham khảo; xổ số có tính ngẫu nhiên và không thể bảo đảm trúng.
@@ -41,12 +41,12 @@ Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết qu�
 ## Vietlott: kho dữ liệu đầy đủ và tự cập nhật hằng ngày
 
 - Workflow `.github/workflows/vietlott-daily-sync.yml` chạy tự động mỗi ngày lúc **23:45 giờ Việt Nam** (16:45 UTC), đồng thời có thể chạy thủ công trong tab **Actions**.
-- Script `scripts/sync_vietlott.py` đồng bộ đủ 7 sản phẩm: Power 6/55, Mega 6/45, Power 5/35, Keno, Max 3D, Max 3D Pro và Bingo18.
+- Script `scripts/sync_vietlott.py` đồng bộ 6 sản phẩm được chọn: Power 6/55, Mega 6/45, Lotto 5/35 (nguồn mirror dùng tên tệp power535), Max 3D, Max 3D Pro và Bingo18. Keno đã được loại khỏi phạm vi đồng bộ theo yêu cầu.
 - Bản NDJSON được lưu tại `data/vietlott/`; `manifest.json` ghi số bản ghi, khoảng ngày, mã kỳ, SHA-256 và cảnh báo khoảng trống mã kỳ.
-- Trước khi thay thế dữ liệu cũ, script tải và kiểm tra toàn bộ 7 tệp. Nếu một tệp lỗi hoặc sai cấu trúc, snapshot hiện tại không bị ghi đè.
+- Trước khi thay thế dữ liệu cũ, script tải và kiểm tra toàn bộ 6 tệp. Nếu một tệp lỗi hoặc sai cấu trúc, snapshot hiện tại không bị ghi đè.
 - Nguồn đồng bộ là kho dữ liệu mở [vietvudanh/vietlott-data](https://github.com/vietvudanh/vietlott-data), công bố thu thập từ trang Vietlott. Đây là nguồn trung gian, không phải API chính thức; các kỳ quan trọng hoặc bất thường cần đối chiếu kết quả công bố trên vietlott.vn.
 - Workflow không tự tạo kỳ còn thiếu. Mã kỳ bị khuyết, mã kỳ sai thứ tự, ngày quay lệch lịch thường lệ và số đặc biệt bị thiếu được ghi thành cảnh báo trong manifest và GitHub Actions Summary để rà soát.
-- Snapshot đồng bộ lần đầu (05/11/2026): Power 6/55 1.419 kỳ; Mega 6/45 1.387 kỳ; Power 5/35 988 bản ghi; Keno 90.801 kỳ; Max 3D 1.154 kỳ; Max 3D Pro 800 kỳ; Bingo18 98.799 kỳ.
+- Snapshot đồng bộ lần đầu (05/11/2026): Power 6/55 1.419 kỳ; Mega 6/45 1.387 kỳ; Lotto 5/35 988 bản ghi; Max 3D 1.154 kỳ; Max 3D Pro 800 kỳ; Bingo18 98.799 kỳ.
 - Lần rà soát đầu đã phát hiện bản ghi Power 6/55 ID 00944 ở ngày 23/09/2022 (lệch lịch quay thứ Ba/Thứ Năm/Thứ Bảy), chỉ có 6 số và làm thứ tự ID nhảy 00779 → 00944 → 00780. Max 3D có hai dòng năm 2025 bị đặt sau dữ liệu năm 2026; Bingo18 có khoảng trống và đảo thứ tự ID. Những điểm này đang được giữ nguyên và gắn cảnh báo, chưa tự ý sửa số liệu.
 - Có thể chạy kiểm tra cục bộ: `python -m unittest discover -s tests` và đồng bộ: `python scripts/sync_vietlott.py`.
 
