@@ -3,28 +3,35 @@
 ## Scope
 Ten calendar dates inclusive. The normalized supplement contains 31 station-days and 558 winning-number rows (18 numbers per station-day across nine prize classes).
 
-## Source tables retrieved
-Complete nine-prize tables retrieved from QuetKQXS for all 31 station-days:
-https://quetkqxs.com/xsmn/05-09-2026
-https://quetkqxs.com/xsmn/06-09-2026
-https://quetkqxs.com/xsmn/07-09-2026
-https://quetkqxs.com/xsmn/08-09-2026
-https://quetkqxs.com/xsmn/09-09-2026
-https://quetkqxs.com/xsmn/10-09-2026
-https://quetkqxs.com/xsmn/11-09-2026
-https://quetkqxs.com/xsmn/12-09-2026
-https://quetkqxs.com/xsmn/13-09-2026
-https://quetkqxs.com/xsmn/14-09-2026
-
 ## Full row-by-row comparison completed
-For 2026-09-05 and 2026-09-06, all nine prize classes were parsed and compared by station and prize class with the normalized CSV, preserving leading zeroes and ignoring only display order:
+Compared every number in all nine prize classes by station and prize class with the normalized CSV, preserving leading zeroes and ignoring only display order:
 - 2026-09-05: TP. HCM, Long An, Bình Phước, Hậu Giang — 4 station-days / 72 numbers.
 - 2026-09-06: Tiền Giang, Kiên Giang, Đà Lạt — 3 station-days / 54 numbers.
 - Total fully compared: 7/31 station-days, 126/558 numbers.
 - All 126 numbers match. No discrepancies.
 
+## Cross-source corroboration
+For 2026-09-05 the full tables agree across HayVL, Ketqua.io, Minh Ngọc, SoiKetQua, NEF, Vé Số Minh Sơn, DivaShop and Xổ Số Quốc Cường:
+- https://hayvl.vn/xo-so/xsmn-05-09-2026
+- https://ketqua.io/kqxs-ket-qua-xo-so/xsmn-xo-so-mien-nam/09-2026
+- https://www.minhngoc.net/kqxs/mien-nam/05-09-2026.html
+- https://soiketqua.com/xsmn-90-ngay
+- https://nef.vn/xsmn-05-09-2026
+- https://www.vesominhson.com/ket-qua-xo-so/mien-nam?ngay=07-09-2026
+- https://divashop.vn/xsmn-05-09-2026.html
+- https://xosoquoccuong.com/xo-so-mien-nam/ngay-05-09-2026/
+
+For 2026-09-06 the full tables agree across XSKT.net, QuetKQXS, KQXSMT.net, Minh Ngọc, KQXSmb.me, XSkt.com.vn and XSKetQua:
+- https://www.xskt.net/xsmn/06-09-2026
+- https://quetkqxs.com/xsmn/06-09-2026
+- https://www.kqxsmt.net/xsmn/09-2026.html
+- https://www.minhngoc.net/kqxs/mien-nam/06-09-2026.html
+- https://kqxsmb.me/xsmn-xo-so-mien-nam/09-2026
+- https://xskt.com.vn/xsmn/ngay-6-9-2026
+- https://xsketqua.com/xsmn-06-09-2026.html
+
 ## Partial checks for remaining dates
-For 2026-09-07 through 2026-09-14, only the station roster, DB and G8 have been compared:
+For 2026-09-07 through 2026-09-14, only station roster, DB and G8 have been compared:
 - 24 station-days; DB 24/24 match; G8 24/24 match.
 - G1–G7 for these 24 station-days still require row-by-row comparison.
 - These 432 numbers are not counted as fully verified.
@@ -32,8 +39,8 @@ For 2026-09-07 through 2026-09-14, only the station roster, DB and G8 have been 
 ## Status
 - Fully verified: 7/31 station-days (22.58%), 126/558 numbers (22.58%).
 - Partial checks only: 24/31 station-days (DB and G8 only).
-- Full-batch discrepancies found so far: 0 in the fully compared subset; 0 in the DB/G8 partial checks.
+- Discrepancies in the fully compared subset: 0.
 - Batch is not complete.
 
 ## Source qualification
-QuetKQXS is a secondary result-table source, not a certified primary record from each provincial lottery company. Preserve source provenance and compare any discrepancies against another source. Do not mark the entire batch verified until all nine prize classes have been compared for all 31 station-days.
+These are secondary result-table websites, not certified primary records from each provincial lottery company. Multiple sites may share upstream feeds, so their agreement is corroboration, not proof of separate primary provenance. Preserve source provenance and do not mark the entire batch verified until all nine prize classes have been compared for all 31 station-days.
