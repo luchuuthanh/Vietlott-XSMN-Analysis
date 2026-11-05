@@ -121,6 +121,17 @@ def main():
         unique_last2 = int(data.last2_numeric.nunique())
         missing_last2 = sorted(set(range(100)) - set(
             data.last2_numeric.dropna().astype(int).tolist()))
+        last2_rows = []
+        for province_name, group in data.groupby("province"):
+            seen = set(group.last2_numeric.dropna().astype(int).tolist())
+            missing = sorted(set(range(100)) - seen)
+            last2_rows.append({
+                "province": province_name,
+                "distinct_last2": len(seen),
+                "missing_count": len(missing),
+                "missing_values": " ".join(f"{n:02d}" for n in missing),
+            })
+        pd.DataFrame(last2_rows).to_csv(OUT/"last2_00_99_by_province.csv", index=False)
     else:
         date_min = date_max = None
         province_count = row_count = duplicate_rows = invalid_rows = unique_last2 = 0
@@ -129,7 +140,8 @@ def main():
                            ("invalid_numbers.csv", ["date","province","prize","prize_order","number"]),
                            ("province_coverage.csv", ["province","first_date","last_date","draw_dates","result_rows","prize_codes"]),
                            ("province_prize_coverage.csv", ["province","prize","rows"]),
-                           ("daily_province_coverage.csv", ["date","province","rows","prize_codes"])):
+                           ("daily_province_coverage.csv", ["date","province","rows","prize_codes"]),
+                           ("last2_00_99_by_province.csv", ["province","distinct_last2","missing_count","missing_values"])):
             pd.DataFrame(columns=cols).to_csv(OUT/name, index=False)
 
     pd.DataFrame(statuses).to_csv(OUT/"quarter_status.csv", index=False)
