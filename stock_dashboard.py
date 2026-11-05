@@ -282,11 +282,15 @@ def render_stock_dashboard():
     result["Đạt MOM10"] = result["MOM10 (FireAnt)"] >= mom10_floor
     result["Đạt EMA100"] = result["Giá đóng cửa"] >= result["EMA100"]
     result["Đạt khối lượng"] = result["KLGD TB20"] >= min_volume
-    result["Đạt bộ lọc"] = result["Đạt ROC14"] & result["Đạt MOM10"] & result["Đạt khối lượng"]
+    # Two independent momentum screens; share only volume and optional EMA constraints.
+    common_pass = result["Đạt khối lượng"]
     if require_ema:
-        result["Đạt bộ lọc"] = result["Đạt bộ lọc"] & result["Đạt EMA100"]
-    filtered = result[result["Đạt bộ lọc"]].copy()
-    filtered = filtered.sort_values("ROC14 (%)", ascending=False).reset_index(drop=True)
+        common_pass = common_pass & result["Đạt EMA100"]
+    result["Đạt MOM10 filter"] = result["Đạt MOM10"] & common_pass
+    result["Đạt ROC14 filter"] = result["Đạt ROC14"] & common_pass
+    filtered_mom10 = result[result["Đạt MOM10 filter"]].copy().sort_values("MOM10 (FireAnt)", ascending=False).reset_index(drop=True)
+    filtered_roc14 = result[result["Đạt ROC14 filter"]].copy().sort_values("ROC14 (%)", ascending=False).reset_index(drop=True)
+    filtered = result[common_pass].copy()
 
     if stats:
         a, b, c = st.columns(3)
@@ -304,21 +308,19 @@ def render_stock_dashboard():
 
     tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
     with tab_scan:
-        st.subheader("Top 20 cổ phiếu có ROC14 cao nhất · xếp từ cao xuống thấp")
-        top20 = filtered.head(20)
-        if top20.empty:
-            st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
-        else:
-            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
-        st.subheader("Danh sách cổ phiếu đạt điều kiện")
-        st.dataframe(
-            filtered[["Mã", "Sàn", "Giá đóng cửa", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
-            use_container_width=True, hide_index=True
-        )
-        st.download_button(
-            "Tải danh sách CSV", filtered.to_csv(index=False).encode("utf-8-sig"),
-            "co_phieu_dat_bo_loc.csv", "text/csv"
-        )
+        mom_tab, roc_tab = st.tabs(["MOM10 ≥ ngưỡng", "ROC14 ≥ ngưỡng"])
+        with mom_tab:
+            st.subheader("Danh sách MOM10 độc lập · FireAnt Length 10, Close")
+            st.caption("Không yêu cầu ROC14 đạt ngưỡng. Vẫn áp dụng khối lượng tối thiểu và EMA100 nếu bật.")
+            st.metric("Số mã đạt MOM10", f"{len(filtered_mom10):,}")
+            st.dataframe(filtered_mom10[["Mã", "Sàn", "Giá đóng cửa", "MOM10 (FireAnt)", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.download_button("Tải CSV MOM10", filtered_mom10.to_csv(index=False).encode("utf-8-sig"), "co_phieu_MOM10_dat_nguong.csv", "text/csv")
+        with roc_tab:
+            st.subheader("Danh sách ROC14 độc lập · phần trăm thay đổi 14 phiên")
+            st.caption("Không yêu cầu MOM10 đạt ngưỡng. Vẫn áp dụng khối lượng tối thiểu và EMA100 nếu bật.")
+            st.metric("Số mã đạt ROC14", f"{len(filtered_roc14):,}")
+            st.dataframe(filtered_roc14[["Mã", "Sàn", "Giá đóng cửa", "MOM10 (FireAnt)", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.download_button("Tải CSV ROC14", filtered_roc14.to_csv(index=False).encode("utf-8-sig"), "co_phieu_ROC14_dat_nguong.csv", "text/csv")
 
     with tab_chart:
         instruments = st.session_state.get("vnstock_instruments")
