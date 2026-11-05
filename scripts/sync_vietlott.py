@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data" / "vietlott"
 MANIFEST = DATA_DIR / "manifest.json"
+MEGA645_BACKFILL = DATA_DIR / "mega645_backfill_00001_00197.jsonl"
 BASE = "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/"
 
 GAMES = {
@@ -139,6 +140,42 @@ def apply_verified_corrections(game: str, payload: bytes) -> bytes:
     # Keep the archive chronological after correcting the misplaced 00944 row.
     rows.sort(key=lambda row: (str(row.get("date", ""))[:10], str(row.get("id", ""))))
     return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)).encode("utf-8")
+
+def merge_mega645_backfill(payload: bytes) -> bytes:
+    """Preserve the independently recovered first 197 Mega 6/45 draws.
+
+    The upstream mirror starts at draw 00198. This immutable local archive is
+    merged on every sync so a daily download cannot erase historical coverage.
+    Conflicting IDs fail closed rather than silently choosing either source.
+    """
+    if not MEGA645_BACKFILL.exists():
+        raise RuntimeError(f"Mega 6/45 historical backfill is missing: {MEGA645_BACKFILL}")
+    rows_by_id = {}
+    for source_name, raw in (
+        ("upstream", payload.decode("utf-8-sig")),
+        ("backfill", MEGA645_BACKFILL.read_text(encoding="utf-8-sig")),
+    ):
+        for line_no, line in enumerate(raw.splitlines(), 1):
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            draw_id = str(row.get("id", "")).zfill(5)
+            if not draw_id.isdigit():
+                raise RuntimeError(f"Mega 6/45 {source_name} line {line_no}: invalid draw ID")
+            normalized = dict(row)
+            normalized["id"] = draw_id
+            previous = rows_by_id.get(draw_id)
+            if previous is not None and previous != normalized:
+                raise RuntimeError(f"Mega 6/45 conflicting records for draw {draw_id}")
+            rows_by_id[draw_id] = normalized
+
+    expected = set(range(1, max(map(int, rows_by_id)) + 1))
+    actual = {int(draw_id) for draw_id in rows_by_id}
+    missing = sorted(expected - actual)
+    if missing:
+        raise RuntimeError(f"Mega 6/45 merged archive has missing IDs: {missing[:20]}")
+    rows = sorted(rows_by_id.values(), key=lambda row: (str(row.get("date", ""))[:10], int(row["id"])))
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
 
 def audit_payload(game: str, payload: bytes) -> dict:
     try:
@@ -260,6 +297,8 @@ def main() -> int:
         try:
             payload = fetch(url)
             payload = apply_verified_corrections(game, payload)
+            if game == "MEGA645":
+                payload = merge_mega645_backfill(payload)
             summary = audit_payload(game, payload)
             summary["sha256"] = hashlib.sha256(payload).hexdigest()
             summary["bytes"] = len(payload)
