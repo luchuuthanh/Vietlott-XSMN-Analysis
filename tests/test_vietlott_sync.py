@@ -28,6 +28,15 @@ class VietlottSyncTests(unittest.TestCase):
                   "third": ["013", "014", "015", "016", "017", "018", "019", "020"]}
         self.assertIsNone(validate_result("MAX3D", result))
 
+    def test_latest_draw_id_uses_last_draw_on_latest_date(self):
+        rows = [
+            {"date": "2026-11-04", "id": "00987", "result": [2, 7, 8, 13, 14, 7]},
+            {"date": "2026-11-04", "id": "00988", "result": [6, 10, 15, 20, 24, 4]},
+        ]
+        payload = ("\\n".join(json.dumps(x) for x in rows) + "\\n").encode()
+        summary = audit_payload("POWER535", payload)
+        self.assertEqual(summary["latest_draw_id"], "00988")
+
     def test_audit_duplicate_ids_rejected(self):
         row = {"date": "2026-01-01", "id": "00001", "result": [1, 2, 3, 4, 5, 6]}
         payload = (json.dumps(row) + "\n" + json.dumps(row) + "\n").encode()
