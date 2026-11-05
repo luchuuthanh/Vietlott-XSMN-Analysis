@@ -198,6 +198,23 @@ try:
                 summary_df = pd.DataFrame(summary_rows)
                 st.dataframe(summary_df, use_container_width=True, hide_index=True)
                 st.dataframe(pd.DataFrame(detail).tail(100), use_container_width=True, hide_index=True)
+                if is_535 and detail:
+                    st.markdown("#### Xem 5 vé máy đã tự tạo cho từng kỳ")
+                    st.caption("Chọn một kỳ trong danh sách. Ứng dụng sẽ dựng lại đúng 5 vé chỉ từ dữ liệu có trước kỳ đó, rồi hiển thị kết quả quay để đối chiếu.")
+                    backtest_labels = [f"#{item['draw_id']} · {item['date']}" for item in detail]
+                    chosen_backtest_label = st.selectbox("Kỳ muốn xem 5 vé đã tạo", backtest_labels, index=len(backtest_labels)-1, key="power535_backtest_ticket_draw")
+                    chosen_backtest = detail[backtest_labels.index(chosen_backtest_label)]
+                    target_index = next(i for i, item in enumerate(draw_records) if item["draw_id"] == chosen_backtest["draw_id"])
+                    historical_rows = draw_records[:target_index]
+                    shown_tickets = build_from_history(historical_rows)
+                    ticket_rows = [{
+                        "Vé": i,
+                        "5 số chính": " – ".join(f"{int(n):02d}" for n in ticket["main_numbers"]),
+                        "Số đặc biệt": f"{int(ticket['special']):02d}",
+                    } for i, ticket in enumerate(shown_tickets, 1)]
+                    st.dataframe(pd.DataFrame(ticket_rows), use_container_width=True, hide_index=True)
+                    actual = draw_records[target_index]
+                    st.caption("Kết quả thực tế: " + " – ".join(f"{n:02d}" for n in actual["main_numbers"]) + f" | Đặc biệt: {actual['special']:02d}")
                 st.download_button(
                     "Tải kết quả kiểm định CSV",
                     pd.DataFrame(detail).to_csv(index=False).encode("utf-8-sig"),
