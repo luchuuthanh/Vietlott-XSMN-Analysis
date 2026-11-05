@@ -5,7 +5,7 @@ from lotto535_analyzer import load_draws, classify_ticket, generate_tickets, rol
 class Lotto535Tests(unittest.TestCase):
     def test_separate_special_can_overlap_main_value(self):
         result = classify_ticket([1,2,3,4,5], 9, [1,2,3,4,9], 9)
-        self.assertEqual(result["tier"], "FIRST")
+        self.assertEqual(result["tier"], "SECOND")
         self.assertTrue(result["special_match"])
 
     def test_jackpot_and_prize_tiers(self):
