@@ -77,7 +77,7 @@ def main():
     observed={}; errors=[]
     for m in PAGES:
         if not a.start[:7]<=m<=a.end[:7]: continue
-        url=f"https://xskt.net/xsmn/{m}"
+        url=f"https://xskt.net/xsmn/{m[5:]}-{m[:4]}"
         try:
             res=session.get(url,timeout=45); res.raise_for_status()
             got=parse_page(res.text); observed.update({k:v for k,v in got.items() if a.start<=k[0]<=a.end})
