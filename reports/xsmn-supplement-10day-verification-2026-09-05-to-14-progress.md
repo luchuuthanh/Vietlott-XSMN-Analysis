@@ -1,52 +1,49 @@
-# XSMN supplement verification — 10-day batch 2026-09-05 to 2026-09-14 (in progress)
+# XSMN supplement verification — 10-day batch 2026-09-05 to 2026-09-14 (completed)
 
 ## Scope
 Ten calendar dates inclusive. The normalized supplement contains 31 station-days and 558 winning-number rows (18 numbers per station-day across nine prize classes).
 
 ## Full row-by-row comparison completed
-Compared every number in all nine prize classes by station and prize class with the normalized CSV, preserving leading zeroes and ignoring only display order:
+Compared every number in all nine prize classes by date, station and prize class against full secondary result tables. Prize-number order within a class is ignored; leading zeroes are preserved.
+
+### 2026-09-05 to 2026-09-08
 - 2026-09-05: TP. HCM, Long An, Bình Phước, Hậu Giang — 4 station-days / 72 numbers.
 - 2026-09-06: Tiền Giang, Kiên Giang, Đà Lạt — 3 station-days / 54 numbers.
-- Total fully compared: 7/31 station-days, 126/558 numbers.
-- All 126 numbers match. No discrepancies.
-
-## Cross-source corroboration
-For 2026-09-05 the full tables agree across HayVL, Ketqua.io, Minh Ngọc, SoiKetQua, NEF, Vé Số Minh Sơn, DivaShop and Xổ Số Quốc Cường:
-- https://hayvl.vn/xo-so/xsmn-05-09-2026
-- https://ketqua.io/kqxs-ket-qua-xo-so/xsmn-xo-so-mien-nam/09-2026
-- https://www.minhngoc.net/kqxs/mien-nam/05-09-2026.html
-- https://soiketqua.com/xsmn-90-ngay
-- https://nef.vn/xsmn-05-09-2026
-- https://www.vesominhson.com/ket-qua-xo-so/mien-nam?ngay=07-09-2026
-- https://divashop.vn/xsmn-05-09-2026.html
-- https://xosoquoccuong.com/xo-so-mien-nam/ngay-05-09-2026/
-
-For 2026-09-06 the full tables agree across XSKT.net, QuetKQXS, KQXSMT.net, Minh Ngọc, KQXSmb.me, XSkt.com.vn and XSKetQua:
-- https://www.xskt.net/xsmn/06-09-2026
-- https://quetkqxs.com/xsmn/06-09-2026
-- https://www.kqxsmt.net/xsmn/09-2026.html
-- https://www.minhngoc.net/kqxs/mien-nam/06-09-2026.html
-- https://kqxsmb.me/xsmn-xo-so-mien-nam/09-2026
-- https://xskt.com.vn/xsmn/ngay-6-9-2026
-- https://xsketqua.com/xsmn-06-09-2026.html
-
-## Full row-by-row comparison completed — additional dates
-For 2026-09-07 and 2026-09-08, transcribed the full nine-prize tables from the daily QuetKQXS pages and compared every prize class against the normalized CSV. Comparison was by station and prize class, ignoring display order and preserving leading zeroes.
 - 2026-09-07: TP. Hồ Chí Minh, Đồng Tháp, Cà Mau — 3 station-days / 54 numbers.
 - 2026-09-08: Bến Tre, Vũng Tàu, Bạc Liêu — 3 station-days / 54 numbers.
-- All 108 numbers match; no discrepancies.
+- Subtotal: 13 station-days / 234 numbers; all match.
 
-## Partial checks for remaining dates
-For 2026-09-09 through 2026-09-14, only station roster, DB and G8 have been compared:
-- 18 station-days; DB 18/18 match; G8 18/18 match.
-- G1–G7 for these 18 station-days still require row-by-row comparison.
-- These 324 numbers are not counted as fully verified.
+### 2026-09-09 to 2026-09-14 — six-draw comparison batch
+- 2026-09-09: Đồng Nai, Cần Thơ, Sóc Trăng — 3 station-days / 54 numbers.
+- 2026-09-10: Tây Ninh, An Giang, Bình Thuận — 3 station-days / 54 numbers.
+- 2026-09-11: Vĩnh Long, Bình Dương, Trà Vinh — 3 station-days / 54 numbers.
+- 2026-09-12: TP. Hồ Chí Minh, Long An, Bình Phước, Hậu Giang — 4 station-days / 72 numbers.
+- 2026-09-13: Tiền Giang, Kiên Giang, Đà Lạt — 3 station-days / 54 numbers.
+- 2026-09-14: TP. Hồ Chí Minh, Đồng Tháp, Cà Mau — 3 station-days / 54 numbers.
+- Subtotal: 18 station-days / 324 numbers; all match.
 
-## Status
-- Fully verified: 13/31 station-days (41.94%), 234/558 numbers (41.94%).
-- Partial checks only: 18/31 station-days (DB and G8 only).
-- Discrepancies in the fully compared subset: 0.
-- Batch is not complete.
+## Comparison outcome
+- Dates: 10/10 complete.
+- Station-days: 31/31 complete.
+- Winning-number rows: 558/558 match.
+- Discrepancies found: 0.
+- All prize classes DB and G1–G8 were compared. Leading zeroes were preserved, including 074, 0265, 0809, 0446, 06447, 0811, 01334, 09358, 04217, 05729 and 0496.
+
+## Sources
+Primary full tables used for row-level comparison:
+- QuetKQXS 2026-09-09: https://quetkqxs.com/xsmn/09-09-2026
+- QuetKQXS 2026-09-10: https://quetkqxs.com/xsmn/10-09-2026
+- QuetKQXS 2026-09-11: https://quetkqxs.com/xsmn/11-09-2026
+- QuetKQXS 2026-09-12: https://quetkqxs.com/xsmn/12-09-2026
+- XSMM 2026-09-13: https://xsmm.vn/ket-qua-xo-so/13-09-2026
+- KQXS.vn 2026-09-14: https://www.kqxs.vn/mien-nam/ngay-14-09-2026
+Cross-check corroboration:
+- 2026-09-12: XSMN.ai and VTC News full tables: https://xsmn.ai/xsmn/12-09-2026 ; https://vtcnews.vn/xsmn-12-9-ket-qua-xsmn-ngay-12-9-2026-xo-so-mien-nam-ngay-12-thang-9-ar1039342.html
+- 2026-09-14: KQXS.vn full table and its per-station prize breakdown.
+- Previously recorded independent corroboration for 2026-09-05 and 2026-09-06 is retained above in earlier report history.
 
 ## Source qualification
-These are secondary result-table websites, not certified primary records from each provincial lottery company. Multiple sites may share upstream feeds, so their agreement is corroboration, not proof of separate primary provenance. Preserve source provenance and do not mark the entire batch verified until all nine prize classes have been compared for all 31 station-days.
+These are secondary result-table websites, not certified primary records issued directly by each provincial lottery company. Some websites may share upstream feeds; their agreement is corroboration, not proof of independent primary provenance. This batch establishes matching against the selected full result tables, not direct certification by the lottery issuers.
+
+## Final status
+This 10-day batch is complete. No rows in this batch remain pending.
