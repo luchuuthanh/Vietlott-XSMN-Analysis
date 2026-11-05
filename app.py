@@ -125,7 +125,8 @@ try:
                         continue
                     try:
                         if is_535:
-                            parsed.append(normalize_power535_ticket(line))
+                            norm_main, norm_special = normalize_power535_ticket(line)
+                            parsed.append([*norm_main, norm_special])
                         else:
                             parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split(), universe=universe))
                     except ValueError as err:
