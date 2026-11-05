@@ -143,7 +143,7 @@ try:
             st.caption("Mỗi kỳ chỉ dùng dữ liệu các kỳ trước để tạo bộ số; sau đó mới đối chiếu với kỳ kế tiếp. Cách này tránh lấy dữ liệu tương lai để dự đoán quá khứ.")
             history_limit = st.slider("Số kỳ đầu làm dữ liệu khởi động", 100, min(500, len(data)-1), min(200, len(data)-1), key="ticket_backtest_window")
             tickets_per_draw = st.slider("Số bộ tạo cho mỗi kỳ kiểm định", 1, 10, 5, key="ticket_backtest_count")
-            if st.button("Chạy kiểm định thuật toán hiện tại", key="run_power655_backtest"):
+            if st.button("Chạy kiểm định thuật toán hiện tại", key=f"run_{selected.lower()}_backtest"):
                 chronological = data.sort_values("date").reset_index(drop=True)
                 draw_records = []
                 for row in chronological.itertuples():
@@ -152,10 +152,12 @@ try:
                     draw_records.append({
                         "draw_id": str(row.draw_id),
                         "date": row.date.strftime("%Y-%m-%d"),
-                        "main_numbers": [int(getattr(row, f"n{i}")) for i in range(1, 7)],
+                        "main_numbers": [int(getattr(row, f"n{i}")) for i in range(1, 6 if is_535 else 7)],
                         "special": special_num,
                     })
                 def build_from_history(history):
+                    if is_535:
+                        return generate_power535_tickets(history, count=tickets_per_draw)
                     history_draws = [item["main_numbers"] for item in history]
                     history_flat = [number for draw in history_draws for number in draw]
                     history_freq = frequency_table(history_flat, universe)
