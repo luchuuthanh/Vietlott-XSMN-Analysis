@@ -99,7 +99,7 @@ try:
             selected_label = st.selectbox("Chọn kỳ quay để dò", draw_labels, index=len(draw_labels)-1)
             draw_index = draw_labels.index(selected_label)
             selected_draw = draw_options.iloc[draw_index]
-            main_result = [int(selected_draw[f"n{i}"]) for i in range(1, 7)]
+            main_result = [int(selected_draw[f"n{i}"]) for i in range(1, 6 if is_535 else 7)]
             special_value = pd.to_numeric(pd.Series([selected_draw.get("special")]), errors="coerce").iloc[0]
             special_result = None if pd.isna(special_value) else int(special_value)
             st.caption(
@@ -107,14 +107,17 @@ try:
                 + " – ".join(f"{n:02d}" for n in main_result)
                 + (f" | Đặc biệt: {special_result:02d}" if special_result is not None else (" | Chưa có số đặc biệt" if selected == "POWER655" else " | Mega 6/45 không có số đặc biệt"))
             )
-            if st.button("Dò các vé đã nhập", key="run_power655_ticket_check"):
+            if st.button("Dò các vé đã nhập", key=f"run_{selected.lower()}_ticket_check"):
                 parsed = []
                 errors = []
                 for line_no, line in enumerate(ticket_text.splitlines(), 1):
                     if not line.strip():
                         continue
                     try:
-                        parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split(), universe=universe))
+                        if is_535:
+                            parsed.append(normalize_power535_ticket(line))
+                        else:
+                            parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split(), universe=universe))
                     except ValueError as err:
                         errors.append(f"Dòng {line_no}: {err}")
                 if errors:
