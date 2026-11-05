@@ -77,3 +77,13 @@ Có thể chạy từ `app.py` bằng cách chọn **Chứng khoán Việt Nam**
 
 ### Triển khai Streamlit Cloud
 Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Main file path** là `stock_app.py`. Không dùng `app.py` làm entrypoint nếu muốn mở thẳng StockLab.
+
+## Power 6/55: bộ dò vé và kiểm định thuật toán
+
+- Tab **Dò vé & kiểm định** trong ứng dụng Vietlott cho phép nhập nhiều dòng vé, chọn kỳ quay và tự xác định hạng giải cao nhất.
+- Hỗ trợ vé 6 số; vé hệ thống 5 số (mở rộng thành 50 tổ hợp), Bao 7–15 và Bao 18 (mở rộng toàn bộ tổ hợp 6 số).
+- Số đặc biệt được kiểm tra độc lập, chỉ dùng xét Jackpot 2. Nếu dữ liệu kỳ quay thiếu số đặc biệt, hệ thống đánh dấu trường hợp 5 số chính là chưa thể xác nhận Jackpot 2.
+- Bộ kiểm định thuật toán dùng rolling/out-of-sample: mỗi kỳ kiểm tra chỉ được tạo ứng viên từ các kỳ đứng trước, không sử dụng kết quả tương lai. Có thể xuất chi tiết CSV.
+- Module lõi: `ticket_checker.py`; kiểm thử: `tests/test_ticket_checker.py`.
+- Quy tắc hạng giải theo Thể lệ Power 6/55 Vietlott: Jackpot 1 (6 số), Jackpot 2 (5 số + đặc biệt), Giải nhất (5 số), Giải nhì (4 số), Giải ba (3 số). Một vé chỉ nhận hạng giải cao nhất. Công cụ chỉ hỗ trợ đối chiếu tham khảo; vé hợp lệ và kết quả chính thức phải được Vietlott xác nhận.
+- Rolling backtest đo hiệu quả lịch sử ngoài mẫu, không phải bằng chứng thuật toán dự đoán được tương lai hay làm tăng xác suất trúng.
