@@ -8,9 +8,11 @@ RAW = "https://raw.githubusercontent.com/luchuuthanh/Vietlott-XSMN-Analysis/main
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_vietlott(game):
-    key = {"POWER655": "power655.jsonl", "MEGA645": "power645.jsonl"}.get(str(game).upper())
+    game_key = str(game).upper()
+    key = {"POWER655": "power655.jsonl", "MEGA645": "power645.jsonl",
+           "POWER535": "power535.jsonl"}.get(game_key)
     if not key:
-        raise ValueError("Chỉ hỗ trợ POWER655 và MEGA645.")
+        raise ValueError("Chỉ hỗ trợ POWER655, MEGA645 và POWER535.")
     response = requests.get(RAW.format(file=key), timeout=30)
     response.raise_for_status()
     records = [json.loads(line) for line in response.text.splitlines() if line.strip()]
@@ -19,16 +21,29 @@ def fetch_vietlott(game):
         nums = item.get("result") or item.get("numbers") or item.get("winning_numbers")
         if isinstance(nums, str):
             nums = [int(x) for x in nums.replace(",", " ").split() if x.isdigit()]
+        if game_key == "POWER535":
+            if not isinstance(nums, list) or len(nums) != 6:
+                continue
+            main = [int(x) for x in nums[:5]]
+            special = int(nums[5])
+            if len(set(main)) != 5 or any(n < 1 or n > 35 for n in main) or not 1 <= special <= 12:
+                continue
+            rows.append({
+                "date": item.get("date"), "game": game_key, "draw_id": item.get("id", ""),
+                "n1": main[0], "n2": main[1], "n3": main[2],
+                "n4": main[3], "n5": main[4], "n6": None, "special": special
+            })
+            continue
         if not isinstance(nums, list) or len(nums) < 6:
             continue
         main = [int(x) for x in nums[:6]]
-        universe = 55 if str(game).upper() == "POWER655" else 45
+        universe = 55 if game_key == "POWER655" else 45
         if len(set(main)) != 6 or any(n < 1 or n > universe for n in main):
             continue
         # POWER655's seventh value is NOT a seventh main number. It is drawn
         # separately from the 49 remaining balls and is only used for Jackpot 2.
         special = None
-        if str(game).upper() == "POWER655" and len(nums) > 6:
+        if game_key == "POWER655" and len(nums) > 6:
             try:
                 candidate = int(nums[6])
                 if 1 <= candidate <= 55 and candidate not in main:
