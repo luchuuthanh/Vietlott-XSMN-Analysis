@@ -303,6 +303,16 @@ def main() -> int:
             summary["sha256"] = hashlib.sha256(payload).hexdigest()
             summary["bytes"] = len(payload)
             summary["source_url"] = url
+            if game == "MEGA645":
+                summary["source_note"] = (
+                    "Merged archive: draws 00001-00197 from the NhanAZ-Data/vietlott-research "
+                    "historical Mega 6/45 CSV (which includes official Vietlott source-page/PDF links); "
+                    "draws 00198 onward from the vietvudanh/vietlott-data mirror. "
+                    "Not every historical row has been independently re-checked against official PDFs."
+                )
+                summary["historical_backfill_source"] = (
+                    "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
+                )
             summary["numeric_id_gaps"] = summary["numeric_id_gaps"][:20]
             warnings = []
             if summary["numeric_id_gap_count_sampled"]:
