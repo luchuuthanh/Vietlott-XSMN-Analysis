@@ -190,7 +190,11 @@ def render_cophieu68_import():
             if not auto_df.empty:
                 updated = auto_df["updated_at_utc"].iloc[0] if "updated_at_utc" in auto_df.columns else "chưa rõ"
                 st.success(f"Dữ liệu quét tự động gần nhất · {len(auto_all)} mã có dữ liệu · {len(auto_df)} mã đạt điều kiện · cập nhật UTC: {updated}")
-                st.dataframe(auto_df.sort_values("MOM14", ascending=False).head(20), use_container_width=True, hide_index=True)
+                sort_col = "ROC14" if "ROC14" in auto_df.columns else ("MOM14" if "MOM14" in auto_df.columns else None)
+                if sort_col:
+                    st.dataframe(auto_df.sort_values(sort_col, ascending=False).head(20), use_container_width=True, hide_index=True)
+                else:
+                    st.warning("CSV tự động thiếu cột chỉ số MOM10/ROC14; hãy kiểm tra lại bản quét.")
                 st.download_button("Tải toàn bộ mã đạt bộ lọc (CSV)", auto_df.to_csv(index=False).encode("utf-8-sig"),
                                    "stocklab_auto_market_passed.csv", "text/csv", key="cp68_auto_download")
             else:
