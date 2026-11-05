@@ -133,13 +133,13 @@ def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260
         symbol = item["symbol"]
         try:
             hist = add_indicators(fetch_daily_quotes(symbol, start, end))
-            valid = hist.dropna(subset=["EMA100", "ROC14", "VOL20"])
+            valid = hist.dropna(subset=["EMA100", "MOM10", "ROC14", "VOL20"])
             if not valid.empty:
                 last = valid.iloc[-1]
                 rows.append({
                     "Mã": symbol, "Sàn": item.get("exchange", ""),
                     "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
-                    "ROC14 (%)": last["ROC14"], "Khối lượng": last["volume"],
+                    "MOM10 (FireAnt)": last["MOM10"], "ROC14 (%)": last["ROC14"], "Khối lượng": last["volume"],
                     "KLGD TB20": last["VOL20"], "Ngày dữ liệu": last["date"],
                     "Đạt ROC14": bool(last["ROC14"] >= 4),
                     "Đạt EMA100": bool(last["close"] >= last["EMA100"]),
@@ -167,7 +167,7 @@ def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
         raw["date"] = pd.to_datetime(raw["date"], errors="coerce")
         for col in ("close", "EMA100", "MOM10", "ROC14", "VOL20"):
             raw[col] = pd.to_numeric(raw[col], errors="coerce")
-        raw = raw.dropna(subset=["symbol", "date", "close", "EMA100", "ROC14", "VOL20"])
+        raw = raw.dropna(subset=["symbol", "date", "close", "EMA100", "MOM10", "ROC14", "VOL20"])
         if raw.empty:
             raise ValueError("Không còn dòng OHLCV hợp lệ sau khi chuẩn hóa")
         result = pd.DataFrame({
