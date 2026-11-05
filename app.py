@@ -61,6 +61,9 @@ try:
                 st.markdown("**Số đặc biệt Power 6/55 — quay riêng sau 6 số chính, chỉ dùng xét Jackpot 2**")
                 special_freq = special.value_counts().rename_axis("Số đặc biệt").reset_index(name="Số lần")
                 st.dataframe(special_freq, use_container_width=True, hide_index=True)
+            missing_special = int(pd.to_numeric(subset["special"], errors="coerce").isna().sum())
+            if missing_special:
+                st.caption(f"Có {missing_special} kỳ trong phạm vi đang xem chưa có dữ liệu số đặc biệt; hệ thống không tự điền hoặc suy đoán.")
     with t2:
         st.dataframe(pair_table(draws, 30), use_container_width=True, hide_index=True)
     with t3:
