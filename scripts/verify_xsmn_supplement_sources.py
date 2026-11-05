@@ -81,7 +81,7 @@ def main():
         try:
             res=session.get(url,timeout=45); res.raise_for_status()
             got=parse_page(res.text); observed.update({k:v for k,v in got.items() if a.start<=k[0]<=a.end})
-            if not got: errors.append({"month":m,"error":"no monthly result tables parsed"})
+            if not got: print("DEBUG",m,res.url,res.status_code,res.text[:500]); errors.append({"month":m,"error":"no monthly result tables parsed"})
         except Exception as e: errors.append({"month":m,"error":str(e)})
         time.sleep(1)
     details=[]; compared=match=bad=missing=0
