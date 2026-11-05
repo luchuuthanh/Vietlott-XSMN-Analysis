@@ -37,7 +37,7 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "b01c494dcca2ad9db7462d4caf5dcdd9211458f424bc09e95da944cafa5ae003",
+      "sha256": "0231dd6f061b1838cd478e3f1fe2e06ee0b172b8b61046bf518454a5a07fc5fc",
       "bytes": 160477,
       "source_url": "https://github.com/luchuuthanh/Vietlott-XSMN-Analysis/blob/main/data/vietlott/power645.jsonl",
       "source_note": "Merged archive: draws 00001-00197 from NhanAZ historical dataset with official Vietlott source links; draws 00198 onward from vietvudanh mirror. Individual records have not all been independently checked against official result pages/PDFs."
