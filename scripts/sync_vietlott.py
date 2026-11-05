@@ -190,12 +190,16 @@ def audit_payload(game: str, payload: bytes) -> dict:
                     break
 
     dates = [x[0] for x in records]
+    first_date = min(dates)
+    latest_date = max(dates)
+    first_draw_id = next(draw_id for draw_date, draw_id in records if draw_date == first_date)
+    latest_draw_id = next(draw_id for draw_date, draw_id in reversed(records) if draw_date == latest_date)
     return {
         "records": len(records),
-        "first_date": min(dates).isoformat(),
-        "latest_date": max(dates).isoformat(),
-        "first_draw_id": records[dates.index(min(dates))][1],
-        "latest_draw_id": records[dates.index(max(dates))][1],
+        "first_date": first_date.isoformat(),
+        "latest_date": latest_date.isoformat(),
+        "first_draw_id": first_draw_id,
+        "latest_draw_id": latest_draw_id,
         "numeric_id_count": len(numeric_ids),
         "numeric_id_gaps": gaps,
         "id_order_anomalies": id_order_anomalies[:20],
