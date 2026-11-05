@@ -4,9 +4,14 @@ from scripts.sync_vietlott import audit_payload, validate_result
 
 class VietlottSyncTests(unittest.TestCase):
     def test_power655(self):
+        # Six main balls and the separately drawn special ball are distinct.
         self.assertIsNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 7]))
+        # Historical rows without a special ball remain loadable and are flagged.
         self.assertIsNone(validate_result("POWER655", [1, 12, 21, 28, 30, 44]))
         self.assertIsNotNone(validate_result("POWER655", [1, 1, 3, 4, 5, 6, 7]))
+        self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 6]))
+        self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 56]))
+        self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 0]))
 
     def test_mega645(self):
         self.assertIsNone(validate_result("MEGA645", [1, 2, 3, 4, 5, 45]))
