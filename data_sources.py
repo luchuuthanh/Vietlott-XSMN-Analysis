@@ -1,10 +1,10 @@
-"""Nguồn dữ liệu công khai Vietlott. Dữ liệu bên thứ ba, cần đối chiếu kết quả chính thức."""
+"""Load the repository's audited Vietlott snapshots, including the Mega 6/45 historical backfill."""
 import json
 import requests
 import pandas as pd
 import streamlit as st
 
-RAW = "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/{file}"
+RAW = "https://raw.githubusercontent.com/luchuuthanh/Vietlott-XSMN-Analysis/main/data/vietlott/{file}"
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_vietlott(game):
