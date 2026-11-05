@@ -1,0 +1,365 @@
+{
+  "generated_at_utc": "2026-11-05T04:45:38Z",
+  "source_repository": "https://github.com/vietvudanh/vietlott-data",
+  "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
+  "games": {
+    "POWER655": {
+      "records": 1419,
+      "first_date": "2017-08-01",
+      "latest_date": "2026-11-03",
+      "first_draw_id": "00001",
+      "latest_draw_id": "01419",
+      "numeric_id_count": 1419,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [
+        {
+          "line": 781,
+          "previous_id": "944",
+          "current_id": "00780",
+          "date": "2022-09-24"
+        }
+      ],
+      "id_order_anomaly_count": 1,
+      "missing_bonus_count": 1,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "3668ec0888e8ce6ef7a7bb8d0bc3508c5b2fe97250e1c7922184d1d19239fffd",
+      "bytes": 155898,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl",
+      "warning": "Draw IDs are not in ascending source order; 1 Power 6/55 record(s) have no special number. Inspect source history before treating archive as complete."
+    },
+    "MEGA645": {
+      "records": 1387,
+      "first_date": "2017-10-25",
+      "latest_date": "2026-11-04",
+      "first_draw_id": "00198",
+      "latest_draw_id": "01584",
+      "numeric_id_count": 1387,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [],
+      "id_order_anomaly_count": 0,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "eb36487307cc7f8f23a1a2c2d2ff8797ea9c2b438688d71c0b62b62f763072c6",
+      "bytes": 148128,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl"
+    },
+    "POWER535": {
+      "records": 988,
+      "first_date": "2025-06-29",
+      "latest_date": "2026-11-04",
+      "first_draw_id": "00001",
+      "latest_draw_id": "00987",
+      "numeric_id_count": 988,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [],
+      "id_order_anomaly_count": 0,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "5c9ba801e38c0c6e9c3a67945544e3600c71b6017f37ce77b8e63086ad1af111",
+      "bytes": 104557,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power535.jsonl"
+    },
+    "KENO": {
+      "records": 90801,
+      "first_date": "2022-12-04",
+      "latest_date": "2026-11-05",
+      "first_draw_id": "#0110271",
+      "latest_draw_id": "#0301806",
+      "numeric_id_count": 0,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [],
+      "id_order_anomaly_count": 0,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "566612da7bf397e6ce756c4505bd76fbf316476ccd540651722e7d397cc4fec6",
+      "bytes": 13908195,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/keno.jsonl"
+    },
+    "MAX3D": {
+      "records": 1154,
+      "first_date": "2019-04-22",
+      "latest_date": "2026-11-04",
+      "first_draw_id": "00001",
+      "latest_draw_id": "01154",
+      "numeric_id_count": 1154,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [
+        {
+          "line": 1146,
+          "previous_id": "1149",
+          "current_id": "00978",
+          "date": "2025-09-17"
+        },
+        {
+          "line": 1149,
+          "previous_id": "981",
+          "current_id": "00979",
+          "date": "2025-09-19"
+        }
+      ],
+      "id_order_anomaly_count": 2,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "d99ba10c474f86059af35169ccb438296caf6b8b2df7bb185d7f4083cdd9b022",
+      "bytes": 275806,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/3d.jsonl",
+      "warning": "Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
+    },
+    "MAX3DPRO": {
+      "records": 800,
+      "first_date": "2021-09-14",
+      "latest_date": "2026-11-03",
+      "first_draw_id": "00001",
+      "latest_draw_id": "00800",
+      "numeric_id_count": 800,
+      "numeric_id_gaps": [],
+      "id_order_anomalies": [],
+      "id_order_anomaly_count": 0,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 0,
+      "sha256": "4ff2256908ce15f8371b52c5b67bbb53f405c7554670ef7c60343acae69216e4",
+      "bytes": 191200,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/3d_pro.jsonl"
+    },
+    "BINGO18": {
+      "records": 98799,
+      "first_date": "2024-12-03",
+      "latest_date": "2026-11-05",
+      "first_draw_id": "0083123",
+      "latest_draw_id": "0194626",
+      "numeric_id_count": 98799,
+      "numeric_id_gaps": [
+        {
+          "after": "134402",
+          "before": "134453",
+          "missing_count": 50
+        },
+        {
+          "after": "134464",
+          "before": "134551",
+          "missing_count": 86
+        },
+        {
+          "after": "134562",
+          "before": "134586",
+          "missing_count": 23
+        },
+        {
+          "after": "134597",
+          "before": "134646",
+          "missing_count": 48
+        },
+        {
+          "after": "134657",
+          "before": "134805",
+          "missing_count": 147
+        },
+        {
+          "after": "134816",
+          "before": "134844",
+          "missing_count": 27
+        },
+        {
+          "after": "134855",
+          "before": "134904",
+          "missing_count": 48
+        },
+        {
+          "after": "134915",
+          "before": "134964",
+          "missing_count": 48
+        },
+        {
+          "after": "134975",
+          "before": "135003",
+          "missing_count": 27
+        },
+        {
+          "after": "135014",
+          "before": "135063",
+          "missing_count": 48
+        },
+        {
+          "after": "135074",
+          "before": "135123",
+          "missing_count": 48
+        },
+        {
+          "after": "135134",
+          "before": "135162",
+          "missing_count": 27
+        },
+        {
+          "after": "135173",
+          "before": "135321",
+          "missing_count": 147
+        },
+        {
+          "after": "135332",
+          "before": "135381",
+          "missing_count": 48
+        },
+        {
+          "after": "135392",
+          "before": "135441",
+          "missing_count": 48
+        },
+        {
+          "after": "135452",
+          "before": "135480",
+          "missing_count": 27
+        },
+        {
+          "after": "135491",
+          "before": "135540",
+          "missing_count": 48
+        },
+        {
+          "after": "135551",
+          "before": "135600",
+          "missing_count": 48
+        },
+        {
+          "after": "135611",
+          "before": "135639",
+          "missing_count": 27
+        },
+        {
+          "after": "135650",
+          "before": "135699",
+          "missing_count": 48
+        }
+      ],
+      "id_order_anomalies": [
+        {
+          "line": 97237,
+          "previous_id": "193134",
+          "current_id": "0193015",
+          "date": "2026-10-25"
+        },
+        {
+          "line": 97291,
+          "previous_id": "193080",
+          "current_id": "0193007",
+          "date": "2026-10-25"
+        },
+        {
+          "line": 97422,
+          "previous_id": "193323",
+          "current_id": "0193217",
+          "date": "2026-10-27"
+        },
+        {
+          "line": 97476,
+          "previous_id": "193270",
+          "current_id": "0193205",
+          "date": "2026-10-27"
+        },
+        {
+          "line": 97582,
+          "previous_id": "193483",
+          "current_id": "0193376",
+          "date": "2026-10-28"
+        },
+        {
+          "line": 97636,
+          "previous_id": "193429",
+          "current_id": "0193364",
+          "date": "2026-10-28"
+        },
+        {
+          "line": 97741,
+          "previous_id": "193642",
+          "current_id": "0193535",
+          "date": "2026-10-29"
+        },
+        {
+          "line": 97795,
+          "previous_id": "193588",
+          "current_id": "0193523",
+          "date": "2026-10-29"
+        },
+        {
+          "line": 97899,
+          "previous_id": "193800",
+          "current_id": "0193694",
+          "date": "2026-10-30"
+        },
+        {
+          "line": 97953,
+          "previous_id": "193747",
+          "current_id": "0193682",
+          "date": "2026-10-30"
+        },
+        {
+          "line": 98059,
+          "previous_id": "193959",
+          "current_id": "0193852",
+          "date": "2026-10-31"
+        },
+        {
+          "line": 98113,
+          "previous_id": "193905",
+          "current_id": "0193841",
+          "date": "2026-10-31"
+        },
+        {
+          "line": 98218,
+          "previous_id": "194119",
+          "current_id": "0194012",
+          "date": "2026-11-01"
+        },
+        {
+          "line": 98272,
+          "previous_id": "194065",
+          "current_id": "0194000",
+          "date": "2026-11-01"
+        },
+        {
+          "line": 98377,
+          "previous_id": "194278",
+          "current_id": "0194171",
+          "date": "2026-11-02"
+        },
+        {
+          "line": 98431,
+          "previous_id": "194224",
+          "current_id": "0194159",
+          "date": "2026-11-02"
+        },
+        {
+          "line": 98536,
+          "previous_id": "194437",
+          "current_id": "0194330",
+          "date": "2026-11-03"
+        },
+        {
+          "line": 98590,
+          "previous_id": "194383",
+          "current_id": "0194318",
+          "date": "2026-11-03"
+        },
+        {
+          "line": 98695,
+          "previous_id": "194596",
+          "current_id": "0194489",
+          "date": "2026-11-04"
+        },
+        {
+          "line": 98749,
+          "previous_id": "194542",
+          "current_id": "0194477",
+          "date": "2026-11-04"
+        }
+      ],
+      "id_order_anomaly_count": 20,
+      "missing_bonus_count": 0,
+      "numeric_id_gap_count_sampled": 100,
+      "sha256": "648f71d287bec4021b8d68970488a48fcb7b70bfdae8368eb0d0167f97dd64d0",
+      "bytes": 13432228,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/bingo18.jsonl",
+      "warning": "Numeric draw-id gaps detected; Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
+    }
+  },
+  "status": "warning"
+}
