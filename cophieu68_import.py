@@ -190,7 +190,7 @@ def render_cophieu68_import():
             if not auto_df.empty:
                 updated = auto_df["updated_at_utc"].iloc[0] if "updated_at_utc" in auto_df.columns else "chưa rõ"
                 st.success(f"Dữ liệu quét tự động gần nhất · {len(auto_all)} mã có dữ liệu · {len(auto_df)} mã đạt điều kiện · cập nhật UTC: {updated}")
-                sort_col = "ROC14" if "ROC14" in auto_df.columns else ("MOM14" if "MOM14" in auto_df.columns else None)
+                sort_col = next((col for col in ("ROC14 (%)", "ROC14", "MOM10 (FireAnt)", "MOM10") if col in auto_df.columns), None)
                 if sort_col:
                     st.dataframe(auto_df.sort_values(sort_col, ascending=False).head(20), use_container_width=True, hide_index=True)
                 else:
