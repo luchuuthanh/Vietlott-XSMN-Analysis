@@ -1,0 +1,28 @@
+name: Probe 383.im XSMN API
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe public endpoints
+        run: python scripts/probe_383_xsmn_api.py
+      - name: Upload probe report
+        uses: actions/upload-artifact@v4
+        with:
+          name: xsmn-383-api-probe
+          path: xsmn_383_probe/
+          if-no-files-found: error
+          retention-days: 14
