@@ -2,7 +2,12 @@
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from analytics import frequency_table, gap_table, score_candidates
 from generator import make_sets
