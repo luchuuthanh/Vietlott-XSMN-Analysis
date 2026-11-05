@@ -40,6 +40,12 @@ def _read_archive(payload: bytes, start_iso: str, end_iso: str) -> pd.DataFrame:
     conn = sqlite3.connect(":memory:")
     try:
         conn.deserialize(payload)
+        integrity = [row[0] for row in conn.execute("PRAGMA quick_check")]
+        if integrity != ["ok"]:
+            raise ValueError(f"SQLite quick_check failed: {integrity[:5]}")
+        fk_errors = list(conn.execute("PRAGMA foreign_key_check"))
+        if fk_errors:
+            raise ValueError(f"SQLite foreign_key_check found {len(fk_errors)} errors")
         required_tables = {"lottery_draws", "lottery_results", "lottery_provinces"}
         tables = {r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
@@ -83,23 +89,36 @@ def fetch_xsmn_five_years(end_iso: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     frames, status = [], []
     session = requests.Session()
     for year, quarter in _quarters(START_DATE, end):
-        url = ARCHIVE_RAW.format(year=year, quarter=quarter)
-        try:
-            response = session.get(url, timeout=TIMEOUT)
-            if response.status_code == 404:
-                status.append({"Quý": f"{year} Q{quarter}", "Trạng thái": "Chưa có archive"})
-                continue
-            response.raise_for_status()
-            frame = _read_archive(response.content, start_iso, end.isoformat())
-            frames.append(frame)
-            status.append({
-                "Quý": f"{year} Q{quarter}",
-                "Trạng thái": "Đã tải",
-                "Số kết quả": len(frame),
-                "Số tỉnh": frame["province"].nunique() if not frame.empty else 0,
-            })
-        except Exception as exc:
-            status.append({"Quý": f"{year} Q{quarter}", "Trạng thái": f"Lỗi: {exc}"})
+        urls = [
+            ARCHIVE_RAW.format(year=year, quarter=quarter),
+            ARCHIVE_RAW.format(year=year, quarter=quarter).replace(".sqlite", "_v2.sqlite"),
+        ]
+        errors = []
+        loaded = False
+        for variant, url in enumerate(urls, start=1):
+            try:
+                response = session.get(url, timeout=TIMEOUT)
+                if response.status_code == 404:
+                    errors.append(f"V{variant}: không có archive")
+                    continue
+                response.raise_for_status()
+                frame = _read_archive(response.content, start_iso, end.isoformat())
+                frames.append(frame)
+                status.append({
+                    "Quý": f"{year} Q{quarter}",
+                    "Trạng thái": "Đã tải",
+                    "Phiên bản": f"V{variant}",
+                    "SQLite integrity": "ok",
+                    "Số kết quả": len(frame),
+                    "Số tỉnh": frame["province"].nunique() if not frame.empty else 0,
+                })
+                loaded = True
+                break
+            except Exception as exc:
+                errors.append(f"V{variant}: {exc}")
+        if not loaded:
+            status.append({"Quý": f"{year} Q{quarter}", "Trạng thái": "Thiếu/lỗi archive",
+                           "Chi tiết": " | ".join(errors)})
     data = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(
         columns=["date", "province", "prize", "prize_order", "number"]
     )
