@@ -44,7 +44,7 @@ def main():
         errors.append({'type':'province_set_mismatch','actual':sorted(df.province.unique())})
     for prize,length in PRIZE_LENGTH.items():
         vals=df.loc[df.prize.eq(prize),'number']
-        if vals.empty or not vals.str.fullmatch(r'\\d+').all() or not vals.str.len().eq(length).all():
+        if vals.empty or not vals.str.fullmatch(r'\d+').all() or not vals.str.len().eq(length).all():
             errors.append({'type':'number_format','prize':prize,'expected_length':length,'rows':len(vals)})
     if set(df.prize.unique()) != set(PRIZE_LENGTH): errors.append({'type':'prize_set_mismatch','actual':sorted(df.prize.unique())})
     bad_schedule=[]
