@@ -42,7 +42,13 @@ def fetch_quarter(year: int, quarter: int):
             required = {"lottery_draws", "lottery_results", "lottery_provinces"}
             if not required.issubset(tables):
                 raise ValueError(f"missing tables: {sorted(required - tables)}")
-            integrity = [row[0] for row in conn.execute("PRAGMA quick_check")]\n            if integrity != ["ok"]:\n                raise ValueError(f"SQLite quick_check failed: {integrity[:5]}")\n            foreign_key_errors = list(conn.execute("PRAGMA foreign_key_check"))\n            if foreign_key_errors:\n                raise ValueError(f"SQLite foreign_key_check found {len(foreign_key_errors)} errors")\n            dcols = {r[1] for r in conn.execute("PRAGMA table_info(lottery_draws)")}
+            integrity = [row[0] for row in conn.execute("PRAGMA quick_check")]
+            if integrity != ["ok"]:
+                raise ValueError(f"SQLite quick_check failed: {integrity[:5]}")
+            foreign_key_errors = list(conn.execute("PRAGMA foreign_key_check"))
+            if foreign_key_errors:
+                raise ValueError(f"SQLite foreign_key_check found {len(foreign_key_errors)} errors")
+            dcols = {r[1] for r in conn.execute("PRAGMA table_info(lottery_draws)")}
             rcols = {r[1] for r in conn.execute("PRAGMA table_info(lottery_results)")}
             pcols = {r[1] for r in conn.execute("PRAGMA table_info(lottery_provinces)")}
             for col in ("draw_key", "draw_date", "province_code", "region_code"):
@@ -65,7 +71,8 @@ def fetch_quarter(year: int, quarter: int):
             frame = pd.read_sql_query(sql, conn, params=(START.isoformat(), END.isoformat()))
             conn.close()
             return frame, {"quarter": f"{year}Q{quarter}", "status": "downloaded",
-                           "source_variant": suffix or "v1", "sqlite_integrity": "ok",\n                           "foreign_key_errors": 0, "rows": len(frame),
+                           "source_variant": suffix or "v1", "sqlite_integrity": "ok",
+                           "foreign_key_errors": 0, "rows": len(frame),
                            "provinces": int(frame.province.nunique()) if len(frame) else 0,
                            "url": url}
         except Exception as exc:
