@@ -103,7 +103,7 @@ try:
             st.caption(
                 f"Kết quả kỳ #{selected_draw['draw_id']}: "
                 + " – ".join(f"{n:02d}" for n in main_result)
-                + (f" | Đặc biệt: {special_result:02d}" if special_result is not None else " | Chưa có số đặc biệt")
+                + (f" | Đặc biệt: {special_result:02d}" if special_result is not None else (" | Chưa có số đặc biệt" if selected == "POWER655" else " | Mega 6/45 không có số đặc biệt"))
             )
             if st.button("Dò các vé đã nhập", key="run_power655_ticket_check"):
                 parsed = []
@@ -151,7 +151,7 @@ try:
                         [int(value) for value in item["Bộ số"].split(" - ")]
                         for item in generated
                     ]
-                with st.spinner("Đang chạy kiểm định ngoài mẫu trên lịch sử Power 6/55..."):
+                with st.spinner(f"Đang chạy kiểm định ngoài mẫu trên lịch sử {selected}..."):
                     summary, detail = rolling_backtest(
                         draw_records, build_from_history,
                         min_history=history_limit, history_window=history_limit, game=selected
@@ -170,7 +170,7 @@ try:
                 st.download_button(
                     "Tải kết quả kiểm định CSV",
                     pd.DataFrame(detail).to_csv(index=False).encode("utf-8-sig"),
-                    "power655_rolling_backtest.csv", "text/csv"
+                    f"{selected.lower()}_rolling_backtest.csv", "text/csv"
                 )
                 st.warning("Kết quả kiểm định là phép đo lịch sử, không chứng minh thuật toán dự đoán được kết quả tương lai hoặc làm tăng xác suất trúng.")
 except Exception as exc:
