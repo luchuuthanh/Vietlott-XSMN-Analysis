@@ -74,15 +74,25 @@ try:
         st.dataframe(metrics.tail(100).iloc[::-1], use_container_width=True, hide_index=True)
         st.bar_chart(metrics.set_index("Kỳ")[["Tổng", "Delta"]])
     with t4:
-        ranked = score_candidates(freq, gaps, universe, universe)
         st.caption("Điểm là công thức xếp hạng thống kê nội bộ, không phải xác suất trúng.")
-        st.dataframe(ranked.head(20), use_container_width=True, hide_index=True)
-        n = st.selectbox("Số lượng số mỗi bộ", [6, 7, 8], index=0)
-        k = st.slider("Số bộ muốn tạo", 1, 10, 5)
-        sets = make_sets(ranked, count=n, sets=k)
-        st.dataframe(pd.DataFrame(sets), use_container_width=True, hide_index=True)
-        if sets:
-            st.download_button("Tải bộ số CSV", pd.DataFrame(sets).to_csv(index=False).encode("utf-8-sig"), "bo_so_tham_khao.csv", "text/csv")
+        if is_535:
+            from lotto535_analyzer import load_draws as load_power535_draws
+            history_535 = load_power535_draws()
+            k = st.slider("Số bộ Lotto 5/35 muốn tạo", 1, 10, 5, key="power535_generate_count")
+            generated_535 = generate_power535_tickets(history_535[-recent_n:], count=k)
+            preview = [{"5 số chính": " - ".join(f"{n:02d}" for n in x["main_numbers"]), "Số đặc biệt": f"{x['special']:02d}"} for x in generated_535]
+            st.dataframe(pd.DataFrame(preview), use_container_width=True, hide_index=True)
+            if preview:
+                st.download_button("Tải bộ số Lotto 5/35 CSV", pd.DataFrame(preview).to_csv(index=False).encode("utf-8-sig"), "power535_bo_so.csv", "text/csv")
+        else:
+            ranked = score_candidates(freq, gaps, universe, universe)
+            st.dataframe(ranked.head(20), use_container_width=True, hide_index=True)
+            n = st.selectbox("Số lượng số mỗi bộ", [6, 7, 8], index=0)
+            k = st.slider("Số bộ muốn tạo", 1, 10, 5)
+            sets = make_sets(ranked, count=n, sets=k)
+            st.dataframe(pd.DataFrame(sets), use_container_width=True, hide_index=True)
+            if sets:
+                st.download_button("Tải bộ số CSV", pd.DataFrame(sets).to_csv(index=False).encode("utf-8-sig"), "bo_so_tham_khao.csv", "text/csv")
     with t5:
         st.dataframe(data.sort_values("date", ascending=False), use_container_width=True, hide_index=True)
         st.download_button("Tải dữ liệu đã chuẩn hóa", data.to_csv(index=False).encode("utf-8-sig"), "vietlott_clean.csv", "text/csv")
