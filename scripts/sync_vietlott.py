@@ -113,6 +113,33 @@ def validate_result(game: str, result) -> str | None:
         return None
     return f"unsupported game: {game}"
 
+# User-supplied result screenshots cross-checked against published draw records.
+# These corrections are reapplied after each upstream mirror download so the
+# verified record is not silently reverted by the daily synchronization.
+VERIFIED_CORRECTIONS = {
+    "POWER655": {
+        "00944": {"date": "2023-10-14", "result": [8, 23, 30, 34, 38, 47, 10]},
+    }
+}
+
+def apply_verified_corrections(game: str, payload: bytes) -> bytes:
+    corrections = VERIFIED_CORRECTIONS.get(game, {})
+    if not corrections:
+        return payload
+    rows = [json.loads(line) for line in payload.decode("utf-8-sig").splitlines() if line.strip()]
+    found = set()
+    for row in rows:
+        draw_id = str(row.get("id", "")).zfill(5)
+        if draw_id in corrections:
+            row.update(corrections[draw_id])
+            found.add(draw_id)
+    missing = set(corrections) - found
+    if missing:
+        raise RuntimeError(f"{game}: verified correction target(s) missing upstream: {sorted(missing)}")
+    # Keep the archive chronological after correcting the misplaced 00944 row.
+    rows.sort(key=lambda row: (str(row.get("date", ""))[:10], str(row.get("id", ""))))
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
+
 def audit_payload(game: str, payload: bytes) -> dict:
     try:
         text = payload.decode("utf-8-sig")
@@ -232,6 +259,7 @@ def main() -> int:
         print(f"Downloading {game}: {url}", flush=True)
         try:
             payload = fetch(url)
+            payload = apply_verified_corrections(game, payload)
             summary = audit_payload(game, payload)
             summary["sha256"] = hashlib.sha256(payload).hexdigest()
             summary["bytes"] = len(payload)
