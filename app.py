@@ -85,12 +85,10 @@ try:
         st.dataframe(data.sort_values("date", ascending=False), use_container_width=True, hide_index=True)
         st.download_button("Tải dữ liệu đã chuẩn hóa", data.to_csv(index=False).encode("utf-8-sig"), "vietlott_clean.csv", "text/csv")
     with t6:
-        if selected != "POWER655":
-            st.info("Bộ dò vé và kiểm định thuật toán hiện được xây dựng riêng cho Power 6/55.")
-        else:
-            st.markdown("### Dò một hoặc nhiều vé")
-            st.caption("Nhập mỗi bộ 6 số trên một dòng. Có thể phân cách bằng dấu cách, dấu phẩy hoặc dấu gạch ngang.")
-            ticket_text = st.text_area("Các bộ vé Power 6/55", placeholder="08 23 30 34 38 47\n01 12 20 30 40 55", height=110, key="power655_ticket_input")
+        if selected in {"POWER655", "MEGA645"}:
+            st.markdown("### Bộ dò vé dùng chung")
+            st.caption("Chọn Power 6/55 hoặc Mega 6/45 ở danh sách Loại vé phía trên. Bộ dò tự áp dụng đúng giới hạn số và luật giải của trò chơi đang chọn.")
+            ticket_text = st.text_area(f"Các bộ vé {selected}", placeholder=("08 23 30 34 38 47\n01 12 20 30 40 55" if selected == "POWER655" else "03 12 20 30 38 45\n01 09 18 27 36 44"), height=110, key=f"shared_ticket_input_{selected}")
             draw_options = data.sort_values("date").reset_index(drop=True)
             draw_labels = [
                 f"#{row.draw_id} · {row.date:%d/%m/%Y}"
@@ -114,19 +112,19 @@ try:
                     if not line.strip():
                         continue
                     try:
-                        parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split()))
+                        parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split(), universe=universe))
                     except ValueError as err:
                         errors.append(f"Dòng {line_no}: {err}")
                 if errors:
                     for err in errors:
                         st.error(err)
                 if parsed:
-                    checked = check_tickets(parsed, main_result, special_result)
+                    checked = check_tickets(parsed, main_result, special_result, game=selected)
                     st.dataframe(pd.DataFrame(checked), use_container_width=True, hide_index=True)
                     winners = sum(row["Mã giải"] != "NONE" for row in checked)
                     st.metric("Số vé có giải", f"{winners}/{len(checked)}")
             st.divider()
-            st.markdown("### Kiểm định thuật toán theo kiểu cuốn chiếu")
+            st.markdown(f"### Kiểm định thuật toán {selected} theo kiểu cuốn chiếu")
             st.caption("Mỗi kỳ chỉ dùng dữ liệu các kỳ trước để tạo bộ số; sau đó mới đối chiếu với kỳ kế tiếp. Cách này tránh lấy dữ liệu tương lai để dự đoán quá khứ.")
             history_limit = st.slider("Số kỳ lịch sử dùng để tạo ứng viên", 100, min(1000, len(data)-1), min(200, len(data)-1), key="ticket_backtest_window")
             tickets_per_draw = st.slider("Số bộ tạo cho mỗi kỳ kiểm định", 1, 10, 5, key="ticket_backtest_count")
@@ -145,9 +143,9 @@ try:
                 def build_from_history(history):
                     history_draws = [item["main_numbers"] for item in history[-history_limit:]]
                     history_flat = [number for draw in history_draws for number in draw]
-                    history_freq = frequency_table(history_flat, 55)
-                    history_gaps = gap_table(history_draws, 55)
-                    ranked_history = score_candidates(history_freq, history_gaps, 55, 22)
+                    history_freq = frequency_table(history_flat, universe)
+                    history_gaps = gap_table(history_draws, universe)
+                    ranked_history = score_candidates(history_freq, history_gaps, universe, universe)
                     generated = make_sets(ranked_history, count=6, sets=tickets_per_draw)
                     return [
                         [int(value) for value in item["Bộ số"].split(" - ")]
@@ -156,11 +154,11 @@ try:
                 with st.spinner("Đang chạy kiểm định ngoài mẫu trên lịch sử Power 6/55..."):
                     summary, detail = rolling_backtest(
                         draw_records, build_from_history,
-                        min_history=history_limit, history_window=history_limit
+                        min_history=history_limit, history_window=history_limit, game=selected
                     )
                 st.caption(f"Đã kiểm định {summary['tested_draws']:,} kỳ, tổng {summary['total_tickets']:,} bộ vé.")
                 summary_df = pd.DataFrame([
-                    {"Hạng giải": "Jackpot 1", "Số lượt": summary["jackpot1"]},
+                    {"Hạng giải": ("Jackpot 1" if selected == "POWER655" else "Jackpot"), "Số lượt": summary["jackpot1"] + summary.get("jackpot", 0)},
                     {"Hạng giải": "Jackpot 2", "Số lượt": summary["jackpot2"]},
                     {"Hạng giải": "Giải nhất", "Số lượt": summary["first"]},
                     {"Hạng giải": "Giải nhì", "Số lượt": summary["second"]},
