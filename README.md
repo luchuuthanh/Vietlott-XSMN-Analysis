@@ -36,6 +36,19 @@ Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết qu�
 - Người dùng cần tải CSV lịch sử thực tế để phân tích. Không tự tạo kết quả còn thiếu.
 - Điểm xếp hạng và bộ số tạo ra chỉ là thống kê tham khảo; xổ số có tính ngẫu nhiên và không thể bảo đảm trúng.
 
+
+## Vietlott: kho dữ liệu đầy đủ và tự cập nhật hằng ngày
+
+- Workflow `.github/workflows/vietlott-daily-sync.yml` chạy tự động mỗi ngày lúc **23:45 giờ Việt Nam** (16:45 UTC), đồng thời có thể chạy thủ công trong tab **Actions**.
+- Script `scripts/sync_vietlott.py` đồng bộ đủ 7 sản phẩm: Power 6/55, Mega 6/45, Power 5/35, Keno, Max 3D, Max 3D Pro và Bingo18.
+- Bản NDJSON được lưu tại `data/vietlott/`; `manifest.json` ghi số bản ghi, khoảng ngày, mã kỳ, SHA-256 và cảnh báo khoảng trống mã kỳ.
+- Trước khi thay thế dữ liệu cũ, script tải và kiểm tra toàn bộ 7 tệp. Nếu một tệp lỗi hoặc sai cấu trúc, snapshot hiện tại không bị ghi đè.
+- Nguồn đồng bộ là kho dữ liệu mở [vietvudanh/vietlott-data](https://github.com/vietvudanh/vietlott-data), công bố thu thập từ trang Vietlott. Đây là nguồn trung gian, không phải API chính thức; các kỳ quan trọng hoặc bất thường cần đối chiếu kết quả công bố trên vietlott.vn.
+- Workflow không tự tạo kỳ còn thiếu. Mã kỳ bị khuyết được ghi thành cảnh báo trong manifest và GitHub Actions Summary để rà soát.
+- Có thể chạy kiểm tra cục bộ: `python -m unittest discover -s tests` và đồng bộ: `python scripts/sync_vietlott.py`.
+
+Lưu ý: việc có kho dữ liệu 7 game không đồng nghĩa giao diện phân tích hiện tại đã hỗ trợ đầy đủ từng game. Giao diện `app.py` cần được mở rộng riêng cho schema Keno, Bingo18 và hai game Max 3D.
+
 ## StockLab Việt Nam
 
 StockLab là màn hình riêng cho phân tích cổ phiếu Việt Nam, dùng chung repository nhưng không thay đổi luồng Vietlott/XSMN.
