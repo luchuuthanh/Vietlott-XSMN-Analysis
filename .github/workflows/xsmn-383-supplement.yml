@@ -1,0 +1,41 @@
+name: Validate XSMN 383 supplement
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xsmn-383-supplement.yml'
+      - 'scripts/validate_383_xsmn_supplement.py'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch 383.im regional history
+        run: |
+          mkdir -p xsmn_383_probe
+          curl --fail --silent --show-error --location \
+            --retry 3 --retry-delay 2 \
+            https://api.383.im/lottery/region/mn.json \
+            -o xsmn_383_probe/region_sample.json
+      - name: Validate supplement
+        run: python scripts/validate_383_xsmn_supplement.py
+      - name: Upload separate supplement and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xsmn-383-validated-supplement
+          path: xsmn_383_supplement/
+          if-no-files-found: error
+          retention-days: 30
