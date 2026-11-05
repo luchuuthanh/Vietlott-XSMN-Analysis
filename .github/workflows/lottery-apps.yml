@@ -39,6 +39,25 @@ jobs:
         run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v
       - name: Run Lotto 5/35 shared-checker tests
         run: python -m unittest discover -s tests -p "test_ticket_checker_535.py" -v
+      - name: Smoke-test all three Vietlott data sources and Lotto 5/35 checker
+        run: |
+          python - <<'PY'
+          from data_sources import fetch_vietlott
+          from ticket_checker import check_tickets, normalize_power535_ticket
+          from lotto535_analyzer import load_draws, generate_tickets
+          p535 = fetch_vietlott("POWER535")
+          p655 = fetch_vietlott("POWER655")
+          m645 = fetch_vietlott("MEGA645")
+          assert len(p535) >= 10 and p535["n6"].isna().all()
+          assert len(p655) >= 10 and len(m645) >= 10
+          main, special = normalize_power535_ticket("01 08 15 22 35 | 09")
+          checked = check_tickets([[*main, special]], [1, 8, 15, 22, 35], 9, game="POWER535")
+          assert checked[0]["Mã giải"] == "Jackpot"
+          history = load_draws()
+          assert len(generate_tickets(history[-200:], count=5)) == 5
+          print(f"POWER535={len(p535)}; POWER655={len(p655)}; MEGA645={len(m645)}")
+          print("Lotto 5/35 data, checker and generator smoke test passed.")
+          PY
       - name: Smoke-test five-year XSMN archive ingestion
         run: |
           python - <<'PY'
