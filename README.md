@@ -4,7 +4,7 @@ Repository chứa hai ứng dụng Streamlit độc lập: Vietlott và XSMN. M�
 
 ## Tính năng hiện có
 - Đọc CSV, kiểm tra cột và chuẩn hóa dữ liệu.
-- Vietlott: Power 6/55, Mega 6/45 hoặc game có cấu trúc 6 số.
+- Vietlott: giao diện thống kê hiện hỗ trợ Power 6/55 và Mega 6/45.
 - Tần suất, tỷ lệ, gan theo số kỳ, cặp số, tổng, chẵn/lẻ, Delta.
 - XSMN: thống kê lô tô 2 số theo tỉnh, theo giải, tần suất và gan theo kỳ/ngày có dữ liệu.
 - Xếp hạng ứng viên theo điểm thống kê và tạo bộ số tham khảo.
@@ -26,7 +26,7 @@ Repository chứa hai ứng dụng Streamlit độc lập: Vietlott và XSMN. M�
 ## Định dạng dữ liệu
 
 ### Vietlott — data/vietlott_template.csv
-Cột bắt buộc: date,game,draw_id,n1,n2,n3,n4,n5,n6. Cột special tùy chọn. Mỗi dòng là một kỳ quay; 6 số chính nằm ở n1–n6. Tên game khuyến nghị POWER655 hoặc MEGA645.
+Cột bắt buộc: date,game,draw_id,n1,n2,n3,n4,n5,n6. Cột special tùy chọn. Mỗi dòng là một kỳ quay; 6 số chính nằm ở n1–n6. Riêng POWER655, `special` là số được quay riêng sau 6 số chính từ 49 bóng còn lại, không phải số chính thứ bảy; chỉ dùng xét Jackpot 2 và thống kê riêng. POWER655 quay thứ Ba, thứ Năm, thứ Bảy lúc 18:00. Tên game khuyến nghị POWER655 hoặc MEGA645.
 
 ### XSMN — data/xsmn_template.csv
 Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết quả giải của một tỉnh trong ngày. Ứng dụng lấy hai chữ số cuối để thống kê lô tô.
@@ -50,7 +50,7 @@ Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết qu�
 - Lần rà soát đầu đã phát hiện bản ghi Power 6/55 ID 00944 ở ngày 23/09/2022 (lệch lịch quay thứ Ba/Thứ Năm/Thứ Bảy), chỉ có 6 số và làm thứ tự ID nhảy 00779 → 00944 → 00780. Max 3D có hai dòng năm 2025 bị đặt sau dữ liệu năm 2026; Bingo18 có khoảng trống và đảo thứ tự ID. Những điểm này đang được giữ nguyên và gắn cảnh báo, chưa tự ý sửa số liệu.
 - Có thể chạy kiểm tra cục bộ: `python -m unittest discover -s tests` và đồng bộ: `python scripts/sync_vietlott.py`.
 
-Lưu ý: việc có kho dữ liệu 7 game không đồng nghĩa giao diện phân tích hiện tại đã hỗ trợ đầy đủ từng game. Giao diện `app.py` cần được mở rộng riêng cho schema Keno, Bingo18 và hai game Max 3D.
+Lưu ý: kho dữ liệu có 6 sản phẩm được chọn không đồng nghĩa giao diện phân tích hiện tại đã hỗ trợ đầy đủ từng sản phẩm. Giao diện `app.py` hiện chỉ phân tích Power 6/55 và Mega 6/45; Bingo18, Lotto 5/35, Max 3D và Max 3D Pro cần bộ phân tích riêng theo đúng luật từng trò chơi.
 
 ## StockLab Việt Nam
 
