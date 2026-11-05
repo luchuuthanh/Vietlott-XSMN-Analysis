@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-05T05:06:57Z",
+  "generated_at_utc": "2026-11-05T05:17:23Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -11,30 +11,16 @@
       "latest_draw_id": "01419",
       "numeric_id_count": 1419,
       "numeric_id_gaps": [],
-      "id_order_anomalies": [
-        {
-          "line": 781,
-          "previous_id": "944",
-          "current_id": "00780",
-          "date": "2022-09-24"
-        }
-      ],
-      "id_order_anomaly_count": 1,
-      "schedule_date_anomalies": [
-        {
-          "line": 780,
-          "draw_id": "00944",
-          "date": "2022-09-23"
-        }
-      ],
-      "schedule_date_anomaly_count": 1,
-      "missing_special_count": 1,
-      "missing_bonus_count": 1,
+      "id_order_anomalies": [],
+      "id_order_anomaly_count": 0,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
+      "missing_special_count": 0,
+      "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "3668ec0888e8ce6ef7a7bb8d0bc3508c5b2fe97250e1c7922184d1d19239fffd",
-      "bytes": 155898,
-      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl",
-      "warning": "Draw IDs are not in ascending source order; 1 Power 6/55 record(s) have no separately drawn special number; 1 record(s) fall outside the usual draw weekday schedule. Inspect source history before treating archive as complete."
+      "sha256": "90887316db93b06b3ac3b5074b9704addc1912fc6b68b38d7c2c61899e1713b8",
+      "bytes": 155901,
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl"
     },
     "MEGA645": {
       "records": 1387,
