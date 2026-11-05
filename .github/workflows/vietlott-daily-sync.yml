@@ -65,7 +65,23 @@ jobs:
           git add data/vietlott/*.jsonl data/vietlott/manifest.json
           if ! git diff --cached --quiet; then
             git commit -m "Update daily Vietlott historical data"
-            git pull --rebase origin main
+            if ! git pull --rebase origin main; then
+              echo "Concurrent data sync detected; resolving in favor of this fully validated snapshot."
+              conflicted=$(git diff --name-only --diff-filter=U)
+              for path in $conflicted; do
+                case "$path" in
+                  data/vietlott/*)
+                    git checkout --theirs -- "$path"
+                    git add "$path"
+                    ;;
+                  *)
+                    echo "Unexpected rebase conflict: $path"
+                    exit 1
+                    ;;
+                esac
+              done
+              GIT_EDITOR=true git rebase --continue
+            fi
             git push origin HEAD:main
           else
             echo "All Vietlott snapshots are already current."
