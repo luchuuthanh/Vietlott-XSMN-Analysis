@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-05T04:48:54Z",
+  "generated_at_utc": "2026-11-05T04:58:23Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -363,8 +363,8 @@
       "warning": "Numeric draw-id gaps detected; Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
     }
   },
-  "status": "warning",
   "excluded_games": {
     "KENO": "Excluded from this project by user request; not synchronized or analyzed."
-  }
+  },
+  "status": "warning"
 }
