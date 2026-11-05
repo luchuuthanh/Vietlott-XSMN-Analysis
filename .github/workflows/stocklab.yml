@@ -46,12 +46,13 @@ jobs:
           assert df["date"].notna().all()
           df = df.sort_values("date").copy()
           df["EMA100"] = df["close"].ewm(span=100, adjust=False, min_periods=100).mean()
-          df["MOM14"] = (df["close"] / df["close"].shift(14) - 1) * 100
+          df["MOM10"] = df["close"] - df["close"].shift(10)
+          df["ROC14"] = (df["close"] / df["close"].shift(14) - 1) * 100
           df["VOL20"] = df["volume"].rolling(20, min_periods=20).mean()
-          latest = df.dropna(subset=["EMA100", "MOM14", "VOL20"]).iloc[-1]
-          assert pd.notna(latest["EMA100"]) and pd.notna(latest["MOM14"]) and pd.notna(latest["VOL20"])
+          latest = df.dropna(subset=["EMA100", "MOM10", "ROC14", "VOL20"]).iloc[-1]
+          assert pd.notna(latest["EMA100"]) and pd.notna(latest["ROC14"]) and pd.notna(latest["VOL20"])
           print(f"Cophieu68 live test OK: {len(df)} FPT rows; latest={df['date'].max()}")
-          print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; VOL20={latest['VOL20']:.0f}")
+          print(f"FPT indicators: close={latest['close']:.2f}; EMA100={latest['EMA100']:.2f}; ROC14={latest['ROC14']:.2f}%; VOL20={latest['VOL20']:.0f}")
           PY
       - name: D1 chart pipeline smoke test
         timeout-minutes: 5
@@ -75,10 +76,10 @@ jobs:
           assert len(candles) >= 100, f"Need >=100 D1 candles for EMA100, got {len(candles)}"
           chart = add_indicators(candles)
           latest = chart.iloc[-1]
-          for col in ("EMA20", "EMA50", "EMA100", "MOM14", "VOL20", "RSI14", "MACD", "MACD_SIGNAL", "MACD_HIST"):
+          for col in ("EMA20", "EMA50", "EMA100", "MOM10", "ROC14", "VOL20", "RSI14", "MACD", "MACD_SIGNAL", "MACD_HIST"):
               assert pd.notna(latest[col]), f"Latest D1 indicator missing: {col}"
           print(f"D1 pipeline OK: source={source}; candles={len(chart)}; latest={latest['date']}")
-          print(f"FPT D1: close={latest['close']:.2f}; EMA20={latest['EMA20']:.2f}; EMA50={latest['EMA50']:.2f}; EMA100={latest['EMA100']:.2f}; MOM14={latest['MOM14']:.2f}%; RSI14={latest['RSI14']:.1f}; volume={latest['volume']:.0f}")
+          print(f"FPT D1: close={latest['close']:.2f}; EMA20={latest['EMA20']:.2f}; EMA50={latest['EMA50']:.2f}; EMA100={latest['EMA100']:.2f}; ROC14={latest['ROC14']:.2f}%; RSI14={latest['RSI14']:.1f}; volume={latest['volume']:.0f}")
           PY
       - name: Live Vietnam market scan via Cophieu68
         timeout-minutes: 60
@@ -96,15 +97,16 @@ jobs:
               try:
                   hist = fetch_cophieu68_history(ticker, max_pages=2).sort_values("date")
                   hist["EMA100"] = hist["close"].ewm(span=100, adjust=False, min_periods=100).mean()
-                  hist["MOM14"] = (hist["close"] / hist["close"].shift(14) - 1) * 100
+                  hist["MOM10"] = hist["close"] - hist["close"].shift(10)
+                  hist["ROC14"] = (hist["close"] / hist["close"].shift(14) - 1) * 100
                   hist["VOL20"] = hist["volume"].rolling(20, min_periods=20).mean()
-                  valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
+                  valid = hist.dropna(subset=["EMA100", "MOM10", "ROC14", "VOL20"])
                   if valid.empty:
                       return None, f"{ticker}: insufficient history"
                   row = valid.iloc[-1]
                   return {"symbol": ticker, "exchange": item.exchange, "date": row["date"],
                           "close": row["close"], "volume": row["volume"], "EMA100": row["EMA100"],
-                          "MOM14": row["MOM14"], "VOL20": row["VOL20"]}, None
+                          "MOM10": row["MOM10"], "ROC14": row["ROC14"], "VOL20": row["VOL20"]}, None
               except Exception as exc:
                   return None, f"{ticker}: {exc}"
 
@@ -122,8 +124,8 @@ jobs:
           data = pd.DataFrame(rows)
           if data.empty:
               raise SystemExit(f"No usable market data. Errors: {errors[:20]}")
-          passed = data[(data["MOM14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
-          passed = passed.sort_values("MOM14", ascending=False)
+          passed = data[(data["ROC14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
+          passed = passed.sort_values("ROC14", ascending=False)
           from datetime import datetime, timezone
           data["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
           passed["updated_at_utc"] = data["updated_at_utc"].iloc[0]
