@@ -138,7 +138,7 @@ def apply_verified_corrections(game: str, payload: bytes) -> bytes:
         raise RuntimeError(f"{game}: verified correction target(s) missing upstream: {sorted(missing)}")
     # Keep the archive chronological after correcting the misplaced 00944 row.
     rows.sort(key=lambda row: (str(row.get("date", ""))[:10], str(row.get("id", ""))))
-    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)).encode("utf-8")
 
 def audit_payload(game: str, payload: bytes) -> dict:
     try:
