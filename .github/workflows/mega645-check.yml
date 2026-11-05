@@ -51,7 +51,7 @@ jobs:
           with tempfile.TemporaryDirectory() as tmp:
               sync.MEGA645_BACKFILL = Path(tmp) / "mega645_backfill_00001_00197.jsonl"
               sync.MEGA645_BACKFILL.write_bytes(backfill_path.read_bytes())
-              fixture = b'{"date":"2017-10-25","id":"00198","result":[1,2,3,4,5,6]}\\n{"date":"2017-10-27","id":"00199","result":[7,8,9,10,11,12]}\\n'
+              fixture = b'{"date":"2017-10-25","id":"00198","result":[1,2,3,4,5,6]}\n{"date":"2017-10-27","id":"00199","result":[7,8,9,10,11,12]}\n'
               merged = sync.merge_mega645_backfill(fixture)
               merged_ids = [int(json.loads(line)["id"]) for line in merged.decode().splitlines()]
               assert merged_ids == list(range(1, 200)), (merged_ids[:3], merged_ids[-3:])
