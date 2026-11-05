@@ -12,7 +12,8 @@ on:
       - "data_sources.py"
       - "xsmn_archive.py"
       - "ticket_checker.py"
-      - "tests/test_ticket_checker.py"\n      - "tests/test_ticket_checker_535.py"
+      - "tests/test_ticket_checker.py"
+      - "tests/test_ticket_checker_535.py"
       - "scripts/backtest_vietlott.py"
       - "scripts/package_mega645.py"
       - "scripts/package_power655.py"
@@ -36,7 +37,9 @@ jobs:
         run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py scripts/package_power655.py
       - name: Run shared ticket-checker tests
         run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v
-      - name: Run Lotto 5/35 shared-checker tests\n        run: python -m unittest discover -s tests -p "test_ticket_checker_535.py" -v\n      - name: Smoke-test five-year XSMN archive ingestion
+      - name: Run Lotto 5/35 shared-checker tests
+        run: python -m unittest discover -s tests -p "test_ticket_checker_535.py" -v
+      - name: Smoke-test five-year XSMN archive ingestion
         run: |
           python - <<'PY'
           from datetime import date
