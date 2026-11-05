@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-05T05:40:27Z",
+  "generated_at_utc": "2026-11-05T05:42:47Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -39,7 +39,9 @@
       "numeric_id_gap_count_sampled": 0,
       "sha256": "0231dd6f061b1838cd478e3f1fe2e06ee0b172b8b61046bf518454a5a07fc5fc",
       "bytes": 160477,
-      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl"
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl",
+      "source_note": "Merged archive: draws 00001-00197 from the NhanAZ-Data/vietlott-research historical Mega 6/45 CSV (which includes official Vietlott source-page/PDF links); draws 00198 onward from the vietvudanh/vietlott-data mirror. Not every historical row has been independently re-checked against official PDFs.",
+      "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
     },
     "POWER535": {
       "records": 988,
