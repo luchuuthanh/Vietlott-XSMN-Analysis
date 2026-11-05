@@ -14,6 +14,8 @@ on:
       - "ticket_checker.py"
       - "tests/test_ticket_checker.py"
       - "scripts/backtest_vietlott.py"
+      - "scripts/package_mega645.py"
+      - "data/vietlott/mega645_backfill_00001_00197.jsonl"
       - "data/vietlott/power655.jsonl"
       - "data/vietlott/power645.jsonl"
       - ".github/workflows/lottery-apps.yml"
@@ -30,7 +32,7 @@ jobs:
       - name: Install app dependencies
         run: pip install -r requirements.txt
       - name: Compile both entrypoints and shared modules
-        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py
+        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py
       - name: Run shared ticket-checker tests
         run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v
       - name: Smoke-test five-year XSMN archive ingestion
@@ -66,6 +68,15 @@ jobs:
 
       - name: Run full-history expanding-window backtests for both games
         run: python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5
+      - name: Build finalized Mega 6/45 package
+        run: python scripts/package_mega645.py
+      - name: Upload finalized Mega 6/45 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega645-final-package-${{ github.run_number }}
+          path: reports/mega645_final_package/
+          if-no-files-found: error
+          retention-days: 90
       - name: Upload rolling backtest CSV and JSON reports
         uses: actions/upload-artifact@v4
         with:
