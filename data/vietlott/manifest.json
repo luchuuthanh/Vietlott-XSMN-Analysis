@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-11-05T05:24:58Z",
+  "generated_at_utc": "2026-11-05T05:40:27Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
-  "source_note": "Merged archive: draws 00001-00197 from NhanAZ historical dataset with official Vietlott source links; draws 00198 onward from vietvudanh mirror. Individual records have not all been independently checked against official result pages/PDFs.",
+  "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
     "POWER655": {
       "records": 1419,
@@ -39,8 +39,7 @@
       "numeric_id_gap_count_sampled": 0,
       "sha256": "0231dd6f061b1838cd478e3f1fe2e06ee0b172b8b61046bf518454a5a07fc5fc",
       "bytes": 160477,
-      "source_url": "https://github.com/luchuuthanh/Vietlott-XSMN-Analysis/blob/main/data/vietlott/power645.jsonl",
-      "source_note": "Merged archive: draws 00001-00197 from NhanAZ historical dataset with official Vietlott source links; draws 00198 onward from vietvudanh mirror. Individual records have not all been independently checked against official result pages/PDFs."
+      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl"
     },
     "POWER535": {
       "records": 988,
