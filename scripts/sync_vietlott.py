@@ -84,8 +84,15 @@ def validate_result(game: str, result) -> str | None:
         if nums is None:
             return "result must be an integer array"
         if game == "POWER655":
-            if len(nums) not in (6, 7) or len(set(nums[:6])) != 6 or any(n < 1 or n > 55 for n in nums):
-                return "Power 6/55 expects 6 distinct main numbers in 1..55 and an optional 7th bonus number"
+            # Six main balls are drawn first. The special ball is drawn separately
+            # from the 49 balls left in the machine and is only used for Jackpot 2.
+            if len(nums) not in (6, 7):
+                return "Power 6/55 expects 6 main numbers and, when available, 1 separate special number"
+            main = nums[:6]
+            if len(set(main)) != 6 or any(n < 1 or n > 55 for n in main):
+                return "Power 6/55 main numbers must be 6 distinct values in 1..55"
+            if len(nums) == 7 and (nums[6] < 1 or nums[6] > 55 or nums[6] in main):
+                return "Power 6/55 special number must be a different value among the 49 balls left after the 6 main balls"
         elif game == "MEGA645":
             if len(nums) != 6 or len(set(nums)) != 6 or any(n < 1 or n > 45 for n in nums):
                 return "Mega 6/45 expects 6 distinct numbers in 1..45"
@@ -202,7 +209,8 @@ def audit_payload(game: str, payload: bytes) -> dict:
         "id_order_anomaly_count": len(id_order_anomalies),
         "schedule_date_anomalies": schedule_date_anomalies[:20],
         "schedule_date_anomaly_count": len(schedule_date_anomalies),
-        "missing_bonus_count": missing_bonus_count,
+        "missing_special_count": missing_bonus_count,
+        "missing_bonus_count": missing_bonus_count,  # backward-compatible manifest field
         "numeric_id_gap_count_sampled": len(gaps),
         "sha256": None,
     }
@@ -235,7 +243,7 @@ def main() -> int:
             if summary["id_order_anomaly_count"]:
                 warnings.append("Draw IDs are not in ascending source order")
             if summary["missing_bonus_count"]:
-                warnings.append(f"{summary['missing_bonus_count']} Power 6/55 record(s) have no special number")
+                warnings.append(f"{summary['missing_special_count']} Power 6/55 record(s) have no separately drawn special number")
             if summary["schedule_date_anomaly_count"]:
                 warnings.append(f"{summary['schedule_date_anomaly_count']} record(s) fall outside the usual draw weekday schedule")
             if warnings:
