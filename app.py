@@ -5,7 +5,8 @@ from analytics import frequency_table, gap_table, pair_table, draw_metrics, scor
 from data_loader import load_vietlott
 from generator import make_sets
 from data_sources import fetch_vietlott
-from ticket_checker import expand_ticket, check_tickets, rolling_backtest
+from ticket_checker import expand_ticket, check_tickets, rolling_backtest, normalize_power535_ticket
+from lotto535_analyzer import generate_tickets as generate_power535_tickets
 
 st.set_page_config(page_title="Vietlott Analysis Lab", page_icon="🎯", layout="wide")
 st.title("🎯 VIETLOTT ANALYSIS LAB")
