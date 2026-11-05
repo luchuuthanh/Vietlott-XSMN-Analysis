@@ -1,7 +1,7 @@
 # XSMN supplement verification — six-draw batch 2026-09-15 to 2026-09-20
 
 ## Scope and method
-Six consecutive XSMN draw dates, 2026-09-15 through 2026-09-20 inclusive. The normalized 383.im supplement contains 18 station-days and 324 winning-number rows for this batch. Compared every prize class DB and G1–G8 by date, station and prize class. Number order within a prize class is immaterial; leading zeroes are preserved.
+Six consecutive XSMN draw dates, 2026-09-15 through 2026-09-20 inclusive. The normalized 383.im supplement contains 19 station-days and 342 winning-number rows for this batch. Compared every prize class DB and G1–G8 by date, station and prize class. Number order within a prize class is immaterial; leading zeroes are preserved.
 
 ## Row-by-row comparison result
 - 2026-09-15: Bến Tre, Vũng Tàu, Bạc Liêu — 3 station-days / 54 numbers.
@@ -11,7 +11,7 @@ Six consecutive XSMN draw dates, 2026-09-15 through 2026-09-20 inclusive. The no
 - 2026-09-19: TP. Hồ Chí Minh, Long An, Bình Phước, Hậu Giang — 4 station-days / 72 numbers.
 - 2026-09-20: Tiền Giang, Đà Lạt, Kiên Giang — 3 station-days / 54 numbers.
 
-All 324 numbers across all 18 station-days match the normalized supplement. No discrepancies found in this batch.
+All 342 numbers across all 19 station-days match the normalized supplement. No discrepancies found in this batch.
 
 ## Full-result references used
 - 2026-09-15: QuetKQXS and KQXS.vn
@@ -35,6 +35,6 @@ These are secondary result-table websites, not certified primary records issued 
 
 ## Status
 - Six draw dates: 6/6 checked.
-- Station-days: 18/18 checked.
-- Result rows: 324/324 match.
+- Station-days: 19/19 checked.
+- Result rows: 342/342 match.
 - Discrepancies found: 0.
