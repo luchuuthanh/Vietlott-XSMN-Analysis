@@ -90,7 +90,7 @@ def main():
         data["date"] = pd.to_datetime(data["date"], errors="coerce")
         data["province"] = data["province"].astype(str).str.strip()
         data["prize"] = data["prize"].astype(str).str.strip()
-        data["number"] = data["number"].astype(str).str.replace(r"\\D", "", regex=True)
+        data["number"] = data["number"].astype(str).str.replace(r"\D", "", regex=True)
         data = data.dropna(subset=["date"])
         data = data[(data.date >= pd.Timestamp(START)) & (data.date <= pd.Timestamp(END))]
         key = ["date","province","prize","prize_order","number"]
