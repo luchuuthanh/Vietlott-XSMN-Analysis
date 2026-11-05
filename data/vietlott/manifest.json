@@ -71,24 +71,6 @@
       "bytes": 104557,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power535.jsonl"
     },
-    "KENO": {
-      "records": 90801,
-      "first_date": "2022-12-04",
-      "latest_date": "2026-11-05",
-      "first_draw_id": "#0110271",
-      "latest_draw_id": "#0301812",
-      "numeric_id_count": 0,
-      "numeric_id_gaps": [],
-      "id_order_anomalies": [],
-      "id_order_anomaly_count": 0,
-      "schedule_date_anomalies": [],
-      "schedule_date_anomaly_count": 0,
-      "missing_bonus_count": 0,
-      "numeric_id_gap_count_sampled": 0,
-      "sha256": "566612da7bf397e6ce756c4505bd76fbf316476ccd540651722e7d397cc4fec6",
-      "bytes": 13908195,
-      "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/keno.jsonl"
-    },
     "MAX3D": {
       "records": 1154,
       "first_date": "2019-04-22",
@@ -381,5 +363,8 @@
       "warning": "Numeric draw-id gaps detected; Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
     }
   },
-  "status": "warning"
+  "status": "warning",
+  "excluded_games": {
+    "KENO": "Excluded from this project by user request; not synchronized or analyzed."
+  }
 }
