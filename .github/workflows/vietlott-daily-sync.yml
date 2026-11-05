@@ -36,7 +36,7 @@ jobs:
         run: python -m pip install pandas
       - name: Run Vietlott data validation tests
         run: python -m unittest discover -s tests -v
-      - name: Download, validate and audit all seven games
+      - name: Download, validate and audit the six selected games
         run: python scripts/sync_vietlott.py
       - name: Publish audit summary
         if: always()
