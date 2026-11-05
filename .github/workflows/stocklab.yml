@@ -124,7 +124,7 @@ jobs:
           data = pd.DataFrame(rows)
           if data.empty:
               raise SystemExit(f"No usable market data. Errors: {errors[:20]}")
-          passed = data[(data["ROC14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
+          passed = data[(data["MOM10"] >= 4) & (data["ROC14"] >= 4) & (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
           passed = passed.sort_values("ROC14", ascending=False)
           from datetime import datetime, timezone
           data["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
