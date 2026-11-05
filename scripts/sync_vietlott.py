@@ -175,7 +175,7 @@ def merge_mega645_backfill(payload: bytes) -> bytes:
     if missing:
         raise RuntimeError(f"Mega 6/45 merged archive has missing IDs: {missing[:20]}")
     rows = sorted(rows_by_id.values(), key=lambda row: (str(row.get("date", ""))[:10], int(row["id"])))
-    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)).encode("utf-8")
 
 def audit_payload(game: str, payload: bytes) -> dict:
     try:
