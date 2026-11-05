@@ -175,14 +175,27 @@ try:
                         min_history=history_limit, history_window=None, game=selected
                     )
                 st.caption(f"Đã kiểm định {summary['tested_draws']:,} kỳ, tổng {summary['total_tickets']:,} bộ vé.")
-                summary_df = pd.DataFrame([
-                    {"Hạng giải": ("Jackpot 1" if selected == "POWER655" else "Jackpot"), "Số lượt": summary["jackpot1"] + summary.get("jackpot", 0)},
-                    {"Hạng giải": "Jackpot 2", "Số lượt": summary["jackpot2"]},
-                    {"Hạng giải": "Giải nhất", "Số lượt": summary["first"]},
-                    {"Hạng giải": "Giải nhì", "Số lượt": summary["second"]},
-                    {"Hạng giải": "Giải ba", "Số lượt": summary["third"]},
-                    {"Hạng giải": "Không trúng", "Số lượt": summary["no_prize"]},
-                ])
+                if is_535:
+                    summary_rows = [
+                        {"Hạng giải": "Jackpot", "Số lượt": summary["jackpot"]},
+                        {"Hạng giải": "Giải nhất", "Số lượt": summary["first"]},
+                        {"Hạng giải": "Giải nhì", "Số lượt": summary["second"]},
+                        {"Hạng giải": "Giải ba", "Số lượt": summary["third"]},
+                        {"Hạng giải": "Giải tư", "Số lượt": summary["fourth"]},
+                        {"Hạng giải": "Giải năm", "Số lượt": summary["fifth"]},
+                        {"Hạng giải": "Khuyến khích", "Số lượt": summary["encouragement"]},
+                        {"Hạng giải": "Không trúng", "Số lượt": summary["no_prize"]},
+                    ]
+                else:
+                    summary_rows = [
+                        {"Hạng giải": ("Jackpot 1" if selected == "POWER655" else "Jackpot"), "Số lượt": summary["jackpot1"] + summary.get("jackpot", 0)},
+                        {"Hạng giải": "Jackpot 2", "Số lượt": summary["jackpot2"]},
+                        {"Hạng giải": "Giải nhất", "Số lượt": summary["first"]},
+                        {"Hạng giải": "Giải nhì", "Số lượt": summary["second"]},
+                        {"Hạng giải": "Giải ba", "Số lượt": summary["third"]},
+                        {"Hạng giải": "Không trúng", "Số lượt": summary["no_prize"]},
+                    ]
+                summary_df = pd.DataFrame(summary_rows)
                 st.dataframe(summary_df, use_container_width=True, hide_index=True)
                 st.dataframe(pd.DataFrame(detail).tail(100), use_container_width=True, hide_index=True)
                 st.download_button(
