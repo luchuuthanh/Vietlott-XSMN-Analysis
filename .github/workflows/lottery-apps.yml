@@ -11,6 +11,11 @@ on:
       - "generator.py"
       - "data_sources.py"
       - "xsmn_archive.py"
+      - "ticket_checker.py"
+      - "tests/test_ticket_checker.py"
+      - "scripts/backtest_vietlott.py"
+      - "data/vietlott/power655.jsonl"
+      - "data/vietlott/power645.jsonl"
       - ".github/workflows/lottery-apps.yml"
   workflow_dispatch:
 
@@ -24,9 +29,7 @@ jobs:
           python-version: "3.11"
       - name: Install app dependencies
         run: pip install -r requirements.txt
-      - name: Compile both entrypoints and shared modules
-        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py
-      - name: Smoke-test five-year XSMN archive ingestion
+      - name: Compile both entrypoints and shared modules\n        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py\n      - name: Run shared ticket-checker tests\n        run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v\n      - name: Smoke-test five-year XSMN archive ingestion
         run: |
           python - <<'PY'
           from datetime import date
@@ -56,3 +59,4 @@ jobs:
           assert len(xgaps) == 100
           print("Lottery analytics smoke test passed.")
           PY
+\n      - name: Run full-history expanding-window backtests for both games\n        run: python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5\n      - name: Upload rolling backtest CSV and JSON reports\n        uses: actions/upload-artifact@v4\n        with:\n          name: vietlott-rolling-backtest-${{ github.run_number }}\n          path: reports/rolling_backtest/\n          if-no-files-found: error\n          retention-days: 90\n
