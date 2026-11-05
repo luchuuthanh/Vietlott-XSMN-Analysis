@@ -52,7 +52,7 @@ jobs:
           assert len(p655) >= 10 and len(m645) >= 10
           main, special = normalize_power535_ticket("01 08 15 22 35 | 09")
           checked = check_tickets([[*main, special]], [1, 8, 15, 22, 35], 9, game="POWER535")
-          assert checked[0]["Mã giải"] == "Jackpot"
+          assert checked[0]["Mã giải"] == "JACKPOT"
           history = load_draws()
           assert len(generate_tickets(history[-200:], count=5)) == 5
           print(f"POWER535={len(p535)}; POWER655={len(p655)}; MEGA645={len(m645)}")
