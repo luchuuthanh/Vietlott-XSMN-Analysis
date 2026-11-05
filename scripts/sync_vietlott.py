@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Daily mirror and integrity audit for all seven Vietlott datasets.
+"""Daily mirror and integrity audit for the six selected Vietlott datasets.
 
 The upstream project publishes NDJSON collected from Vietlott result pages.
 This script never fabricates missing draws: it downloads a complete snapshot,
@@ -27,7 +27,6 @@ GAMES = {
     "POWER655": ("power655.jsonl", "power655.jsonl"),
     "MEGA645": ("power645.jsonl", "power645.jsonl"),
     "POWER535": ("power535.jsonl", "power535.jsonl"),
-    "KENO": ("keno.jsonl", "keno.jsonl"),
     "MAX3D": ("3d.jsonl", "3d.jsonl"),
     "MAX3DPRO": ("3d_pro.jsonl", "3d_pro.jsonl"),
     "BINGO18": ("bingo18.jsonl", "bingo18.jsonl"),
@@ -80,7 +79,7 @@ def three_digit_values(value):
     return found
 
 def validate_result(game: str, result) -> str | None:
-    if game in {"POWER655", "MEGA645", "POWER535", "KENO", "BINGO18"}:
+    if game in {"POWER655", "MEGA645", "POWER535", "BINGO18"}:
         nums = as_int_list(result)
         if nums is None:
             return "result must be an integer array"
@@ -93,9 +92,6 @@ def validate_result(game: str, result) -> str | None:
         elif game == "POWER535":
             if len(nums) != 6 or len(set(nums[:5])) != 5 or any(n < 1 or n > 35 for n in nums[:5]):
                 return "Power 5/35 expects 5 distinct main numbers in 1..35 plus a special number"
-        elif game == "KENO":
-            if len(nums) != 20 or len(set(nums)) != 20 or any(n < 1 or n > 80 for n in nums):
-                return "Keno expects 20 distinct numbers in 1..80"
         elif game == "BINGO18":
             if len(nums) != 3 or any(n < 1 or n > 6 for n in nums):
                 return "Bingo18 expects 3 dice values in 1..6"
@@ -218,6 +214,7 @@ def main() -> int:
         "source_repository": "https://github.com/vietvudanh/vietlott-data",
         "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
         "games": {},
+        "excluded_games": {"KENO": "Excluded from this project by user request; not synchronized or analyzed."},
         "status": "ok",
     }
     staged = []
@@ -262,14 +259,14 @@ def main() -> int:
         MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         raise RuntimeError("One or more game datasets failed; existing data snapshots were not replaced. " + " | ".join(failures))
 
-    # Replace snapshots only after all seven downloads have passed validation.
+    # Replace snapshots only after all six downloads have passed validation.
     for path, payload in staged:
         tmp = path.with_suffix(path.suffix + ".tmp")
         tmp.write_bytes(payload)
         os.replace(tmp, path)
 
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"All {len(GAMES)} datasets validated. Manifest: {MANIFEST}", flush=True)
+    print(f"All {len(GAMES)} selected datasets validated. Manifest: {MANIFEST}", flush=True)
     return 0
 
 if __name__ == "__main__":
