@@ -23,12 +23,12 @@
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl"
     },
     "MEGA645": {
-      "records": 1387,
-      "first_date": "2017-10-25",
+      "records": 1584,
+      "first_date": "2016-07-20",
       "latest_date": "2026-11-04",
-      "first_draw_id": "00198",
+      "first_draw_id": "00001",
       "latest_draw_id": "01584",
-      "numeric_id_count": 1387,
+      "numeric_id_count": 1584,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -37,8 +37,8 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "eb36487307cc7f8f23a1a2c2d2ff8797ea9c2b438688d71c0b62b62f763072c6",
-      "bytes": 148128,
+      "sha256": null,
+      "bytes": 160477,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl"
     },
     "POWER535": {
