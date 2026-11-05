@@ -33,7 +33,7 @@ class VietlottSyncTests(unittest.TestCase):
             {"date": "2026-11-04", "id": "00987", "result": [2, 7, 8, 13, 14, 7]},
             {"date": "2026-11-04", "id": "00988", "result": [6, 10, 15, 20, 24, 4]},
         ]
-        payload = ("\\n".join(json.dumps(x) for x in rows) + "\\n").encode()
+        payload = ("\n".join(json.dumps(x) for x in rows) + "\n").encode()
         summary = audit_payload("POWER535", payload)
         self.assertEqual(summary["latest_draw_id"], "00988")
 
