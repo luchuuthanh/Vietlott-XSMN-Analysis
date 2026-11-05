@@ -8,7 +8,7 @@ from data_sources import fetch_vietlott
 
 st.set_page_config(page_title="Vietlott Analysis Lab", page_icon="🎯", layout="wide")
 st.title("🎯 VIETLOTT ANALYSIS LAB")
-st.caption("Phân tích Power 6/55 và Mega 6/45. Thống kê tham khảo, không bảo đảm trúng thưởng.")
+st.caption("Phân tích Power 6/55 và Mega 6/45. Với Power 6/55, 6 số chính và số đặc biệt được thống kê riêng; số đặc biệt không tham gia tần suất 6 số chính.")
 
 with st.sidebar:
     st.header("Nguồn dữ liệu")
@@ -58,7 +58,7 @@ try:
         if "special" in subset.columns:
             special = pd.to_numeric(subset["special"], errors="coerce").dropna().astype(int)
             if not special.empty:
-                st.markdown("**Thống kê số đặc biệt (nếu có)**")
+                st.markdown("**Số đặc biệt Power 6/55 — quay riêng sau 6 số chính, chỉ dùng xét Jackpot 2**")
                 special_freq = special.value_counts().rename_axis("Số đặc biệt").reset_index(name="Số lần")
                 st.dataframe(special_freq, use_container_width=True, hide_index=True)
     with t2:
