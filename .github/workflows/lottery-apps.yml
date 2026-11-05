@@ -14,7 +14,8 @@ on:
       - "ticket_checker.py"
       - "tests/test_ticket_checker.py"
       - "scripts/backtest_vietlott.py"
-      - "scripts/package_mega645.py"\n      - "scripts/package_power655.py"
+      - "scripts/package_mega645.py"
+      - "scripts/package_power655.py"
       - "data/vietlott/mega645_backfill_00001_00197.jsonl"
       - "data/vietlott/power655.jsonl"
       - "data/vietlott/power645.jsonl"
@@ -32,7 +33,7 @@ jobs:
       - name: Install app dependencies
         run: pip install -r requirements.txt
       - name: Compile both entrypoints and shared modules
-        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py
+        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py scripts/package_power655.py
       - name: Run shared ticket-checker tests
         run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v
       - name: Smoke-test five-year XSMN archive ingestion
@@ -65,10 +66,18 @@ jobs:
           assert len(xgaps) == 100
           print("Lottery analytics smoke test passed.")
           PY
-
       - name: Run full-history expanding-window backtests for both games
         run: python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5
-      - name: Build finalized Power 6/55 package\n        run: python scripts/package_power655.py\n      - name: Upload finalized Power 6/55 package\n        uses: actions/upload-artifact@v4\n        with:\n          name: power655-final-package-${{ github.run_number }}\n          path: reports/power655_final_package/\n          if-no-files-found: error\n          retention-days: 90\n      - name: Build finalized Mega 6/45 package
+      - name: Build finalized Power 6/55 package
+        run: python scripts/package_power655.py
+      - name: Upload finalized Power 6/55 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: power655-final-package-${{ github.run_number }}
+          path: reports/power655_final_package/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Build finalized Mega 6/45 package
         run: python scripts/package_mega645.py
       - name: Upload finalized Mega 6/45 package
         uses: actions/upload-artifact@v4
