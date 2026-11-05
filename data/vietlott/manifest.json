@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-05T04:46:41Z",
+  "generated_at_utc": "2026-11-05T04:47:05Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -20,12 +20,20 @@
         }
       ],
       "id_order_anomaly_count": 1,
+      "schedule_date_anomalies": [
+        {
+          "line": 780,
+          "draw_id": "00944",
+          "date": "2022-09-23"
+        }
+      ],
+      "schedule_date_anomaly_count": 1,
       "missing_bonus_count": 1,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "3668ec0888e8ce6ef7a7bb8d0bc3508c5b2fe97250e1c7922184d1d19239fffd",
       "bytes": 155898,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl",
-      "warning": "Draw IDs are not in ascending source order; 1 Power 6/55 record(s) have no special number. Inspect source history before treating archive as complete."
+      "warning": "Draw IDs are not in ascending source order; 1 Power 6/55 record(s) have no special number; 1 record(s) fall outside the usual draw weekday schedule. Inspect source history before treating archive as complete."
     },
     "MEGA645": {
       "records": 1387,
@@ -37,6 +45,8 @@
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "eb36487307cc7f8f23a1a2c2d2ff8797ea9c2b438688d71c0b62b62f763072c6",
@@ -53,6 +63,8 @@
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "5c9ba801e38c0c6e9c3a67945544e3600c71b6017f37ce77b8e63086ad1af111",
@@ -69,6 +81,8 @@
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "566612da7bf397e6ce756c4505bd76fbf316476ccd540651722e7d397cc4fec6",
@@ -98,6 +112,8 @@
         }
       ],
       "id_order_anomaly_count": 2,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "d99ba10c474f86059af35169ccb438296caf6b8b2df7bb185d7f4083cdd9b022",
@@ -115,6 +131,8 @@
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
       "sha256": "4ff2256908ce15f8371b52c5b67bbb53f405c7554670ef7c60343acae69216e4",
@@ -353,6 +371,8 @@
         }
       ],
       "id_order_anomaly_count": 20,
+      "schedule_date_anomalies": [],
+      "schedule_date_anomaly_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 100,
       "sha256": "648f71d287bec4021b8d68970488a48fcb7b70bfdae8368eb0d0167f97dd64d0",
