@@ -36,8 +36,10 @@ class Power655TicketCheckerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             normalize_ticket("1 2 3 4 5 56")
 
-    def test_bao_seven_expands_to_seven_lines(self):
+    def test_system_tickets_expand_to_all_six_number_combinations(self):
+        self.assertEqual(len(expand_ticket([1, 2, 3, 4, 5])), 50)
         self.assertEqual(len(expand_ticket([1, 2, 3, 4, 5, 6, 7])), 7)
+        self.assertEqual(len(expand_ticket([1, 2, 3, 4, 5, 6, 7, 8])), 28)
 
     def test_ticket_batch(self):
         rows = check_tickets([[8, 23, 30, 34, 38, 47]], self.main, self.special)
