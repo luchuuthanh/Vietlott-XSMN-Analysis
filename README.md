@@ -80,10 +80,10 @@ Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Ma
 
 ## Power 6/55: bộ dò vé và kiểm định thuật toán
 
-- Tab **Dò vé & kiểm định** trong ứng dụng Vietlott cho phép nhập nhiều dòng vé, chọn kỳ quay và tự xác định hạng giải cao nhất.
-- Hỗ trợ vé 6 số; vé hệ thống 5 số (mở rộng thành 50 tổ hợp), Bao 7–15 và Bao 18 (mở rộng toàn bộ tổ hợp 6 số).
-- Số đặc biệt được kiểm tra độc lập, chỉ dùng xét Jackpot 2. Nếu dữ liệu kỳ quay thiếu số đặc biệt, hệ thống đánh dấu trường hợp 5 số chính là chưa thể xác nhận Jackpot 2.
+- Tab **Dò vé & kiểm định** là bộ dò dùng chung cho Power 6/55 và Mega 6/45: chọn loại trò chơi ở bộ lọc phía trên, nhập nhiều dòng vé, chọn kỳ quay và hệ thống tự áp dụng giới hạn số cùng luật giải tương ứng.
+- Hỗ trợ vé 6 số; vé hệ thống 5 số (Power 6/55 tạo 50 tổ hợp, Mega 6/45 tạo 40 tổ hợp), Bao 7–15 và Bao 18 (mở rộng toàn bộ tổ hợp 6 số).
+- Với Power 6/55, số đặc biệt được kiểm tra độc lập, chỉ dùng xét Jackpot 2; nếu thiếu dữ liệu, hệ thống đánh dấu chưa thể xác nhận Jackpot 2. Với Mega 6/45, không có số đặc biệt và bộ dò dùng đúng các hạng Jackpot, Giải nhất, Giải nhì, Giải ba.
 - Bộ kiểm định thuật toán dùng rolling/out-of-sample: mỗi kỳ kiểm tra chỉ được tạo ứng viên từ các kỳ đứng trước, không sử dụng kết quả tương lai. Có thể xuất chi tiết CSV.
-- Module lõi: `ticket_checker.py`; kiểm thử: `tests/test_ticket_checker.py`.
+- Module lõi dùng chung: `ticket_checker.py`; kiểm thử: `tests/test_ticket_checker.py`.
 - Quy tắc hạng giải theo Thể lệ Power 6/55 Vietlott: Jackpot 1 (6 số), Jackpot 2 (5 số + đặc biệt), Giải nhất (5 số), Giải nhì (4 số), Giải ba (3 số). Một vé chỉ nhận hạng giải cao nhất. Công cụ chỉ hỗ trợ đối chiếu tham khảo; vé hợp lệ và kết quả chính thức phải được Vietlott xác nhận.
 - Rolling backtest đo hiệu quả lịch sử ngoài mẫu, không phải bằng chứng thuật toán dự đoán được tương lai hay làm tăng xác suất trúng.
