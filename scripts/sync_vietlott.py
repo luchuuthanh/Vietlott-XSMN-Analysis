@@ -32,6 +32,12 @@ GAMES = {
     "MAX3DPRO": ("3d_pro.jsonl", "3d_pro.jsonl"),
     "BINGO18": ("bingo18.jsonl", "bingo18.jsonl"),
 }
+SCHEDULE_WEEKDAYS = {
+    "POWER655": {1, 3, 5},  # Tuesday, Thursday, Saturday
+    "MEGA645": {2, 4, 6},   # Wednesday, Friday, Sunday
+    "MAX3D": {0, 2, 4},      # Monday, Wednesday, Friday
+    "MAX3DPRO": {1, 3, 5},   # Tuesday, Thursday, Saturday
+}
 
 def fetch(url: str, attempts: int = 4) -> bytes:
     last_error = None
@@ -117,6 +123,7 @@ def audit_payload(game: str, payload: bytes) -> dict:
     id_numbers = set()
     missing_bonus_count = 0
     id_order_anomalies = []
+    schedule_date_anomalies = []
     previous_numeric_id = None
     for line_no, line in enumerate(text.splitlines(), 1):
         if not line.strip():
@@ -140,6 +147,8 @@ def audit_payload(game: str, payload: bytes) -> dict:
         except ValueError:
             errors.append(f"line {line_no}: invalid date {raw_date!r}")
             continue
+        if game in SCHEDULE_WEEKDAYS and parsed_date.weekday() not in SCHEDULE_WEEKDAYS[game]:
+            schedule_date_anomalies.append({"line": line_no, "draw_id": draw_id, "date": parsed_date.isoformat()})
         result_error = validate_result(game, result)
         if result_error:
             errors.append(f"line {line_no}, draw {draw_id}: {result_error}")
@@ -191,6 +200,8 @@ def audit_payload(game: str, payload: bytes) -> dict:
         "numeric_id_gaps": gaps,
         "id_order_anomalies": id_order_anomalies[:20],
         "id_order_anomaly_count": len(id_order_anomalies),
+        "schedule_date_anomalies": schedule_date_anomalies[:20],
+        "schedule_date_anomaly_count": len(schedule_date_anomalies),
         "missing_bonus_count": missing_bonus_count,
         "numeric_id_gap_count_sampled": len(gaps),
         "sha256": None,
@@ -224,6 +235,8 @@ def main() -> int:
                 warnings.append("Draw IDs are not in ascending source order")
             if summary["missing_bonus_count"]:
                 warnings.append(f"{summary['missing_bonus_count']} Power 6/55 record(s) have no special number")
+            if summary["schedule_date_anomaly_count"]:
+                warnings.append(f"{summary['schedule_date_anomaly_count']} record(s) fall outside the usual draw weekday schedule")
             if warnings:
                 summary["warning"] = "; ".join(warnings) + ". Inspect source history before treating archive as complete."
                 manifest["status"] = "warning"
