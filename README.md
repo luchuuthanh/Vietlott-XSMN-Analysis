@@ -38,6 +38,15 @@ Cột bắt buộc: date,province,prize,number. Mỗi dòng là một kết qu�
 - Điểm xếp hạng và bộ số tạo ra chỉ là thống kê tham khảo; xổ số có tính ngẫu nhiên và không thể bảo đảm trúng.
 
 
+## XSMN: kiểm định kho lịch sử 5 năm
+
+- Phạm vi audit mặc định: 05/11/2021 đến ngày chạy.
+- Script: `python scripts/audit_xsmn_archive.py`.
+- Workflow: `.github/workflows/xsmn-archive-audit.yml`, có chạy thủ công và lịch hằng tuần.
+- Thử tải V1 trước, tự chuyển sang V2 nếu V1 thiếu hoặc không hợp lệ; kiểm tra SQLite `quick_check` và `foreign_key_check`.
+- Artifact `xsmn-five-year-audit` gồm tổng quan, trạng thái từng quý, độ phủ tỉnh/ngày/giải, bản ghi trùng, số không hợp lệ và độ phủ 00–99 theo từng tỉnh.
+- Báo cáo độ phủ là chỉ báo kiểm tra, chưa tự khẳng định kỳ quay/giải thiếu nếu chưa đối chiếu lịch quay và nguồn chính thức.
+
 ## Vietlott: kho dữ liệu đầy đủ và tự cập nhật hằng ngày
 
 - Workflow `.github/workflows/vietlott-daily-sync.yml` chạy tự động mỗi ngày lúc **23:45 giờ Việt Nam** (16:45 UTC), đồng thời có thể chạy thủ công trong tab **Actions**.
