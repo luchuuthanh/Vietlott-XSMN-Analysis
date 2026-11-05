@@ -21,7 +21,7 @@ class VietlottSyncTests(unittest.TestCase):
             {"date": "2023-10-12", "id": "00943", "result": [5, 8, 9, 20, 36, 50, 35]},
             {"date": "2023-10-17", "id": "00945", "result": [13, 22, 33, 41, 46, 47, 9]},
         ]
-        payload = ("\\n".join(json.dumps(row) for row in rows) + "\\n").encode()
+        payload = ("\n".join(json.dumps(row) for row in rows) + "\n").encode()
         corrected = apply_verified_corrections("POWER655", payload)
         result = [json.loads(line) for line in corrected.decode().splitlines()]
         draw = next(row for row in result if row["id"] == "00944")
