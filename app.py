@@ -22,15 +22,16 @@ try:
         raw = load_vietlott(upload)
     else:
         with st.spinner("Đang tải dữ liệu Vietlott..."):
-            raw = pd.concat([fetch_vietlott("POWER655"), fetch_vietlott("MEGA645")], ignore_index=True)
+            raw = pd.concat([fetch_vietlott("POWER655"), fetch_vietlott("MEGA645"), fetch_vietlott("POWER535")], ignore_index=True)
     games = sorted(raw["game"].unique().tolist())
     if not games:
         st.warning("Chưa có dữ liệu Vietlott.")
         st.stop()
     selected = st.sidebar.selectbox("Loại vé", games)
     data = raw[raw["game"] == selected].copy()
-    cols = ["n1", "n2", "n3", "n4", "n5", "n6"]
-    universe = 55 if "655" in selected else 45
+    is_535 = selected == "POWER535"
+    cols = ["n1", "n2", "n3", "n4", "n5"] if is_535 else ["n1", "n2", "n3", "n4", "n5", "n6"]
+    universe = 35 if is_535 else (55 if selected == "POWER655" else 45)
     if len(data) < 10:
         st.warning("Cần tối thiểu 10 kỳ quay để thống kê ổn định.")
         st.stop()
@@ -57,7 +58,7 @@ try:
             st.markdown("**Số lâu chưa xuất hiện**")
             st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
         st.bar_chart(freq.set_index("Số")["Số lần"])
-        if "special" in subset.columns:
+        if "special" in subset.columns and selected in {"POWER655", "POWER535"}:
             special = pd.to_numeric(subset["special"], errors="coerce").dropna().astype(int)
             if not special.empty:
                 st.markdown("**Số đặc biệt Power 6/55 — quay riêng sau 6 số chính, chỉ dùng xét Jackpot 2**")
@@ -86,7 +87,7 @@ try:
         st.dataframe(data.sort_values("date", ascending=False), use_container_width=True, hide_index=True)
         st.download_button("Tải dữ liệu đã chuẩn hóa", data.to_csv(index=False).encode("utf-8-sig"), "vietlott_clean.csv", "text/csv")
     with t6:
-        if selected in {"POWER655", "MEGA645"}:
+        if selected in {"POWER655", "MEGA645", "POWER535"}:
             st.markdown("### Bộ dò vé dùng chung")
             st.caption("Chọn Power 6/55 hoặc Mega 6/45 ở danh sách Loại vé phía trên. Bộ dò tự áp dụng đúng giới hạn số và luật giải của trò chơi đang chọn.")
             ticket_text = st.text_area(f"Các bộ vé {selected}", placeholder=("08 23 30 34 38 47\n01 12 20 30 40 55" if selected == "POWER655" else "03 12 20 30 38 45\n01 09 18 27 36 44"), height=110, key=f"shared_ticket_input_{selected}")
