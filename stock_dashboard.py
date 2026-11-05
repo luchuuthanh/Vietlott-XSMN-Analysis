@@ -104,8 +104,10 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["EMA20"] = out["close"].ewm(span=20, adjust=False, min_periods=20).mean()
     out["EMA50"] = out["close"].ewm(span=50, adjust=False, min_periods=50).mean()
     out["EMA100"] = out["close"].ewm(span=100, adjust=False, min_periods=100).mean()
-    # MOM14 is expressed as percentage change from 14 trading sessions earlier.
-    out["MOM14"] = (out["close"] / out["close"].shift(14) - 1) * 100
+    # FireAnt Mom: length 10, source Close; value is a price difference, not a percentage.
+    out["MOM10"] = out["close"] - out["close"].shift(10)
+    # ROC14 is percentage change from 14 trading sessions earlier.
+    out["ROC14"] = (out["close"] / out["close"].shift(14) - 1) * 100
     out["VOL20"] = out["volume"].rolling(20, min_periods=20).mean()
     delta = out["close"].diff()
     gain = delta.clip(lower=0).ewm(alpha=1/14, adjust=False, min_periods=14).mean()
@@ -131,23 +133,23 @@ def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260
         symbol = item["symbol"]
         try:
             hist = add_indicators(fetch_daily_quotes(symbol, start, end))
-            valid = hist.dropna(subset=["EMA100", "MOM14", "VOL20"])
+            valid = hist.dropna(subset=["EMA100", "ROC14", "VOL20"])
             if not valid.empty:
                 last = valid.iloc[-1]
                 rows.append({
                     "Mã": symbol, "Sàn": item.get("exchange", ""),
                     "Giá đóng cửa": last["close"], "EMA100": last["EMA100"],
-                    "MOM14 (%)": last["MOM14"], "Khối lượng": last["volume"],
+                    "ROC14 (%)": last["ROC14"], "Khối lượng": last["volume"],
                     "KLGD TB20": last["VOL20"], "Ngày dữ liệu": last["date"],
-                    "Đạt MOM14": bool(last["MOM14"] >= 4),
+                    "Đạt ROC14": bool(last["ROC14"] >= 4),
                     "Đạt EMA100": bool(last["close"] >= last["EMA100"]),
-                    "Đạt bộ lọc": bool(last["MOM14"] >= 4 and last["close"] >= last["EMA100"]),
+                    "Đạt bộ lọc": bool(last["ROC14"] >= 4 and last["close"] >= last["EMA100"]),
                 })
         except Exception as exc:
             errors.append(f"{symbol}: {exc}")
     result = pd.DataFrame(rows)
     if not result.empty:
-        result = result.sort_values(["Đạt bộ lọc", "MOM14 (%)"], ascending=[False, False]).reset_index(drop=True)
+        result = result.sort_values(["Đạt bộ lọc", "ROC14 (%)"], ascending=[False, False]).reset_index(drop=True)
     return result, {"scanned": len(symbols), "success": len(rows), "errors": errors}
 
 def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
@@ -159,13 +161,13 @@ def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
         return None, None
     try:
         raw = pd.read_csv(path)
-        required = {"symbol", "exchange", "date", "close", "EMA100", "MOM14", "VOL20"}
+        required = {"symbol", "exchange", "date", "close", "EMA100", "MOM10", "ROC14", "VOL20"}
         if raw.empty or not required.issubset(raw.columns):
             raise ValueError("CSV thiếu cột bắt buộc hoặc không có dữ liệu")
         raw["date"] = pd.to_datetime(raw["date"], errors="coerce")
-        for col in ("close", "EMA100", "MOM14", "VOL20"):
+        for col in ("close", "EMA100", "MOM10", "ROC14", "VOL20"):
             raw[col] = pd.to_numeric(raw[col], errors="coerce")
-        raw = raw.dropna(subset=["symbol", "date", "close", "EMA100", "MOM14", "VOL20"])
+        raw = raw.dropna(subset=["symbol", "date", "close", "EMA100", "ROC14", "VOL20"])
         if raw.empty:
             raise ValueError("Không còn dòng OHLCV hợp lệ sau khi chuẩn hóa")
         result = pd.DataFrame({
@@ -173,7 +175,8 @@ def load_saved_market_scan() -> tuple[pd.DataFrame | None, dict | None]:
             "Sàn": raw["exchange"].astype(str).str.upper(),
             "Giá đóng cửa": raw["close"],
             "EMA100": raw["EMA100"],
-            "MOM14 (%)": raw["MOM14"],
+            "MOM10 (FireAnt)": raw["MOM10"],
+            "ROC14 (%)": raw["ROC14"],
             "Khối lượng": pd.to_numeric(raw["volume"], errors="coerce") if "volume" in raw.columns else pd.NA,
             "KLGD TB20": raw["VOL20"],
             "Ngày dữ liệu": raw["date"],
@@ -204,7 +207,7 @@ def render_stock_dashboard():
         days = st.selectbox("Số ngày lịch sử", [260, 365, 520, 730], index=1)
     with right:
         min_volume = st.number_input("Khối lượng tối thiểu (cổ phiếu)", min_value=0, value=50000, step=10000)
-    mom_floor = st.number_input("MOM14 tối thiểu (%)", value=4.0, step=0.5)
+    mom_floor = st.number_input("ROC14 tối thiểu (%)", value=4.0, step=0.5)
     require_ema = st.checkbox("Chỉ lấy giá đóng cửa ≥ EMA100", value=True)
     st.caption("Dữ liệu thị trường được cập nhật tự động từ Cophieu68. Nút bên dưới chỉ nạp lại bản quét đầy đủ, không gọi Vnstock hàng loạt.")
 
@@ -270,14 +273,14 @@ def render_stock_dashboard():
         )
 
     result = result.copy()
-    result["Đạt MOM14"] = result["MOM14 (%)"] >= mom_floor
+    result["Đạt ROC14"] = result["ROC14 (%)"] >= mom_floor
     result["Đạt EMA100"] = result["Giá đóng cửa"] >= result["EMA100"]
     result["Đạt khối lượng"] = result["KLGD TB20"] >= min_volume
-    result["Đạt bộ lọc"] = result["Đạt MOM14"] & result["Đạt khối lượng"]
+    result["Đạt bộ lọc"] = result["Đạt ROC14"] & result["Đạt khối lượng"]
     if require_ema:
         result["Đạt bộ lọc"] = result["Đạt bộ lọc"] & result["Đạt EMA100"]
     filtered = result[result["Đạt bộ lọc"]].copy()
-    filtered = filtered.sort_values("MOM14 (%)", ascending=False).reset_index(drop=True)
+    filtered = filtered.sort_values("ROC14 (%)", ascending=False).reset_index(drop=True)
 
     if stats:
         a, b, c = st.columns(3)
@@ -295,15 +298,15 @@ def render_stock_dashboard():
 
     tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
     with tab_scan:
-        st.subheader("Top 20 cổ phiếu có MOM14 cao nhất · xếp từ cao xuống thấp")
+        st.subheader("Top 20 cổ phiếu có ROC14 cao nhất · xếp từ cao xuống thấp")
         top20 = filtered.head(20)
         if top20.empty:
             st.info("Chưa có mã nào đạt đồng thời các điều kiện đang chọn.")
         else:
-            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
+            st.dataframe(top20[["Mã", "Sàn", "Giá đóng cửa", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]], use_container_width=True, hide_index=True)
         st.subheader("Danh sách cổ phiếu đạt điều kiện")
         st.dataframe(
-            filtered[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
+            filtered[["Mã", "Sàn", "Giá đóng cửa", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
             use_container_width=True, hide_index=True
         )
         st.download_button(
@@ -344,11 +347,12 @@ def render_stock_dashboard():
                 st.warning("Chưa có dữ liệu OHLC hợp lệ cho mã này.")
             else:
                 last = chart.iloc[-1]
-                p1, p2, p3, p4 = st.columns(4)
+                p1, p2, p3, p4, p5 = st.columns(5)
                 p1.metric("Giá đóng cửa", f"{last['close']:,.2f}")
-                p2.metric("MOM14", f"{last['MOM14']:.2f}%" if pd.notna(last["MOM14"]) else "—")
-                p3.metric("RSI14", f"{last['RSI14']:.1f}" if pd.notna(last["RSI14"]) else "—")
-                p4.metric("Khối lượng", f"{last['volume']:,.0f}")
+                p2.metric("MOM10 (FireAnt)", f"{last['MOM10']:.2f}" if pd.notna(last["MOM10"]) else "—")
+                p3.metric("ROC14", f"{last['ROC14']:.2f}%" if pd.notna(last["ROC14"]) else "—")
+                p4.metric("RSI14", f"{last['RSI14']:.1f}" if pd.notna(last["RSI14"]) else "—")
+                p5.metric("Khối lượng", f"{last['volume']:,.0f}")
                 fig = make_subplots(
                     rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.035,
                     row_heights=[0.62, 0.18, 0.20],
@@ -395,7 +399,7 @@ def render_stock_dashboard():
                 comparison["_order"] = comparison["Mã"].map(order)
                 comparison = comparison.sort_values("_order").drop(columns=["_order"])
                 st.dataframe(
-                    comparison[["Mã", "Sàn", "Giá đóng cửa", "MOM14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
+                    comparison[["Mã", "Sàn", "Giá đóng cửa", "ROC14 (%)", "EMA100", "Khối lượng", "KLGD TB20", "Ngày dữ liệu"]],
                     use_container_width=True,
                     hide_index=True,
                 )
