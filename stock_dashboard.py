@@ -143,7 +143,8 @@ def _scan_market_uncached_v2(instruments: pd.DataFrame, lookback_days: int = 260
                     "KLGD TB20": last["VOL20"], "Ngày dữ liệu": last["date"],
                     "Đạt ROC14": bool(last["ROC14"] >= 4),
                     "Đạt EMA100": bool(last["close"] >= last["EMA100"]),
-                    "Đạt bộ lọc": bool(last["ROC14"] >= 4 and last["close"] >= last["EMA100"]),
+                    "Đạt MOM10": bool(last["MOM10"] >= 4),
+                    "Đạt bộ lọc": bool(last["MOM10"] >= 4 and last["ROC14"] >= 4 and last["close"] >= last["EMA100"]),
                 })
         except Exception as exc:
             errors.append(f"{symbol}: {exc}")
@@ -207,7 +208,11 @@ def render_stock_dashboard():
         days = st.selectbox("Số ngày lịch sử", [260, 365, 520, 730], index=1)
     with right:
         min_volume = st.number_input("Khối lượng tối thiểu (cổ phiếu)", min_value=0, value=50000, step=10000)
-    mom_floor = st.number_input("ROC14 tối thiểu (%)", value=4.0, step=0.5)
+    filter_col1, filter_col2 = st.columns(2)
+    with filter_col1:
+        mom_floor = st.number_input("ROC14 tối thiểu (%)", value=4.0, step=0.5)
+    with filter_col2:
+        mom10_floor = st.number_input("MOM10 tối thiểu (giá)", value=4.0, step=0.5)
     require_ema = st.checkbox("Chỉ lấy giá đóng cửa ≥ EMA100", value=True)
     st.caption("Dữ liệu thị trường được cập nhật tự động từ Cophieu68. Nút bên dưới chỉ nạp lại bản quét đầy đủ, không gọi Vnstock hàng loạt.")
 
@@ -274,9 +279,10 @@ def render_stock_dashboard():
 
     result = result.copy()
     result["Đạt ROC14"] = result["ROC14 (%)"] >= mom_floor
+    result["Đạt MOM10"] = result["MOM10 (FireAnt)"] >= mom10_floor
     result["Đạt EMA100"] = result["Giá đóng cửa"] >= result["EMA100"]
     result["Đạt khối lượng"] = result["KLGD TB20"] >= min_volume
-    result["Đạt bộ lọc"] = result["Đạt ROC14"] & result["Đạt khối lượng"]
+    result["Đạt bộ lọc"] = result["Đạt ROC14"] & result["Đạt MOM10"] & result["Đạt khối lượng"]
     if require_ema:
         result["Đạt bộ lọc"] = result["Đạt bộ lọc"] & result["Đạt EMA100"]
     filtered = result[result["Đạt bộ lọc"]].copy()
