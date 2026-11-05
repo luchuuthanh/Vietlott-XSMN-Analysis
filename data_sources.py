@@ -22,15 +22,26 @@ def fetch_vietlott(game):
         if not isinstance(nums, list) or len(nums) < 6:
             continue
         main = [int(x) for x in nums[:6]]
-        if len(set(main)) != 6:
+        universe = 55 if str(game).upper() == "POWER655" else 45
+        if len(set(main)) != 6 or any(n < 1 or n > universe for n in main):
             continue
+        # POWER655's seventh value is NOT a seventh main number. It is drawn
+        # separately from the 49 remaining balls and is only used for Jackpot 2.
+        special = None
+        if str(game).upper() == "POWER655" and len(nums) > 6:
+            try:
+                candidate = int(nums[6])
+                if 1 <= candidate <= 55 and candidate not in main:
+                    special = candidate
+            except (TypeError, ValueError):
+                pass
         rows.append({
             "date": item.get("date"),
             "game": str(game).upper(),
             "draw_id": item.get("id", ""),
             "n1": main[0], "n2": main[1], "n3": main[2],
             "n4": main[3], "n5": main[4], "n6": main[5],
-            "special": int(nums[6]) if len(nums) > 6 and str(nums[6]).isdigit() else None
+            "special": special if str(game).upper() == "POWER655" else None
         })
     df = pd.DataFrame(rows)
     if df.empty:
