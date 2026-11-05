@@ -1,0 +1,59 @@
+name: Mega 6/45 integrity check
+
+on:
+  push:
+    paths:
+      - "data/vietlott/power645.jsonl"
+      - "data/vietlott/mega645_backfill_00001_00197.jsonl"
+      - "data/vietlott/manifest.json"
+      - "scripts/sync_vietlott.py"
+      - ".github/workflows/mega645-check.yml"
+  workflow_dispatch:
+
+jobs:
+  mega645-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate merged archive and sync protection
+        run: |
+          python - <<'PY'
+          import hashlib, json, tempfile
+          from pathlib import Path
+          import scripts.sync_vietlott as sync
+
+          data_path = Path("data/vietlott/power645.jsonl")
+          backfill_path = Path("data/vietlott/mega645_backfill_00001_00197.jsonl")
+          manifest_path = Path("data/vietlott/manifest.json")
+          raw = data_path.read_bytes()
+          summary = sync.audit_payload("MEGA645", raw)
+          rows = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
+          ids = [int(row["id"]) for row in rows]
+          assert len(rows) == 1584, len(rows)
+          assert ids == list(range(1, 1585)), (ids[:3], ids[-3:])
+          assert summary["numeric_id_gaps"] == []
+          assert summary["id_order_anomaly_count"] == 0
+          assert summary["schedule_date_anomaly_count"] == 0
+          assert rows[0]["date"] == "2016-07-20"
+          assert rows[-1]["date"] == "2026-11-04"
+
+          manifest = json.loads(manifest_path.read_text())
+          expected = manifest["games"]["MEGA645"]["sha256"]
+          actual = hashlib.sha256(raw).hexdigest()
+          assert expected == actual, (expected, actual)
+          assert manifest["games"]["MEGA645"]["records"] == 1584
+
+          # Prove a subsequent upstream snapshot beginning at 00198 retains
+          # all 197 historical records and produces a continuous 1..199 archive.
+          with tempfile.TemporaryDirectory() as tmp:
+              sync.MEGA645_BACKFILL = Path(tmp) / "mega645_backfill_00001_00197.jsonl"
+              sync.MEGA645_BACKFILL.write_bytes(backfill_path.read_bytes())
+              fixture = b'{"date":"2017-10-25","id":"00198","result":[1,2,3,4,5,6]}\\n{"date":"2017-10-27","id":"00199","result":[7,8,9,10,11,12]}\\n'
+              merged = sync.merge_mega645_backfill(fixture)
+              merged_ids = [int(json.loads(line)["id"]) for line in merged.decode().splitlines()]
+              assert merged_ids == list(range(1, 200)), (merged_ids[:3], merged_ids[-3:])
+          print("PASS: 1,584 records; IDs 00001-01584 continuous; valid Mega 6/45 results; SHA-256 matches; backfill survives sync.")
+          PY
