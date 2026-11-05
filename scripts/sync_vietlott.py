@@ -79,8 +79,8 @@ def validate_result(game: str, result) -> str | None:
         if nums is None:
             return "result must be an integer array"
         if game == "POWER655":
-            if len(nums) != 7 or len(set(nums[:6])) != 6 or any(n < 1 or n > 55 for n in nums):
-                return "Power 6/55 expects 6 distinct main numbers and 1 bonus, all in 1..55"
+            if len(nums) not in (6, 7) or len(set(nums[:6])) != 6 or any(n < 1 or n > 55 for n in nums):
+                return "Power 6/55 expects 6 distinct main numbers in 1..55 and an optional 7th bonus number"
         elif game == "MEGA645":
             if len(nums) != 6 or len(set(nums)) != 6 or any(n < 1 or n > 45 for n in nums):
                 return "Mega 6/45 expects 6 distinct numbers in 1..45"
@@ -115,6 +115,9 @@ def audit_payload(game: str, payload: bytes) -> dict:
     seen_ids = set()
     seen_date_ids = set()
     id_numbers = set()
+    missing_bonus_count = 0
+    id_order_anomalies = []
+    previous_numeric_id = None
     for line_no, line in enumerate(text.splitlines(), 1):
         if not line.strip():
             continue
@@ -150,8 +153,17 @@ def audit_payload(game: str, payload: bytes) -> dict:
             continue
         seen_ids.add(draw_id)
         seen_date_ids.add(key)
+        if game == "POWER655" and isinstance(result, list) and len(result) == 6:
+            missing_bonus_count += 1
         if draw_id.isdigit():
-            id_numbers.add(int(draw_id))
+            numeric_id = int(draw_id)
+            id_numbers.add(numeric_id)
+            if previous_numeric_id is not None and numeric_id <= previous_numeric_id:
+                id_order_anomalies.append({
+                    "line": line_no, "previous_id": str(previous_numeric_id),
+                    "current_id": draw_id, "date": parsed_date.isoformat()
+                })
+            previous_numeric_id = numeric_id
         records.append((parsed_date, draw_id))
 
     if not records:
@@ -177,6 +189,9 @@ def audit_payload(game: str, payload: bytes) -> dict:
         "latest_draw_id": records[dates.index(max(dates))][1],
         "numeric_id_count": len(numeric_ids),
         "numeric_id_gaps": gaps,
+        "id_order_anomalies": id_order_anomalies[:20],
+        "id_order_anomaly_count": len(id_order_anomalies),
+        "missing_bonus_count": missing_bonus_count,
         "numeric_id_gap_count_sampled": len(gaps),
         "sha256": None,
     }
@@ -202,8 +217,15 @@ def main() -> int:
             summary["bytes"] = len(payload)
             summary["source_url"] = url
             summary["numeric_id_gaps"] = summary["numeric_id_gaps"][:20]
+            warnings = []
             if summary["numeric_id_gap_count_sampled"]:
-                summary["warning"] = "Numeric draw-id gaps detected; inspect source history before treating archive as complete."
+                warnings.append("Numeric draw-id gaps detected")
+            if summary["id_order_anomaly_count"]:
+                warnings.append("Draw IDs are not in ascending source order")
+            if summary["missing_bonus_count"]:
+                warnings.append(f"{summary['missing_bonus_count']} Power 6/55 record(s) have no special number")
+            if warnings:
+                summary["warning"] = "; ".join(warnings) + ". Inspect source history before treating archive as complete."
                 manifest["status"] = "warning"
             manifest["games"][game] = summary
             staged.append((DATA_DIR / filename, payload))
