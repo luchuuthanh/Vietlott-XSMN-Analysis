@@ -77,11 +77,19 @@ def main():
                     seen.add(key)
                     rows.append((draw_date.isoformat(),PROVINCES[slug],prize.upper(),idx,number))
     expected_pairs=set()
-    for iso in daily_dates:
-        d=date.fromisoformat(iso)
-        wd=("mon","tue","wed","thu","fri","sat","sun")[d.weekday()]
-        expected_pairs.update((iso,s) for s in SCHEDULE[wd])
+    expected_dates=set()
+    cursor=START
+    while cursor <= today:
+        iso=cursor.isoformat()
+        expected_dates.add(iso)
+        wd=("mon","tue","wed","thu","fri","sat","sun")[cursor.weekday()]
+        expected_pairs.update((iso,station) for station in SCHEDULE[wd])
+        cursor=date.fromordinal(cursor.toordinal()+1)
+    missing_dates=sorted(expected_dates-daily_dates)
+    extra_dates=sorted(daily_dates-expected_dates)
     missing=sorted(expected_pairs-actual_pairs); extra=sorted(actual_pairs-expected_pairs)
+    if missing_dates: errors.append({"type":"missing_draw_dates","count":len(missing_dates),"dates":missing_dates[:30]})
+    if extra_dates: errors.append({"type":"unexpected_draw_dates","count":len(extra_dates),"dates":extra_dates[:30]})
     if missing: errors.append({"type":"missing_station_days","count":len(missing),"examples":missing[:30]})
     if extra: errors.append({"type":"unexpected_station_days","count":len(extra),"examples":extra[:30]})
     OUT.mkdir(exist_ok=True)
@@ -94,6 +102,7 @@ def main():
       "days":len(daily_dates),"province_count":len({r[1] for r in rows}),
       "rows":len(rows),"station_day_pairs":len(actual_pairs),
       "expected_station_day_pairs":len(expected_pairs),
+      "missing_draw_dates":len(missing_dates),"unexpected_draw_dates":len(extra_dates),
       "missing_station_days":len(missing),"unexpected_station_days":len(extra),
       "duplicate_rows":sum(e["type"]=="duplicate_row" for e in errors),
       "error_count":len(errors),"errors":errors,
