@@ -32,8 +32,12 @@ def normalize_ticket(values):
 def expand_ticket(values):
     """Expand Bao 7–15/18 into all six-number combinations."""
     nums = sorted(set(int(x) for x in values))
+    if len(nums) == 5:
+        if any(n < 1 or n > 55 for n in nums):
+            raise ValueError("Số trên vé phải nằm trong khoảng 01–55.")
+        return [tuple(sorted((*nums, extra))) for extra in range(1, 56) if extra not in nums]
     if len(nums) not in set(range(6, 16)) | {18}:
-        raise ValueError("Vé bao cần chọn 6–15 hoặc 18 số khác nhau.")
+        raise ValueError("Vé hệ thống cần chọn 5 số, 6–15 số hoặc 18 số khác nhau.")
     if any(n < 1 or n > 55 for n in nums):
         raise ValueError("Số trên vé phải nằm trong khoảng 01–55.")
     return list(combinations(nums, 6))
