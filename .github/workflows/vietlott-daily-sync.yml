@@ -1,0 +1,62 @@
+name: Daily Vietlott data sync
+
+on:
+  schedule:
+    # 23:45 Vietnam time (UTC+7), every day; schedule is UTC.
+    - cron: "45 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vietlott-daily-data-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download, validate and audit all seven games
+        run: python scripts/sync_vietlott.py
+      - name: Publish audit summary
+        if: always()
+        run: |
+          if [ -f data/vietlott/manifest.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          m = json.loads(Path("data/vietlott/manifest.json").read_text(encoding="utf-8"))
+          print("# Vietlott daily data audit")
+          print(f"**Status:** {m.get('status')}")
+          print(f"**Generated (UTC):** {m.get('generated_at_utc')}")
+          print("| Game | Records | First date | Latest date | ID gap warnings |")
+          print("|---|---:|---|---|---:|")
+          for game, x in m.get("games", {}).items():
+              print(f"| {game} | {x.get('records', 0)} | {x.get('first_date','')} | {x.get('latest_date','')} | {x.get('numeric_id_gap_count_sampled',0)} |")
+          for error in m.get("errors", []):
+              print(f"- ERROR: {error}")
+          PY
+          fi
+      - name: Commit updated datasets and audit manifest
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/vietlott/*.jsonl data/vietlott/manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update daily Vietlott historical data"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          else
+            echo "All Vietlott snapshots are already current."
+          fi
