@@ -1,6 +1,12 @@
 name: Daily Vietlott data sync
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/sync_vietlott.py"
+      - "tests/test_vietlott_sync.py"
+      - ".github/workflows/vietlott-daily-sync.yml"
   schedule:
     # 23:45 Vietnam time (UTC+7), every day; schedule is UTC.
     - cron: "45 16 * * *"
@@ -26,6 +32,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Run Vietlott data validation tests
+        run: python -m unittest discover -s tests -v
       - name: Download, validate and audit all seven games
         run: python scripts/sync_vietlott.py
       - name: Publish audit summary
