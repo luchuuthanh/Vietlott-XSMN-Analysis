@@ -5,6 +5,7 @@ from scripts.sync_vietlott import audit_payload, validate_result
 class VietlottSyncTests(unittest.TestCase):
     def test_power655(self):
         self.assertIsNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 7]))
+        self.assertIsNone(validate_result("POWER655", [1, 12, 21, 28, 30, 44]))
         self.assertIsNotNone(validate_result("POWER655", [1, 1, 3, 4, 5, 6, 7]))
 
     def test_mega645(self):
