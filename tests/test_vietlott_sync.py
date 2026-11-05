@@ -1,6 +1,6 @@
 import json
 import unittest
-from scripts.sync_vietlott import audit_payload, validate_result
+from scripts.sync_vietlott import audit_payload, apply_verified_corrections, validate_result
 
 class VietlottSyncTests(unittest.TestCase):
     def test_power655(self):
@@ -12,6 +12,22 @@ class VietlottSyncTests(unittest.TestCase):
         self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 6]))
         self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 56]))
         self.assertIsNotNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 0]))
+
+    def test_verified_power655_draw_00944_correction(self):
+        rows = [
+            {"date": "2022-09-22", "id": "00779", "result": [12, 14, 19, 29, 44, 47, 26]},
+            {"date": "2022-09-23", "id": "00944", "result": [1, 12, 21, 28, 30, 44]},
+            {"date": "2022-09-24", "id": "00780", "result": [1, 4, 5, 17, 42, 47, 9]},
+            {"date": "2023-10-12", "id": "00943", "result": [5, 8, 9, 20, 36, 50, 35]},
+            {"date": "2023-10-17", "id": "00945", "result": [13, 22, 33, 41, 46, 47, 9]},
+        ]
+        payload = ("\\n".join(json.dumps(row) for row in rows) + "\\n").encode()
+        corrected = apply_verified_corrections("POWER655", payload)
+        result = [json.loads(line) for line in corrected.decode().splitlines()]
+        draw = next(row for row in result if row["id"] == "00944")
+        self.assertEqual(draw["date"], "2023-10-14")
+        self.assertEqual(draw["result"], [8, 23, 30, 34, 38, 47, 10])
+        self.assertEqual([row["id"] for row in result], ["00779", "00780", "00943", "00944", "00945"])
 
     def test_mega645(self):
         self.assertIsNone(validate_result("MEGA645", [1, 2, 3, 4, 5, 45]))
