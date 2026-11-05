@@ -5,7 +5,7 @@ from analytics import frequency_table, gap_table, pair_table, draw_metrics, scor
 from data_loader import load_vietlott
 from generator import make_sets
 from data_sources import fetch_vietlott
-from ticket_checker import normalize_ticket, check_tickets, rolling_backtest
+from ticket_checker import expand_ticket, check_tickets, rolling_backtest
 
 st.set_page_config(page_title="Vietlott Analysis Lab", page_icon="🎯", layout="wide")
 st.title("🎯 VIETLOTT ANALYSIS LAB")
@@ -114,7 +114,7 @@ try:
                     if not line.strip():
                         continue
                     try:
-                        parsed.append(normalize_ticket(line))
+                        parsed.extend(expand_ticket(line.replace(",", " ").replace("-", " ").replace(";", " ").split()))
                     except ValueError as err:
                         errors.append(f"Dòng {line_no}: {err}")
                 if errors:
