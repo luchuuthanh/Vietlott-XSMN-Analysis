@@ -1,15 +1,15 @@
 {
-  "generated_at_utc": "2026-11-05T07:45:53Z",
+  "generated_at_utc": "2026-11-05T22:21:17Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
     "POWER655": {
-      "records": 1419,
+      "records": 1420,
       "first_date": "2017-08-01",
-      "latest_date": "2026-11-03",
+      "latest_date": "2026-11-05",
       "first_draw_id": "00001",
-      "latest_draw_id": "01419",
-      "numeric_id_count": 1419,
+      "latest_draw_id": "01420",
+      "numeric_id_count": 1420,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -18,8 +18,8 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "90887316db93b06b3ac3b5074b9704addc1912fc6b68b38d7c2c61899e1713b8",
-      "bytes": 155901,
+      "sha256": "fc78a18d1d50b4702ceaa007b5a9c57a2e7deb9df0132746568920c4a61a987d",
+      "bytes": 156005,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl"
     },
     "MEGA645": {
@@ -44,12 +44,12 @@
       "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
     },
     "POWER535": {
-      "records": 988,
+      "records": 989,
       "first_date": "2025-06-29",
-      "latest_date": "2026-11-04",
+      "latest_date": "2026-11-05",
       "first_draw_id": "00001",
-      "latest_draw_id": "00988",
-      "numeric_id_count": 988,
+      "latest_draw_id": "00989",
+      "numeric_id_count": 989,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -58,8 +58,8 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "5c9ba801e38c0c6e9c3a67945544e3600c71b6017f37ce77b8e63086ad1af111",
-      "bytes": 104557,
+      "sha256": "52c040681a36ad16f9a527498731e52703579dd3e8964ca2b7db3808b3075aaf",
+      "bytes": 104656,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power535.jsonl"
     },
     "MAX3D": {
@@ -96,12 +96,12 @@
       "warning": "Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
     },
     "MAX3DPRO": {
-      "records": 800,
+      "records": 801,
       "first_date": "2021-09-14",
-      "latest_date": "2026-11-03",
+      "latest_date": "2026-11-05",
       "first_draw_id": "00001",
-      "latest_draw_id": "00800",
-      "numeric_id_count": 800,
+      "latest_draw_id": "00801",
+      "numeric_id_count": 801,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -110,17 +110,17 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "4ff2256908ce15f8371b52c5b67bbb53f405c7554670ef7c60343acae69216e4",
-      "bytes": 191200,
+      "sha256": "ef2ade1810848aa9f286ae84d37b3ceb926b82949b80796463fb0afafa61b0b0",
+      "bytes": 191439,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/3d_pro.jsonl"
     },
     "BINGO18": {
-      "records": 98799,
+      "records": 98918,
       "first_date": "2024-12-03",
       "latest_date": "2026-11-05",
       "first_draw_id": "0083123",
-      "latest_draw_id": "0194635",
-      "numeric_id_count": 98799,
+      "latest_draw_id": "0194647",
+      "numeric_id_count": 98918,
       "numeric_id_gaps": [
         {
           "after": "134402",
@@ -345,14 +345,14 @@
           "date": "2026-11-04"
         }
       ],
-      "id_order_anomaly_count": 20,
+      "id_order_anomaly_count": 22,
       "schedule_date_anomalies": [],
       "schedule_date_anomaly_count": 0,
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 100,
-      "sha256": "648f71d287bec4021b8d68970488a48fcb7b70bfdae8368eb0d0167f97dd64d0",
-      "bytes": 13432228,
+      "sha256": "98fba6ebf0b90917000423b4cdc77429246c21e58c3441178bef5070300d69a0",
+      "bytes": 13447037,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/bingo18.jsonl",
       "warning": "Numeric draw-id gaps detected; Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
     }
