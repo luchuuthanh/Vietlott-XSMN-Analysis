@@ -126,7 +126,7 @@ try:
             st.divider()
             st.markdown(f"### Kiểm định thuật toán {selected} theo kiểu cuốn chiếu")
             st.caption("Mỗi kỳ chỉ dùng dữ liệu các kỳ trước để tạo bộ số; sau đó mới đối chiếu với kỳ kế tiếp. Cách này tránh lấy dữ liệu tương lai để dự đoán quá khứ.")
-            history_limit = st.slider("Số kỳ lịch sử dùng để tạo ứng viên", 100, min(1000, len(data)-1), min(200, len(data)-1), key="ticket_backtest_window")
+            history_limit = st.slider("Số kỳ đầu làm dữ liệu khởi động", 100, min(500, len(data)-1), min(200, len(data)-1), key="ticket_backtest_window")
             tickets_per_draw = st.slider("Số bộ tạo cho mỗi kỳ kiểm định", 1, 10, 5, key="ticket_backtest_count")
             if st.button("Chạy kiểm định thuật toán hiện tại", key="run_power655_backtest"):
                 chronological = data.sort_values("date").reset_index(drop=True)
@@ -141,7 +141,7 @@ try:
                         "special": special_num,
                     })
                 def build_from_history(history):
-                    history_draws = [item["main_numbers"] for item in history[-history_limit:]]
+                    history_draws = [item["main_numbers"] for item in history]
                     history_flat = [number for draw in history_draws for number in draw]
                     history_freq = frequency_table(history_flat, universe)
                     history_gaps = gap_table(history_draws, universe)
@@ -154,7 +154,7 @@ try:
                 with st.spinner(f"Đang chạy kiểm định ngoài mẫu trên lịch sử {selected}..."):
                     summary, detail = rolling_backtest(
                         draw_records, build_from_history,
-                        min_history=history_limit, history_window=history_limit, game=selected
+                        min_history=history_limit, history_window=None, game=selected
                     )
                 st.caption(f"Đã kiểm định {summary['tested_draws']:,} kỳ, tổng {summary['total_tickets']:,} bộ vé.")
                 summary_df = pd.DataFrame([
