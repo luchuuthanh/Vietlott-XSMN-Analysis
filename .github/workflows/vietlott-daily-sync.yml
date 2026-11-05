@@ -6,6 +6,9 @@ on:
     paths:
       - "scripts/sync_vietlott.py"
       - "tests/test_vietlott_sync.py"
+      - "ticket_checker.py"
+      - "tests/test_ticket_checker.py"
+      - "app.py"
       - ".github/workflows/vietlott-daily-sync.yml"
   schedule:
     # 23:45 Vietnam time (UTC+7), every day; schedule is UTC.
