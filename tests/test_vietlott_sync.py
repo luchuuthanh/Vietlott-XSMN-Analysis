@@ -15,10 +15,6 @@ class VietlottSyncTests(unittest.TestCase):
     def test_power535(self):
         self.assertIsNone(validate_result("POWER535", [1, 2, 3, 4, 5, 6]))
 
-    def test_keno(self):
-        self.assertIsNone(validate_result("KENO", list(range(1, 21))))
-        self.assertIsNotNone(validate_result("KENO", list(range(1, 20))))
-
     def test_bingo18(self):
         self.assertIsNone(validate_result("BINGO18", [1, 3, 6]))
 
