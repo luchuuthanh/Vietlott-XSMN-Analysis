@@ -40,8 +40,15 @@
       "sha256": "0231dd6f061b1838cd478e3f1fe2e06ee0b172b8b61046bf518454a5a07fc5fc",
       "bytes": 160477,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl",
-      "source_note": "Merged archive: draws 00001-00197 from the NhanAZ-Data/vietlott-research historical Mega 6/45 CSV (which includes official Vietlott source-page/PDF links); draws 00198 onward from the vietvudanh/vietlott-data mirror. Not every historical row has been independently re-checked against official PDFs.",
-      "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
+      "source_note": "Merged archive: draws 00001-00197 from the NhanAZ-Data/vietlott-research historical Mega 6/45 CSV (official Vietlott provenance metadata and official result-page/PDF links); draws 00198 onward from the vietvudanh/vietlott-data mirror. Historical backfill data-level cross-check: PASS. Direct download and parsing of every linked official PDF remains pending.",
+      "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv",
+      "historical_backfill_verification": {
+        "status": "PASS",
+        "scope": "Data-level cross-check for draws 00001-00197 against the NhanAZ-Data/vietlott-research Mega 6/45 collector snapshot, including official Vietlott provenance metadata and official PDF links.",
+        "records": 197,
+        "source_url": "https://raw.githubusercontent.com/NhanAZ-Data/vietlott-research/main/datasets/draws/mega645/all.csv",
+        "limitation": "The linked official PDF files have not all been downloaded and independently parsed; this PASS does not certify direct PDF-content verification."
+      }
     },
     "POWER535": {
       "records": 988,
