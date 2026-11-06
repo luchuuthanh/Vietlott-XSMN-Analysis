@@ -86,6 +86,12 @@ hr { border-color:var(--line); }
 @media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:100px minmax(0,1fr); gap:9px; padding:10px 9px; } .prize-name { font-size:.82rem; padding:5px 7px 5px 0; } .prize-numbers { gap:7px; } .number-chip { min-width:102px; min-height:58px; font-size:1.24rem; padding:9px 10px; } .jackpot-chip { min-width:145px; min-height:64px; font-size:1.35rem; } }
 
 [data-testid="stAlert"] { border-radius:13px; }
+/* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
+.st-key-hidden-xsmn-metrics,
+.st-key-hidden-xsmn-prize,
+.st-key-hidden-xsmn-data,
+.st-key-hidden-xsmn-coverage,
+.st-key-hidden-xsmn-archive-status { display:none !important; }
 @media (max-width: 700px) {
  .block-container { padding:1rem .8rem 2rem .8rem; }
  .hero-xsmn { padding:20px 18px; border-radius:17px; }
@@ -144,8 +150,9 @@ elif upload is not None:
         st.error(f"Không đọc được CSV: {exc}")
 
 if not archive_status.empty:
-    with st.expander("Tình trạng tải dữ liệu theo quý", expanded=True):
-        st.dataframe(archive_status, use_container_width=True, hide_index=True)
+    with st.container(key="hidden-xsmn-archive-status"):
+        with st.expander("Tình trạng tải dữ liệu theo quý", expanded=True):
+            st.dataframe(archive_status, use_container_width=True, hide_index=True)
 if raw.empty:
     st.info("Chọn kho lịch sử 5 năm hoặc tải CSV để bắt đầu phân tích.")
     st.stop()
@@ -168,6 +175,12 @@ try:
     freq = frequency_table(flat, 99, start=0)
     gaps = gap_table(draws, 99, start=0)
     st.metric("Tỉnh đã chọn", province)
+    # Giữ lại 3 chỉ số cũ nhưng ẩn khỏi giao diện theo yêu cầu.
+    with st.container(key="hidden-xsmn-metrics"):
+        c2, c3, c4 = st.columns(3)
+        c2.metric("Ngày có dữ liệu", len(dates))
+        c3.metric("Số kết quả", len(data))
+        c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
     tab_labels = ["Lịch sử kết quả", "Lô tô 2 số", "Thuật toán", "Backtest"]
@@ -271,6 +284,24 @@ try:
             st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
         st.bar_chart(freq.set_index("Số")["Số lần"])
         st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
+
+    # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
+    with st.container(key="hidden-xsmn-prize"):
+        by_prize = subset.groupby("prize")["number"].count().sort_values(ascending=False).rename("Số kết quả")
+        st.dataframe(by_prize, use_container_width=True)
+
+    # Khôi phục nội dung tab Dữ liệu; giữ nguyên bảng và nút tải CSV nhưng ẩn khỏi giao diện.
+    with st.container(key="hidden-xsmn-data"):
+        st.dataframe(data.sort_values(["date", "prize"], ascending=[False, True]), use_container_width=True, hide_index=True)
+        st.download_button("Tải dữ liệu tỉnh CSV", data.to_csv(index=False).encode("utf-8-sig"), "xsmn_clean.csv", "text/csv")
+
+    # Khôi phục nội dung tab Kiểm tra độ phủ; giữ nguyên nhưng ẩn khỏi giao diện.
+    with st.container(key="hidden-xsmn-coverage"):
+        st.metric("Ngày đầu có dữ liệu", pd.to_datetime(data["date"]).min().strftime("%d/%m/%Y"))
+        st.metric("Ngày cuối có dữ liệu", pd.to_datetime(data["date"]).max().strftime("%d/%m/%Y"))
+        if not archive_status.empty:
+            st.dataframe(archive_status, use_container_width=True, hide_index=True)
+        st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
 
     history = draw_history(raw, province)
     with t5:
