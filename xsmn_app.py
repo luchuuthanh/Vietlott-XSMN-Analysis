@@ -9,8 +9,53 @@ from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
-st.title("🍀 XSMN ANALYSIS LAB")
-st.caption("Thống kê lô tô miền Nam theo tỉnh, ngày và giải. Không phải công cụ bảo đảm dự đoán.")
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+:root { --ink:#e8f1f4; --muted:#91a7b0; --panel:#10232c; --panel2:#142c36; --line:rgba(148,190,199,.16); --mint:#35d0ae; --gold:#f2c66d; }
+html, body, [class*="css"] { font-family:'Be Vietnam Pro',sans-serif; }
+.stApp { background: radial-gradient(ellipse at 12% 0%, #163d45 0%, #0b1820 42%, #08131b 100%); color:var(--ink); }
+[data-testid="stHeader"] { background:rgba(8,19,27,.82); }
+[data-testid="stSidebar"] { background:linear-gradient(180deg,#10252e,#0b1921); border-right:1px solid var(--line); }
+[data-testid="stSidebar"] * { color:var(--ink); }
+.block-container { max-width:1440px; padding-top:2rem; padding-bottom:3rem; }
+h1,h2,h3 { color:#f2f8fa !important; letter-spacing:-.035em; }
+h1 { font-size:2.2rem !important; font-weight:800 !important; }
+p, label, .stCaption { color:var(--muted); }
+.hero-xsmn { background:linear-gradient(115deg,rgba(23,75,78,.96),rgba(16,37,49,.96) 58%,rgba(31,47,57,.96)); border:1px solid rgba(90,213,183,.25); border-radius:22px; padding:26px 28px; margin:0 0 22px 0; box-shadow:0 18px 50px rgba(0,0,0,.22); position:relative; overflow:hidden; }
+.hero-xsmn:after { content:'🍀'; position:absolute; right:30px; top:12px; font-size:68px; opacity:.13; }
+.hero-kicker { color:#70e2c4; text-transform:uppercase; letter-spacing:.16em; font-size:.72rem; font-weight:800; }
+.hero-title { color:#f4fbfc; font-size:1.85rem; font-weight:800; margin-top:7px; }
+.hero-sub { color:#b2c8ce; font-size:.92rem; margin-top:6px; max-width:760px; }
+[data-testid="stMetric"] { background:linear-gradient(145deg,#142d37,#10232c); border:1px solid var(--line); border-radius:16px; padding:16px 18px; box-shadow:0 8px 22px rgba(0,0,0,.14); }
+[data-testid="stMetricLabel"] { color:#9db6bd !important; font-size:.8rem !important; }
+[data-testid="stMetricValue"] { color:#f4fbfc !important; font-weight:800; }
+[data-testid="stTabs"] button { color:#9eb6bd; font-weight:700; border-radius:10px 10px 0 0; }
+[data-testid="stTabs"] button[aria-selected="true"] { color:#5ee0bd !important; border-bottom:3px solid #35d0ae !important; }
+[data-testid="stDataFrame"], [data-testid="stTable"] { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.stButton button, .stDownloadButton button { background:linear-gradient(100deg,#1ca98f,#35d0ae); color:#06231f; border:0; border-radius:11px; font-weight:800; }
+.stButton button:hover, .stDownloadButton button:hover { background:#6be6c9; color:#06231f; }
+input, textarea, [data-baseweb="select"] > div { background:#10232c !important; border-color:var(--line) !important; border-radius:10px !important; }
+hr { border-color:var(--line); }
+[data-testid="stAlert"] { border-radius:13px; }
+@media (max-width: 700px) {
+ .block-container { padding:1rem .8rem 2rem .8rem; }
+ .hero-xsmn { padding:20px 18px; border-radius:17px; }
+ .hero-title { font-size:1.45rem; }
+ h1 { font-size:1.7rem !important; }
+ [data-testid="stMetric"] { padding:12px; }
+}
+</style>
+<div class="hero-xsmn">
+ <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
+ <div class="hero-title">Trung tâm phân tích xổ số miền Nam</div>
+ <div class="hero-sub">Thống kê lịch sử · Chu kỳ · Thuật toán · Kiểm định cuốn chiếu — trình bày dữ liệu rõ ràng, không khẳng định khả năng dự đoán chắc chắn.</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.title("Tổng quan XSMN")
+st.caption("Không gian phân tích dữ liệu miền Nam")
 
 with st.sidebar:
     st.header("Dữ liệu XSMN")
