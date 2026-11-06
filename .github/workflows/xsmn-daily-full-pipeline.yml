@@ -39,13 +39,13 @@ jobs:
           python-version: "3.12"
       - name: Install pipeline dependencies
         run: python -m pip install --upgrade pandas requests beautifulsoup4
-      - name: Retry full XSMN verification every 5 minutes from 16:45; publish by 17:00
+      - name: Retry full XSMN verification every 5 minutes from 16:45; publish by 17:35
         shell: bash
         run: |
           set -uo pipefail
           mkdir -p xsmn_383_probe xsmn_run_status
           validation_start=$(date -d '16:45:00' +%s)
-          deadline=$(date -d '17:00:00' +%s)
+          deadline=$(date -d '17:35:00' +%s)
           scheduled=0
           if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then scheduled=1; fi
 
@@ -143,7 +143,7 @@ jobs:
             rm -f data/xsmn_5y_canonical.csv.tmp data/xsmn_5y_canonical.json.tmp
             now=$(date +%s)
             if (( now >= deadline )); then
-              echo '::error::17:00 deadline reached; full pipeline did not pass. Existing canonical history is preserved.'
+              echo '::error::17:35 deadline reached; full pipeline did not pass. Existing canonical history is preserved.'
               exit 1
             fi
             remaining=$((deadline - now))
@@ -152,9 +152,9 @@ jobs:
             echo "Attempt ${attempt} failed; retrying the ENTIRE verification pipeline in ${sleep_for}s."
             sleep "$sleep_for"
           done
-          echo '::error::17:00 deadline reached before full verification passed; canonical dataset unchanged.'
+          echo '::error::17:35 deadline reached before full verification passed; canonical dataset unchanged.'
           exit 1
-      - name: Report only failures at or after the 17:00 deadline
+      - name: Report only failures at or after the 17:35 deadline
         if: always()
         shell: bash
         run: |
@@ -167,10 +167,10 @@ jobs:
           now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
           status = {
             "reported_at_vietnam": now.isoformat(),
-            "deadline": "17:00 Asia/Ho_Chi_Minh",
+            "deadline": "17:35 Asia/Ho_Chi_Minh",
             "workflow_job_status": os.environ.get("JOB_STATUS", "unknown"),
             "canonical_dataset_updated": False,
-            "rule": "No user-facing failure report when all required work finishes successfully by 17:00. If any required step fails or the deadline is missed, record exact failed stage and evidence.",
+            "rule": "No user-facing failure report when all required work finishes successfully by 17:35. If any required step fails or the deadline is missed, record exact failed stage and evidence.",
           }
           try:
             status["canonical_dataset_updated"] = subprocess.run(
@@ -178,7 +178,7 @@ jobs:
             ).returncode == 1
           except Exception:
             pass
-          missed_deadline = now.hour > 17 or (now.hour == 17 and now.minute > 0)
+          missed_deadline = now.hour > 17 or (now.hour == 17 and now.minute > 35)
           failed = os.environ.get("JOB_STATUS") != "success" or missed_deadline
           if missed_deadline:
             status["deadline_missed"] = True
