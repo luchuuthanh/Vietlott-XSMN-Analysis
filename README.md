@@ -96,3 +96,14 @@ Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Ma
 - Module lõi dùng chung: `ticket_checker.py`; kiểm thử: `tests/test_ticket_checker.py`.
 - Quy tắc hạng giải theo Thể lệ Power 6/55 Vietlott: Jackpot 1 (6 số), Jackpot 2 (5 số + đặc biệt), Giải nhất (5 số), Giải nhì (4 số), Giải ba (3 số). Một vé chỉ nhận hạng giải cao nhất. Công cụ chỉ hỗ trợ đối chiếu tham khảo; vé hợp lệ và kết quả chính thức phải được Vietlott xác nhận.
 - Rolling backtest đo hiệu quả lịch sử ngoài mẫu, không phải bằng chứng thuật toán dự đoán được tương lai hay làm tăng xác suất trúng.
+
+## XSMN: thuật toán thống kê và backtest cuốn chiếu
+
+- Module phân tích: `xsmn_algorithms.py`.
+- Các phương pháp xếp hạng: tần suất 30/90/365 kỳ, độ gan, EWMA (giảm trọng số theo thời gian), mô hình kết hợp.
+- Phân tích cặp số cùng xuất hiện, tổng, chẵn/lẻ và phân phối 00–99.
+- Tab **Thuật toán** và **Backtest** trong `xsmn_app.py`.
+- Backtest walk-forward: tại mỗi ngày kiểm tra, chỉ dùng dữ liệu có ngày nhỏ hơn ngày mục tiêu; không dùng kết quả tương lai.
+- So sánh số lần trùng trong top-K với mức kỳ vọng ngẫu nhiên, xuất chi tiết từng ngày ra CSV.
+- Kiểm thử tự động: `tests/test_xsmn_algorithms.py`, workflow `.github/workflows/xsmn-algorithms-tests.yml`.
+- Điểm xếp hạng và kết quả backtest là thống kê quá khứ, không chứng minh khả năng dự đoán hoặc tăng xác suất trúng.
