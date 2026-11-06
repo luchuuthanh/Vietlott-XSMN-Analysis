@@ -130,7 +130,8 @@ hr { border-color:var(--line); }
 .st-key-hidden-xsmn-data,
 .st-key-hidden-xsmn-coverage,
 .st-key-hidden-xsmn-archive-status,
-.st-key-hidden-xsmn-algo-pairs { display:none !important; }
+.st-key-hidden-xsmn-algo-pairs,
+.st-key-hidden-xsmn-two-chart { display:none !important; }
 @media (max-width: 700px) {
  .block-container { padding:1rem .8rem 2rem .8rem; }
  .hero-xsmn { padding:20px 18px; border-radius:17px; }
@@ -365,18 +366,17 @@ try:
     with t_two:
         # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
         st.markdown("### Thống kê hai số")
-        two_col1, two_col2 = st.columns(2)
-        with two_col1:
-            two_periods = st.slider(
-                "Số kỳ thống kê hai số", 1, max(1, len(dates)),
-                min(30, max(1, len(dates))), key="stats_two_periods"
-            )
-        with two_col2:
-            two_scope = st.selectbox(
-                "Chọn giải (hai số)", ["G8", "ĐB", "Tất cả giải"],
-                key="stats_two_scope"
-            )
-        two_freq, two_gaps, two_used = suffix_statistics(
+        two_periods = st.slider(
+            "Số kỳ thống kê tần suất", 1, max(1, len(dates)),
+            min(30, max(1, len(dates))), key="stats_two_periods"
+        )
+        two_scope = st.radio(
+            "Chọn giải",
+            ["G8", "ĐB", "Tất cả giải"],
+            horizontal=True,
+            key="stats_two_scope"
+        )
+        two_freq, _, two_used = suffix_statistics(
             raw, province, 2, two_periods, two_scope
         )
         two_display = two_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
@@ -384,13 +384,23 @@ try:
         st.caption(f"Phạm vi: {two_scope} · {two_used} kỳ gần nhất.")
         st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
 
-        # Khôi phục bảng số lâu chưa xuất hiện và biểu đồ tần suất hai số.
         st.markdown("### Số lâu chưa xuất hiện")
+        gap_periods = st.slider(
+            "Số kỳ xét số lâu chưa xuất hiện", 1, max(1, len(dates)),
+            min(30, max(1, len(dates))), key="stats_two_gap_periods"
+        )
+        _, two_gaps, gap_used = suffix_statistics(
+            raw, province, 2, gap_periods, two_scope
+        )
+        st.caption(f"Phạm vi: {two_scope} · {gap_used} kỳ gần nhất.")
         two_gaps_display = two_gaps.copy()
         two_gaps_display["Số"] = two_gaps_display["Số"].map(lambda n: f"{int(n):02d}")
         st.dataframe(two_gaps_display.head(20), use_container_width=True, hide_index=True)
-        st.markdown("### Biểu đồ tần suất hai số")
-        st.bar_chart(two_freq.set_index("Số")["Số lần"])
+
+        # Biểu đồ được ẩn khỏi giao diện, vẫn giữ nguyên phép tính và mã hiển thị.
+        with st.container(key="hidden-xsmn-two-chart"):
+            st.markdown("### Biểu đồ tần suất hai số")
+            st.bar_chart(two_freq.set_index("Số")["Số lần"])
 
 
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
