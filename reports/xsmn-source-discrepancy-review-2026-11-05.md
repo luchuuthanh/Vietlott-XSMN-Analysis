@@ -60,3 +60,13 @@ The ledger is deliberately explicit that the historical 383.im overlap payload i
 - 2026-05-02: xskt.com.vn, Minh Ngọc, Xổ Số Nay, xskt.net, and other result pages publish the same four-station table, including all prize groups DB–G7.
 
 These are corroborating secondary result pages. Their common upstream data ownership has not been established, and no official issuer certification has been obtained. The archive remains unchanged; no historical archive values are overwritten.
+
+
+## Recent 402-day cross-check corrections — 2026-11-06
+
+Two station-day differences were reported by the independent 402-day supplement comparison. They are separate from the 66 historical archive-vs-383.im overlap groups above.
+
+1. **2026-08-29 Long An, G2 — resolved: 79719.** The cross-check source value 79719 is supported by the published full result table at https://xskt.com.vn/xsla/ngay-29-8-2026. The competing archive value 76719 is not supported by that result page. Correct the supplement/canonical row to 79719 only after applying the repository's normal source-of-truth update procedure; do not silently rewrite the original archive.
+2. **2026-10-23 Vĩnh Long, G4 — conflicting secondary sources: unresolved pending the user's previously supplied result image.** Published pages disagree: Minh Ngọc and xskt.com.vn list 87962, while KQXS.vn and KQXS NOW list 87992. Evidence URLs: https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/vinh-long/23-10-2026.html ; https://xskt.com.vn/xsvl/ngay-23-10-2026 ; https://m.kqxs.vn/mien-nam/xo-so-vinh-long/ngay-23-10-2026 ; https://kqxsnow.com/xo-so/vinh-long/2026-10-23 . The user states that an image containing the result was already supplied in an earlier conversation. That image was not retrievable in the current session's accessible files, so neither value is declared final here. Retrieve and inspect the user's image before closing this item.
+
+Do not mark the 402-day cross-check as fully clean until the Vĩnh Long G4 conflict is resolved against the user's image or an official issuer record. The 66 historical discrepancy ledger and the 402-day supplement cross-check must remain separate QA scopes.
