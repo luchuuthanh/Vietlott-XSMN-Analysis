@@ -209,15 +209,21 @@ hr { border-color:var(--line); }
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
 .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
- display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important;
+ display:grid !important; grid-auto-flow:column !important;
+ grid-auto-columns:minmax(0,1fr) !important; grid-template-columns:none !important;
  gap:8px !important; align-items:stretch !important; width:100% !important;
+ max-width:100% !important; overflow:hidden !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] {
- min-width:0 !important; width:0 !important; max-width:none !important;
- flex:1 1 0% !important;
+ min-width:0 !important; width:auto !important; max-width:none !important;
+ flex:none !important; padding:0 !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] > div {
  width:100% !important; min-width:0 !important;
+}
+.st-key-xsmn-station-row [data-testid="stCheckbox"] { width:100% !important; min-width:0 !important; }
+.st-key-xsmn-station-row [data-testid="stCheckbox"] label {
+ box-sizing:border-box !important; width:100% !important; min-width:0 !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { min-height:64px; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
@@ -243,7 +249,7 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
- .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { flex-wrap:nowrap !important; gap:6px !important; }
+ .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { grid-auto-flow:column !important; grid-auto-columns:minmax(0,1fr) !important; gap:6px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { padding:8px 2px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.78rem !important; }
 }
