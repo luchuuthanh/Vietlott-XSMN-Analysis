@@ -363,18 +363,20 @@ try:
             live_station["_order"] = live_station["prize"].map(order).fillna(99)
             live_station = live_station.sort_values("_order")
             live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
-            st.markdown(f"**{live_province} · {live_date}**")
-            for prize, rows in live_station.groupby("prize", sort=False):
-                prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
-                values = "".join(
-                    f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
-                    for v in rows["number"].tolist()
-                )
-                st.markdown(
-                    f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
-                    f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
-                    unsafe_allow_html=True,
-                )
+            st.markdown(f"**{live_date} · Kết quả theo từng đài**")
+            for station, station_rows in live_station.groupby("province", sort=False):
+                st.markdown(f"### {html.escape(str(station))}")
+                for prize, rows in station_rows.groupby("prize", sort=False):
+                    prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
+                    values = "".join(
+                        f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
+                        for v in rows["number"].tolist()
+                    )
+                    st.markdown(
+                        f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
+                        f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
+                        unsafe_allow_html=True,
+                    )
             st.caption("Nguồn dữ liệu: SXMN · Tự làm mới mỗi 60 giây khi mở ứng dụng.")
         except Exception as exc:
             st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
@@ -407,18 +409,19 @@ try:
               <div class="draw-count"><strong>{len(live_result)}</strong><span>con số</span></div>
             </div>
             """, unsafe_allow_html=True)
-            grouped = list(live_result.groupby("prize", sort=False))
-            for prize, rows in grouped:
-                prize_label = str(prize).upper()
-                values = [html.escape(str(v)) for v in rows["number"].tolist()]
-                is_jackpot = prize_label in {"ĐB", "DB", "GĐB"}
-                chips = "".join(f'<span class="number-chip {"jackpot-chip" if is_jackpot else ""}">{v}</span>' for v in values)
-                st.markdown(
-                    f'<div class="prize-row {"prize-jackpot" if is_jackpot else ""}>'
-                    f'<div class="prize-name">{"ĐẶC BIỆT" if is_jackpot else "GIẢI " + html.escape(prize_label)}</div>'
-                    f'<div class="prize-numbers">{chips}</div></div>',
-                    unsafe_allow_html=True,
-                )
+            for station, station_rows in live_result.groupby("province", sort=False):
+                st.markdown(f"### {html.escape(str(station))}")
+                for prize, rows in station_rows.groupby("prize", sort=False):
+                    prize_label = str(prize).upper()
+                    values = [html.escape(str(v)) for v in rows["number"].tolist()]
+                    is_jackpot = prize_label in {"ĐB", "DB", "GĐB"}
+                    chips = "".join(f'<span class="number-chip {"jackpot-chip" if is_jackpot else ""}">{v}</span>' for v in values)
+                    st.markdown(
+                        f'<div class="prize-row {"prize-jackpot" if is_jackpot else ""}>'
+                        f'<div class="prize-name">{"ĐẶC BIỆT" if is_jackpot else "GIẢI " + html.escape(prize_label)}</div>'
+                        f'<div class="prize-numbers">{chips}</div></div>',
+                        unsafe_allow_html=True,
+                    )
             st.caption(f"Ngày mới nhất hiện có trong kho các đài đã chọn: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
         else:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
