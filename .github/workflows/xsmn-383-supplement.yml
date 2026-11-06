@@ -3,8 +3,8 @@ name: Daily XSMN 383 feed validation
 on:
   workflow_dispatch:
   schedule:
-    # 16:35 Vietnam time, after the direct result feed is normally available around 16:20.
-    - cron: "35 9 * * *"
+    # 16:45 Vietnam time, allowing the direct result feed to settle after ~16:20.
+    - cron: "45 9 * * *"
 
 permissions:
   contents: read
