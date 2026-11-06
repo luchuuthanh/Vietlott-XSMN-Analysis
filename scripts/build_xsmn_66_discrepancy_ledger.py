@@ -15,7 +15,7 @@ CASES = {
     ("2025-06-28", "Binh Phuoc"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
         "url2": "https://xs.com.vn/xsmn-ngay-28-6-2025.html",
-        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES
+        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES, "prizes": PRIZES
     },
     ("2025-06-28", "Hau Giang"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
@@ -41,7 +41,7 @@ CASES = {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/02-05-2026.html",
         "url3": "https://xosonay.com/xsmn/02-05-2026/",
-        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES
+        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES, "prizes": PRIZES
     },
     ("2026-05-02", "Hau Giang"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
