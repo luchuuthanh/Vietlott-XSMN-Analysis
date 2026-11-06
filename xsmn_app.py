@@ -151,6 +151,58 @@ hr { border-color:var(--line); }
 @media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:100px minmax(0,1fr); gap:9px; padding:10px 9px; } .prize-name { font-size:.82rem; padding:5px 7px 5px 0; } .prize-numbers { gap:7px; } .number-chip { min-width:102px; min-height:58px; font-size:1.24rem; padding:9px 10px; } .jackpot-chip { min-width:145px; min-height:64px; font-size:1.35rem; } }
 
 [data-testid="stAlert"] { border-radius:13px; }
+/* Bộ chọn thứ mở thưởng và đài: dạng thẻ lớn, chữ căn giữa */
+.st-key-xsmn_weekday [data-testid="stRadio"] > div {
+ display:grid !important;
+ grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+ gap:10px !important;
+ width:100%;
+}
+.st-key-xsmn_weekday [data-testid="stRadio"] label {
+ display:flex !important; align-items:center !important; justify-content:center !important;
+ text-align:center !important; min-height:62px !important; padding:12px 8px !important;
+ margin:0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
+ border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
+}
+.st-key-xsmn_weekday [data-testid="stRadio"] label p {
+ color:#e8f1f4 !important; font-size:1.12rem !important; font-weight:800 !important;
+ text-align:center !important; margin:0 !important;
+}
+.st-key-xsmn_weekday [data-testid="stRadio"] label:has(input:checked) {
+ background:linear-gradient(145deg,#713044,#3b2635) !important;
+ border:2px solid #f04465 !important;
+ box-shadow:0 5px 16px rgba(220,65,85,.2);
+}
+.st-key-xsmn_weekday [data-testid="stRadio"] label > div:first-child { display:none !important; }
+.st-key-xsmn_station_ [data-testid="stCheckbox"] {
+ min-height:64px; display:flex; align-items:stretch; justify-content:center;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
+ display:flex !important; align-items:center !important; justify-content:center !important;
+ width:100% !important; min-height:62px !important; padding:10px 12px !important;
+ margin:0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
+ border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
+ color:#e8f1f4 !important; font-size:1.08rem !important; font-weight:800 !important;
+ text-align:center !important; margin:0 !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
+ background:linear-gradient(145deg,#15534f,#123744) !important;
+ border:2px solid #35d0ae !important;
+ box-shadow:0 5px 16px rgba(53,208,174,.16);
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:first-child {
+ position:absolute !important; width:1px !important; height:1px !important;
+ overflow:hidden !important; clip:rect(0,0,0,0) !important;
+}
+@media (max-width:600px) {
+ .st-key-xsmn_weekday [data-testid="stRadio"] > div { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] label { min-height:58px !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] label p,
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:1.08rem !important; }
+}
+
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
 .st-key-hidden-xsmn-lookback,
@@ -297,7 +349,8 @@ try:
                 return actual
         return None
     station_map = {label: resolve_station(label) for label in scheduled}
-    st.markdown("**Chọn đài (có thể tích nhiều đài)**")
+    st.markdown("### Chọn đài")
+    st.caption("Chạm vào từng khối để chọn hoặc bỏ chọn nhiều đài.")
     cols = st.columns(2)
     selected_stations = []
     for idx, label in enumerate(scheduled):
