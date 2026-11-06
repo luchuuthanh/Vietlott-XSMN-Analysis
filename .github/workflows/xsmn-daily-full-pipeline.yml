@@ -169,11 +169,14 @@ jobs:
             ).returncode == 1
           except Exception:
             pass
-          failed = os.environ.get("JOB_STATUS") != "success"
+          missed_deadline = now.hour > 17 or (now.hour == 17 and now.minute > 0)
+          failed = os.environ.get("JOB_STATUS") != "success" or missed_deadline
+          if missed_deadline:
+            status["deadline_missed"] = True
           if failed:
             status["overall_status"] = "ERROR_NEEDS_PROCESS_REVIEW"
             status["message"] = "Quy trình không hoàn tất đúng hạn hoặc có bước lỗi. Cần xem log bước lỗi và chuẩn hóa cách xử lý; dữ liệu chuẩn cũ phải được giữ nguyên nếu chưa PASS."
-            status["failed_stage"] = os.environ.get("FAILED_STEP", "See failed step in GitHub Actions job log")
+            status["failed_stage"] = "See the first failed step in the GitHub Actions job log"
             Path("xsmn_run_status/failure-after-deadline.json").write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding="utf-8")
             print("::error::XSMN pipeline failed or missed the 17:00 completion deadline; inspect failure report.")
             print(json.dumps(status,ensure_ascii=False,indent=2))
@@ -184,7 +187,6 @@ jobs:
           PY
         env:
           JOB_STATUS: ${{ job.status }}
-          FAILED_STEP: ${{ steps.*.outcome }}
       - name: Preserve full run evidence
         if: always()
         uses: actions/upload-artifact@v4
