@@ -28,7 +28,8 @@ jobs:
       - run: python scripts/normalize_xsmn_five_year.py --archive xsmn_audit/xsmn_cleaned_rows.csv --supplement xsmn_383_supplement/xsmn_383_supplement.csv --out xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/normalization_report.json
       - name: Apply reviewed corrections without changing raw supplement
         run: python scripts/apply_xsmn_reviewed_corrections.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/reconciliation_report.json
-      - name: Compare supplement against parsed XoSoTin daily result tables\n        run: python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/xsmn_source_comparison.csv
+      - name: Compare supplement against parsed XoSoTin daily result tables
+        run: python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/xsmn_source_comparison.csv
       - uses: actions/upload-artifact@v4
         if: always()
         with:
