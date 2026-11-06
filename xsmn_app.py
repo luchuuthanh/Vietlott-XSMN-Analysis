@@ -276,8 +276,8 @@ try:
     with t5:
         st.subheader("Xếp hạng thống kê 00–99")
         st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
-        method = st.selectbox("Phương pháp xếp hạng", ["blend", "freq_30", "freq_90", "freq_365", "gap"],
-                              format_func=lambda x: {"blend":"Kết hợp tần suất + gan", "freq_30":"Tần suất 30 kỳ",
+        method = st.selectbox("Phương pháp xếp hạng", ["freq_30", "freq_90", "freq_365", "gap"],
+                              format_func=lambda x: {"freq_30":"Tần suất 30 kỳ",
                               "freq_90":"Tần suất 90 kỳ", "freq_365":"Tần suất 365 kỳ",
                               "gap":"Số ít xuất hiện"}[x])
         top_k = st.slider("Số lượng số hiển thị", 5, 30, 10, key="algorithm_top_k")
