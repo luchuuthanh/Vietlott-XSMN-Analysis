@@ -9,7 +9,7 @@ def histories_by_province(df):
     x=df.copy()
     x["date"]=pd.to_datetime(x["date"],errors="coerce").dt.normalize()
     x["province"]=x["province"].astype(str).str.strip()
-    col=x["last2"] if "last2" in x.columns else x["number"].astype(str).str.replace(r"\\D","",regex=True).str[-2:]
+    col=x["last2"] if "last2" in x.columns else x["number"].astype(str).str.replace(r"\D","",regex=True).str[-2:]
     x["n2"]=pd.to_numeric(col,errors="coerce")
     x=x.dropna(subset=["date","n2"])
     x=x[x.n2.between(0,99)]
