@@ -44,13 +44,13 @@ def parse_daily(html, draw_date):
     for table in soup.find_all("table"):
         trs=table.find_all("tr")
         if len(trs)<10: continue
-        head=trs[0].find_all(["th","td"],recursive=False)
+        head=trs[0].find_all(["th","td"],recursive=True)
         if len(head)<4: continue
         station_names=[map_station(c.get_text(" ",strip=True)) for c in head[1:]]
         if any(x is None for x in station_names) or len(set(station_names))!=len(station_names): continue
         result={s:defaultdict(list) for s in station_names}
         for tr in trs[1:]:
-            cells=tr.find_all(["th","td"],recursive=False)
+            cells=tr.find_all(["th","td"],recursive=True)
             if len(cells)<len(station_names)+1: continue
             p=prize_code(cells[0].get_text(" ",strip=True))
             if not p: continue
@@ -82,7 +82,7 @@ def main():
     observed={}; errors=[]
     dates=sorted({k[0] for k in expected})
     for d in dates:
-        dt=date.fromisoformat(d); url=f"https://xosotin.net/ket-qua/xsmn/{dt:%d-%m-%Y}.html"
+        dt=date.fromisoformat(d); url=f"https://xskt.net/xsmn/{dt:%d-%m-%Y}"
         try:
             res=session.get(url,timeout=35); res.raise_for_status()
             parsed=parse_daily(res.text,d)
@@ -116,7 +116,7 @@ def main():
     Path(a.out).parent.mkdir(parents=True,exist_ok=True)
     with open(a.out,"w",encoding="utf-8-sig",newline="") as f:
         w=csv.writer(f); w.writerow(["date","province","status","prize","supplement_numbers","independent_numbers"]); w.writerows(details)
-    report={"source":"XoSoTin daily XSMN pages (secondary source)","source_base":"https://xosotin.net/ket-qua/xsmn/DD-MM-YYYY.html",
+    report={"source":"XSKT.net daily XSMN pages (secondary source)","source_base":"https://xskt.net/xsmn/DD-MM-YYYY",
     "window_start":a.start,"window_end":a.end,"expected_station_days":len(expected),"dates_requested":len(dates),
     "station_days_parsed":len(observed),"station_days_compared":compared,"station_days_match":matched,
     "station_days_with_mismatch":pair_mismatch,"station_days_missing_from_source":missing,
