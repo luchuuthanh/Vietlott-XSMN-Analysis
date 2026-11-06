@@ -13,6 +13,22 @@ from xsmn_live import fetch_live_xsmn
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
+PRIZE_DIGITS = {
+    "ĐB": 6, "DB": 6, "GĐB": 6,
+    "G1": 5, "G2": 5, "G3": 5, "G4": 5,
+    "G5": 4, "G6": 4, "G7": 3, "G8": 2,
+}
+
+def format_prize_number(prize, number):
+    """Format result to the official digit count for its prize; keep significant leading zeros."""
+    label = str(prize).strip().upper()
+    digits = PRIZE_DIGITS.get(label)
+    value = "".join(ch for ch in str(number) if ch.isdigit())
+    if not digits or not value:
+        return value
+    return value[-digits:].zfill(digits)
+
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
@@ -173,6 +189,7 @@ try:
                     key="live_xsmn_province",
                 )
                 live_station = live_frame[live_frame["province"] == live_province].copy()
+                live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
                 order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
                 live_station["_order"] = live_station["prize"].map(order).fillna(99)
                 live_station = live_station.sort_values("_order")
@@ -209,6 +226,7 @@ try:
                 key="xsmn_live_date",
             )
             live_result = data[data["date"].astype(str) == selected_live_date].copy()
+            live_result["number"] = live_result.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
             prize_order = {"ĐB": 0, "DB": 0, "GĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
             live_result["_order"] = live_result["prize"].astype(str).str.upper().map(prize_order).fillna(99)
             live_result = live_result.sort_values(["_order", "prize"], ascending=True)
