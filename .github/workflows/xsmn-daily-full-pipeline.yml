@@ -83,7 +83,11 @@ jobs:
           c=json.load(open('xsmn_5y_normalized/reconciliation_report.json',encoding='utf-8'))
           v=json.load(open('xsmn_independent_audit/today_comparison.json',encoding='utf-8'))
           a=json.load(open('xsmn_audit/summary.json',encoding='utf-8'))
-          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_today':v.get('status')=='PASS','archive_quarters':a.get('quarter_count_missing_or_error')==0}
+          from datetime import datetime, time
+          import zoneinfo
+          now=datetime.now(zoneinfo.ZoneInfo('Asia/Ho_Chi_Minh'))
+          before_deadline=now.time() < time(17,0)
+          checks={'before_17_00_vietnam':before_deadline,'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_today':v.get('status')=='PASS','archive_quarters':a.get('quarter_count_missing_or_error')==0}
           print(json.dumps({'checks':checks,'normalization':n,'independent_today':v},ensure_ascii=False,indent=2))
           if not all(checks.values()): sys.exit('Final gate failed; canonical dataset will not be changed')
           df=pd.read_csv('xsmn_5y_normalized/xsmn_5y_normalized.csv',dtype={'number':str,'last2':str})
