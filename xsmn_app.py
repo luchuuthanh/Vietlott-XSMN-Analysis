@@ -216,8 +216,23 @@ if source == "Kho lịch sử 5 năm":
             if meta.get("status") != "PASS":
                 raise ValueError("Manifest chưa xác nhận PASS")
             raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
-            with st.container(key="hidden-xsmn-validated-data-caption"):
-                st.caption(f"Dữ liệu chuẩn đã kiểm định: {meta.get('window_start')} → {meta.get('window_end')} · {meta.get('rows')} dòng · cập nhật {meta.get('updated_at_vietnam')}")
+            # Trạng thái kho dữ liệu phải hiển thị trực tiếp trong ứng dụng.
+            updated_at = meta.get("updated_at_vietnam", "Chưa rõ")
+            window_end = meta.get("window_end", "Chưa rõ")
+            rows_count = int(meta.get("rows", 0) or 0)
+            source_name = meta.get("source", "Không rõ nguồn")
+            st.markdown("### Tình trạng cập nhật dữ liệu")
+            status_col1, status_col2, status_col3 = st.columns(3)
+            status_col1.metric("Kiểm định kho dữ liệu", "ĐẠT" if meta.get("status") == "PASS" else "CHƯA ĐẠT")
+            status_col2.metric("Dữ liệu đến ngày", pd.to_datetime(window_end).strftime("%d/%m/%Y") if window_end != "Chưa rõ" else "Chưa rõ")
+            status_col3.metric("Tổng dòng kết quả", f"{rows_count:,}".replace(",", "."))
+            st.caption(f"Cập nhật kho: {updated_at} · Nguồn: {source_name}")
+            if meta.get("status") != "PASS":
+                st.error("Kho dữ liệu chưa vượt qua kiểm định. Không sử dụng để xác nhận kết quả.")
+            elif window_end < date.today().isoformat():
+                st.warning(f"Kho dữ liệu hiện mới xác nhận đến {pd.to_datetime(window_end).strftime('%d/%m/%Y')}. Chưa có xác nhận dữ liệu cho ngày hôm nay; không tự coi là đã cập nhật.")
+            else:
+                st.success("Kho dữ liệu đã kiểm định và có dữ liệu đến ngày hiện tại.")
         except Exception as exc:
             st.error(f"Không đọc được bản dữ liệu chuẩn đã xuất bản: {exc}")
             st.stop()
