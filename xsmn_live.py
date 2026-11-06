@@ -66,7 +66,7 @@ def fetch_live_xsmn() -> tuple[pd.DataFrame, str]:
 
     if not records:
         raise ValueError("Bảng có cấu trúc nhưng chưa có kết quả số.")
-    date_match = re.search(r"(?:XSMN|SXMN)[^\\n]{0,70}?(\d{2}/\d{2}/\d{4})", soup.get_text(" ", strip=True), re.I)
+    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", soup.get_text(" ", strip=True))
     draw_date = datetime.strptime(date_match.group(1), "%d/%m/%Y").date().isoformat() if date_match else datetime.now().date().isoformat()
     frame = pd.DataFrame(records)
     frame.insert(0, "date", draw_date)
