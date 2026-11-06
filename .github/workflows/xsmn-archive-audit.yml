@@ -28,11 +28,7 @@ jobs:
       - name: Download and audit five-year XSMN archive
         run: python scripts/audit_xsmn_archive.py
       - name: Build 66-group historical discrepancy ledger
-        run: |
-          python scripts/build_xsmn_66_discrepancy_ledger.py \\
-            --archive xsmn_audit/xsmn_cleaned_rows.csv \\
-            --out xsmn_audit/xsmn_66_discrepancy_ledger.csv \\
-            --report xsmn_audit/xsmn_66_discrepancy_ledger.json
+        run: python scripts/build_xsmn_66_discrepancy_ledger.py --archive xsmn_audit/xsmn_cleaned_rows.csv --out xsmn_audit/xsmn_66_discrepancy_ledger.csv --report xsmn_audit/xsmn_66_discrepancy_ledger.json
       - name: Fetch 383.im supplement
         run: |
           mkdir -p xsmn_383_probe
