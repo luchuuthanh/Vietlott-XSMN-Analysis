@@ -225,65 +225,76 @@ try:
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
-    # Ẩn tab Backtest khỏi giao diện nhưng giữ nguyên toàn bộ nội dung và phép kiểm định.
-    backtest_tab_index = 7 if show_live_tab else 6
-    st.markdown(
-        f"<style>[data-testid='stTabs'] [role='tab']:nth-child({backtest_tab_index}) "
-        "{display:none !important;}</style>",
-        unsafe_allow_html=True,
+    # Điều hướng chính dùng các nút chọn dạng pill; Backtest vẫn giữ mã nhưng ẩn như trước.
+    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
+    if show_live_tab:
+        nav_options.insert(0, "🔴 Trực tuyến")
+    st.markdown("""
+    <style>
+    div[data-testid="stRadio"] > div {
+        display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    div[data-testid="stRadio"] label {
+        border: 1px solid rgba(150,170,180,.35);
+        border-radius: 12px; padding: 8px 13px;
+        background: rgba(120,140,150,.08);
+    }
+    div[data-testid="stRadio"] label:has(input:checked) {
+        background: rgba(220,65,85,.18);
+        border-color: #dc4155;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    selected_nav = st.radio(
+        "Chọn mục",
+        nav_options,
+        horizontal=True,
+        label_visibility="collapsed",
+        key="xsmn_main_navigation",
     )
-    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thống kê hai số", "Thống kê ba số", "Thuật toán", "Backtest"]
-    if show_live_tab:
-        tab_labels.insert(0, "🔴 Trực tuyến")
-    tabs = st.tabs(tab_labels)
-    if show_live_tab:
-        tlive = tabs[0]
-        with tlive:
-            st.subheader("Kết quả XSMN trực tuyến")
-            st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
-            if st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn"):
-                st.cache_data.clear()
-            @st.cache_data(ttl=60, show_spinner=False)
-            def _load_live_xsmn():
-                return fetch_live_xsmn()
-            try:
-                with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
-                    live_frame, live_source = _load_live_xsmn()
-                live_provinces = sorted(live_frame["province"].unique().tolist())
-                preferred = province if province in live_provinces else live_provinces[0]
-                live_province = st.selectbox(
-                    "Chọn đài",
-                    live_provinces,
-                    index=live_provinces.index(preferred),
-                    key="live_xsmn_province",
+    if show_live_tab and selected_nav == "🔴 Trực tuyến":
+        st.subheader("Kết quả XSMN trực tuyến")
+        st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
+        if st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn"):
+            st.cache_data.clear()
+        @st.cache_data(ttl=60, show_spinner=False)
+        def _load_live_xsmn():
+            return fetch_live_xsmn()
+        try:
+            with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
+                live_frame, live_source = _load_live_xsmn()
+            live_provinces = sorted(live_frame["province"].unique().tolist())
+            preferred = province if province in live_provinces else live_provinces[0]
+            live_province = st.selectbox(
+                "Chọn đài",
+                live_provinces,
+                index=live_provinces.index(preferred),
+                key="live_xsmn_province",
+            )
+            live_station = live_frame[live_frame["province"] == live_province].copy()
+            live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
+            order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+            live_station["_order"] = live_station["prize"].map(order).fillna(99)
+            live_station = live_station.sort_values("_order")
+            live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
+            st.markdown(f"**{live_province} · {live_date}**")
+            for prize, rows in live_station.groupby("prize", sort=False):
+                prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
+                values = "".join(
+                    f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
+                    for v in rows["number"].tolist()
                 )
-                live_station = live_frame[live_frame["province"] == live_province].copy()
-                live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
-                order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
-                live_station["_order"] = live_station["prize"].map(order).fillna(99)
-                live_station = live_station.sort_values("_order")
-                live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
-                st.markdown(f"**{live_province} · {live_date}**")
-                for prize, rows in live_station.groupby("prize", sort=False):
-                    prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
-                    values = "".join(
-                        f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
-                        for v in rows["number"].tolist()
-                    )
-                    st.markdown(
-                        f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
-                        f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
-                        unsafe_allow_html=True,
-                    )
-                st.caption("Nguồn dữ liệu: SXMN · Tự làm mới mỗi 60 giây khi mở ứng dụng.")
-            except Exception as exc:
-                st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
-                st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
-    history_offset = 1 if show_live_tab else 0
-    thistory, t1, t_two, t_three, t_algo, t_backtest = [
-        tabs[i] for i in range(history_offset, history_offset + 6)
-    ]
-    with thistory:
+                st.markdown(
+                    f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
+                    f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
+                    unsafe_allow_html=True,
+                )
+            st.caption("Nguồn dữ liệu: SXMN · Tự làm mới mỗi 60 giây khi mở ứng dụng.")
+        except Exception as exc:
+            st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
+            st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
+
+    if selected_nav == "Lịch sử kết quả":
         st.subheader(f"Kết quả lịch sử XSMN — {province}")
         st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
         live_dates = sorted(data["date"].dropna().astype(str).unique(), reverse=True)
@@ -326,7 +337,7 @@ try:
         else:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
-    with t1:
+    if selected_nav == "Thống kê cặp số":
         # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
         st.markdown("### Thống kê cặp số")
         pair_periods = st.slider(
@@ -338,7 +349,7 @@ try:
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
-    with t_three:
+    if selected_nav == "Thống kê ba số":
         # Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
         st.markdown("### Thống kê ba số")
         three_periods = st.slider(
@@ -362,7 +373,7 @@ try:
         st.dataframe(three_gaps_display.head(20), use_container_width=True, hide_index=True)
 
 
-    with t_two:
+    if selected_nav == "Thống kê hai số":
         # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
         st.markdown("### Thống kê hai số")
         two_periods = st.slider(
@@ -420,7 +431,7 @@ try:
             st.dataframe(archive_status, use_container_width=True, hide_index=True)
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
 
-    with t_algo:
+    if selected_nav == "Thuật toán":
         st.subheader("Xếp hạng thống kê 00–99")
         st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
         method = st.selectbox("Phương pháp xếp hạng", ["freq_30", "freq_90", "freq_365", "gap"],
@@ -449,7 +460,7 @@ try:
             a.metric("Số kỳ lịch sử", report["draws"])
             b.metric("Tổng lượt xuất hiện", report["observations"])
             d.metric("Tổng trung bình mỗi kỳ", report.get("mean_sum") or 0)
-    with t_backtest:
+    if False:  # Backtest giữ nguyên mã nguồn nhưng không hiển thị trên thanh điều hướng.
         st.subheader("Kiểm định cuốn chiếu – không nhìn trước kết quả")
         st.caption("Mỗi kỳ được dự đoán chỉ sử dụng dữ liệu của các kỳ trước đó. So sánh với mức kỳ vọng nếu chọn ngẫu nhiên cùng số lượng.")
         min_history = st.slider("Số kỳ lịch sử tối thiểu trước lần kiểm tra đầu", 30, 180, 90, step=10)
