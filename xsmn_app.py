@@ -87,6 +87,7 @@ hr { border-color:var(--line); }
 
 [data-testid="stAlert"] { border-radius:13px; }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
+.st-key-hidden-xsmn-lookback,
 .st-key-hidden-xsmn-metrics,
 .st-key-hidden-xsmn-prize,
 .st-key-hidden-xsmn-data,
@@ -168,7 +169,9 @@ try:
     if not dates:
         st.warning("Tỉnh này chưa có ngày dữ liệu hợp lệ.")
         st.stop()
-    recent_n = st.slider("Số ngày/kỳ gần nhất", 1, len(dates), min(90, len(dates)))
+    # Giữ nguyên bộ lọc số kỳ; chỉ ẩn thanh điều khiển khỏi giao diện.
+    with st.container(key="hidden-xsmn-lookback"):
+        recent_n = st.slider("Số ngày/kỳ gần nhất", 1, len(dates), min(90, len(dates)))
     chosen_dates = set(dates[-recent_n:])
     subset = data[data["date"].isin(chosen_dates)].copy()
     draws = subset.groupby("date")["last2"].apply(list).tolist()
