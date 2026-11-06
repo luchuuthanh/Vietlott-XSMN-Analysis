@@ -29,9 +29,11 @@ def format_prize_number(prize, number):
     return value[-digits:].zfill(digits)
 
 
-def suffix_statistics(frame, province, digits, periods, prize_scope):
-    """Count unique last-N-digit results per draw for the selected province/prize scope."""
-    df = frame[frame["province"].astype(str) == str(province)].copy()
+def suffix_statistics(frame, provinces, digits, periods, prize_scope):
+    """Count unique last-N-digit results per draw for selected stations/prize scope."""
+    if isinstance(provinces, str):
+        provinces = [provinces]
+    df = frame[frame["province"].astype(str).isin([str(p) for p in provinces])].copy()
     df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.normalize()
     df = df.dropna(subset=["date"])
     if prize_scope != "Tất cả giải":
@@ -220,17 +222,62 @@ if raw.empty:
 try:
     if "last2" not in raw.columns:
         raw["last2"] = raw["number"].astype(str).str[-2:].astype(int)
-    provinces = sorted(raw["province"].dropna().unique().tolist())
-    # Đưa bộ chọn tỉnh ra nội dung chính để dễ chạm và tìm trên điện thoại.
-    st.markdown("### Chọn tỉnh / đài")
-    province = st.selectbox(
-        "Tỉnh đang xem",
-        provinces,
-        key="xsmn_main_province",
-        help="Chạm vào ô rồi gõ tên tỉnh để tìm nhanh.",
+    available_provinces = sorted(raw["province"].dropna().astype(str).unique().tolist())
+    schedule = {
+        "Thứ 2": ["TP.HCM", "Đồng Tháp", "Cà Mau"],
+        "Thứ 3": ["Bến Tre", "Vũng Tàu", "Bạc Liêu"],
+        "Thứ 4": ["Đồng Nai", "Cần Thơ", "Sóc Trăng"],
+        "Thứ 5": ["Tây Ninh", "An Giang", "Bình Thuận"],
+        "Thứ 6": ["Vĩnh Long", "Bình Dương", "Trà Vinh"],
+        "Thứ 7": ["TP.HCM", "Long An", "Bình Phước", "Hậu Giang"],
+        "Chủ nhật": ["Tiền Giang", "Kiên Giang", "Đà Lạt"],
+    }
+    weekday_names = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+    today_index = (date.today().weekday())
+    default_day = weekday_names[today_index]
+    st.markdown("### Chọn thứ mở thưởng")
+    weekday = st.radio(
+        "Ngày trong tuần",
+        weekday_names,
+        index=today_index,
+        horizontal=True,
+        key="xsmn_weekday",
         label_visibility="collapsed",
     )
-    data = raw[raw["province"] == province].copy()
+    scheduled = schedule[weekday]
+    def resolve_station(label):
+        candidates = {
+            "TP.HCM": ["TP.HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh", "Hồ Chí Minh"],
+            "Đà Lạt": ["Đà Lạt", "Lâm Đồng"],
+        }.get(label, [label])
+        for candidate in candidates:
+            match = next((p for p in available_provinces if p.casefold() == candidate.casefold()), None)
+            if match:
+                return match
+        return None
+    station_map = {label: resolve_station(label) for label in scheduled}
+    st.markdown("**Chọn đài (có thể tích nhiều đài)**")
+    cols = st.columns(2)
+    selected_stations = []
+    for idx, label in enumerate(scheduled):
+        actual = station_map[label]
+        if actual is None:
+            st.warning(f"Chưa tìm thấy dữ liệu tỉnh: {label}")
+            continue
+        with cols[idx % 2]:
+            checked = st.checkbox(
+                label,
+                value=True,
+                key=f"xsmn_station_{weekday}_{label}",
+            )
+        if checked:
+            selected_stations.append(actual)
+    if not selected_stations:
+        st.info("Hãy tích chọn ít nhất một đài để xem dữ liệu.")
+        st.stop()
+    provinces = selected_stations
+    province = ", ".join(selected_stations)
+    data = raw[raw["province"].astype(str).isin(selected_stations)].copy()
     dates = sorted(data["date"].dropna().unique())
     if not dates:
         st.warning("Tỉnh này chưa có ngày dữ liệu hợp lệ.")
@@ -244,7 +291,7 @@ try:
     flat = subset["last2"].astype(int).tolist()
     freq = frequency_table(flat, 99, start=0)
     gaps = gap_table(draws, 99, start=0)
-    st.metric("Tỉnh đã chọn", province)
+    st.metric("Đài đã chọn", len(selected_stations))
     # Giữ lại 3 chỉ số cũ nhưng ẩn khỏi giao diện theo yêu cầu.
     with st.container(key="hidden-xsmn-metrics"):
         c2, c3, c4 = st.columns(3)
@@ -291,15 +338,10 @@ try:
         try:
             with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
                 live_frame, live_source = _load_live_xsmn()
-            live_provinces = sorted(live_frame["province"].unique().tolist())
-            preferred = province if province in live_provinces else live_provinces[0]
-            live_province = st.selectbox(
-                "Chọn đài",
-                live_provinces,
-                index=live_provinces.index(preferred),
-                key="live_xsmn_province",
-            )
-            live_station = live_frame[live_frame["province"] == live_province].copy()
+            live_station = live_frame[live_frame["province"].astype(str).isin(selected_stations)].copy()
+            if live_station.empty:
+                raise ValueError("Nguồn trực tuyến chưa có kết quả cho các đài đã chọn.")
+            live_province = ", ".join(selected_stations)
             live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
             order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
             live_station["_order"] = live_station["prize"].map(order).fillna(99)
@@ -361,10 +403,10 @@ try:
                     f'<div class="prize-numbers">{chips}</div></div>',
                     unsafe_allow_html=True,
                 )
-            st.caption(f"Ngày mới nhất hiện có trong kho của tỉnh này: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
+            st.caption(f"Ngày mới nhất hiện có trong kho các đài đã chọn: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
         else:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
-    history = draw_history(raw, province)
+    history = [(d, set(g["last2"].astype(int))) for d, g in data.assign(last2=pd.to_numeric(data["last2"], errors="coerce")).dropna(subset=["last2"]).groupby("date", sort=True)]
     if selected_nav == "Thống kê cặp số":
         # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
         st.markdown("### Thống kê cặp số")
@@ -389,7 +431,7 @@ try:
             horizontal=True, key="stats_three_scope"
         )
         three_freq, three_gaps, three_used = suffix_statistics(
-            raw, province, 3, three_periods, three_scope
+            raw, selected_stations, 3, three_periods, three_scope
         )
         three_display = three_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
         three_display["Số"] = three_display["Số"].map(lambda n: f"{int(n):03d}")
@@ -415,7 +457,7 @@ try:
             key="stats_two_scope"
         )
         two_freq, _, two_used = suffix_statistics(
-            raw, province, 2, two_periods, two_scope
+            raw, selected_stations, 2, two_periods, two_scope
         )
         two_display = two_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
         two_display["Số"] = two_display["Số"].map(lambda n: f"{int(n):02d}")
@@ -428,7 +470,7 @@ try:
             min(30, max(1, len(dates))), key="stats_two_gap_periods"
         )
         _, two_gaps, gap_used = suffix_statistics(
-            raw, province, 2, gap_periods, two_scope
+            raw, selected_stations, 2, gap_periods, two_scope
         )
         st.caption(f"Phạm vi: {two_scope} · {gap_used} kỳ gần nhất.")
         two_gaps_display = two_gaps.copy()
