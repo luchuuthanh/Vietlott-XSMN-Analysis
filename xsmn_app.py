@@ -339,9 +339,15 @@ try:
         c2.metric("Ngày có dữ liệu", len(dates))
         c3.metric("Số kết quả", len(data))
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    # Tab trực tuyến luôn hiển thị để người dùng có thể chủ động cập nhật
-    # cả sau giờ mở thưởng; không khóa theo khung giờ 16:10–16:50.
-    nav_options = ["🔴 Trực tuyến", "Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
+    # Chỉ hiển thị mục Trực tuyến và nút cập nhật trong khung giờ
+    # 16:20 đến trước 17:35 theo giờ Việt Nam.
+    vn_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
+    live_window_start = time(16, 20)
+    live_window_end = time(17, 35)
+    live_window_open = live_window_start <= vn_now < live_window_end
+    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
+    if live_window_open:
+        nav_options.insert(0, "🔴 Trực tuyến")
     st.markdown("""
     <style>
     div[data-testid="stRadio"] > div {
