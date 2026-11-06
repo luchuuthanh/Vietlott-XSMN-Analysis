@@ -3,7 +3,7 @@ name: Daily XSMN 383 feed validation
 on:
   workflow_dispatch:
   schedule:
-    # 16:45 Vietnam time, allowing the direct result feed to settle after ~16:20.
+    # Start at 16:45 Vietnam time; retry every 5 minutes in the same run until validation passes.
     - cron: "45 9 * * *"
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 360
     env:
       TZ: Asia/Ho_Chi_Minh
       XSMN_REQUIRE_TODAY: "1"
@@ -27,12 +27,44 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch direct regional feed
+      - name: Fetch and validate; retry every five minutes until passing
+        shell: bash
         run: |
+          set -uo pipefail
           mkdir -p xsmn_383_probe
-          curl --fail --silent --show-error --location --retry 3 --retry-delay 2 --max-time 45 https://api.383.im/lottery/region/mn.json -o xsmn_383_probe/region_sample.json
-      - name: Validate freshness, dates, stations and all nine prize classes
-        run: python scripts/validate_383_xsmn_supplement.py
+          start_seconds=$SECONDS
+          max_seconds=21000 # 5h50m, leaving room before the six-hour GitHub job limit
+          attempt=0
+          while true; do
+            attempt=$((attempt + 1))
+            echo "::group::XSMN validation attempt ${attempt} at $(date -Is)"
+            rm -f xsmn_383_probe/region_sample.json
+            if curl --fail --silent --show-error --location --retry 3 --retry-delay 2 --max-time 45 \
+              https://api.383.im/lottery/region/mn.json \
+              -o xsmn_383_probe/region_sample.json; then
+              if python scripts/validate_383_xsmn_supplement.py; then
+                echo "XSMN_VALIDATION=PASS" >> "$GITHUB_ENV"
+                echo "::notice::XSMN validation passed on attempt ${attempt}."
+                echo "::endgroup::"
+                exit 0
+              else
+                echo "Validation not passed; will fetch fresh source data and retry."
+              fi
+            else
+              echo "Source fetch failed; will retry."
+            fi
+            echo "::endgroup::"
+            elapsed=$((SECONDS - start_seconds))
+            remaining=$((max_seconds - elapsed))
+            if (( remaining <= 0 )); then
+              echo "::error::XSMN did not pass validation within the retry window. No success status is issued."
+              exit 1
+            fi
+            sleep_for=300
+            if (( remaining < sleep_for )); then sleep_for=$remaining; fi
+            echo "Next automatic attempt in ${sleep_for} seconds."
+            sleep "$sleep_for"
+          done
       - name: Upload daily validation evidence
         if: always()
         uses: actions/upload-artifact@v4
