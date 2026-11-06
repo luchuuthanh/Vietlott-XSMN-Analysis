@@ -55,6 +55,26 @@ jobs:
           done
           echo "::error::No complete valid XSMN feed by 17:00 Vietnam time."
           exit 1
+      - name: Report deadline status at 17:00 and continue late-result recovery
+        if: always()
+        shell: bash
+        run: |
+          if [ "${XSMN_FEED_PASS:-}" != "1" ]; then
+            echo "::warning::17:00 report: XSMN data is not yet complete and validated. Previous canonical dataset remains unchanged; recovery is required."
+            mkdir -p xsmn_run_status
+            python - <<'PY'
+          import json
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          p={"reported_at_vietnam":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
+             "deadline":"17:00 Asia/Ho_Chi_Minh","status":"INCOMPLETE_AT_DEADLINE",
+             "canonical_dataset_updated":False,
+             "message":"Chưa đủ dữ liệu hoặc chưa vượt qua kiểm định lúc 17:00. Giữ nguyên bản chuẩn cũ; cần tiếp tục lấy dữ liệu và kiểm tra lại."}
+          Path("xsmn_run_status/17-00-status.json").write_text(json.dumps(p,ensure_ascii=False,indent=2),encoding="utf-8")
+          print(json.dumps(p,ensure_ascii=False,indent=2))
+          PY
+          fi
       - name: Audit all quarterly five-year archive files
         run: |
           python scripts/audit_xsmn_archive.py
