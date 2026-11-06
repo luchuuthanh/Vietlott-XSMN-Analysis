@@ -12,7 +12,9 @@ import pandas as pd
 
 OWNER_REPO = "itgi8vn/api-kqxs-archives-quarterly"
 START = date(2021, 11, 5)
-END = date.today()
+# The quarterly archive is intentionally frozen at the day before the 383 supplement begins.
+# Newer dates are validated from the separate supplement source, not expected here.
+END = date(2026, 6, 30)
 BASE = f"https://raw.githubusercontent.com/{OWNER_REPO}/main/archives"
 OUT = Path("xsmn_audit")
 OUT.mkdir(exist_ok=True)
