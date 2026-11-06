@@ -188,6 +188,13 @@ try:
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
+    # Ẩn tab Backtest khỏi giao diện nhưng giữ nguyên toàn bộ nội dung và phép kiểm định.
+    backtest_tab_index = 5 if show_live_tab else 4
+    st.markdown(
+        f"<style>[data-testid='stTabs'] [role='tab']:nth-child({backtest_tab_index}) "
+        "{display:none !important;}</style>",
+        unsafe_allow_html=True,
+    )
     tab_labels = ["Lịch sử kết quả", "Thống kê", "Thuật toán", "Backtest"]
     if show_live_tab:
         tab_labels.insert(0, "🔴 Trực tuyến")
