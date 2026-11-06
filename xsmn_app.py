@@ -2,6 +2,7 @@
 from datetime import date
 from pathlib import Path
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
@@ -125,7 +126,13 @@ try:
     c2.metric("Ngày có dữ liệu", len(dates))
     c3.metric("Số kết quả", len(data))
     c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    t1, t2, t3, t4, t5, t6 = st.tabs(["Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
+    tlive, t1, t2, t3, t4, t5, t6 = st.tabs(["🔴 Kết quả trực tiếp", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
+    with tlive:
+        st.subheader("Kết quả xổ số miền Nam")
+        st.caption("Bảng kết quả được nhúng từ nguồn SXMN bên ngoài. Đây không phải nguồn dữ liệu chính thức của công ty xổ số; hãy đối chiếu khi cần xác nhận.")
+        st.link_button("Mở trang kết quả trực tiếp ở tab mới", "https://sxmn.com.vn/")
+        components.iframe("https://sxmn.com.vn/", height=1050, scrolling=True)
+        st.caption("Nếu khung nhúng không hiển thị trên iPhone, dùng nút Mở trang kết quả trực tiếp ở phía trên.")
     with t1:
         a, b = st.columns(2)
         with a:
