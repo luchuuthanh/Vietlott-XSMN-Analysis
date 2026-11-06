@@ -173,7 +173,7 @@ try:
                     key="live_xsmn_province",
                 )
                 live_station = live_frame[live_frame["province"] == live_province].copy()
-                    order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+                order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
                 live_station["_order"] = live_station["prize"].map(order).fillna(99)
                 live_station = live_station.sort_values("_order")
                 live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
