@@ -355,7 +355,7 @@ try:
         try:
             with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
                 live_frame, live_source = _load_live_xsmn()
-            live_station = live_frame[live_frame["province"].astype(str).isin(selected_stations)].copy()
+            live_station = live_frame[live_frame["province"].astype(str).map(normalize_station_name).isin({normalize_station_name(p) for p in selected_stations})].copy()
             if live_station.empty:
                 raise ValueError("Nguồn trực tuyến chưa có kết quả cho các đài đã chọn.")
             live_province = ", ".join(selected_stations)
