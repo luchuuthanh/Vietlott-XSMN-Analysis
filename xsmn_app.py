@@ -139,6 +139,7 @@ hr { border-color:var(--line); }
  h1 { font-size:1.7rem !important; }
  [data-testid="stMetric"] { padding:12px; }
 }
+ .st-key-hidden-xsmn-overview { display:none !important; }
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
@@ -147,8 +148,10 @@ hr { border-color:var(--line); }
 </div>
 """, unsafe_allow_html=True)
 
-st.title("Tổng quan XSMN")
-st.caption("Không gian phân tích dữ liệu miền Nam")
+# Giữ nguyên tiêu đề Tổng quan trong mã nhưng ẩn khỏi giao diện theo yêu cầu.
+with st.container(key="hidden-xsmn-overview"):
+    st.title("Tổng quan XSMN")
+    st.caption("Không gian phân tích dữ liệu miền Nam")
 
 with st.sidebar:
     st.header("Dữ liệu XSMN")
