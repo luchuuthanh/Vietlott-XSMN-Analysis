@@ -197,10 +197,13 @@ hr { border-color:var(--line); }
  overflow:hidden !important; clip:rect(0,0,0,0) !important;
 }
 @media (max-width:600px) {
- .st-key-xsmn_weekday [data-testid="stRadio"] > div { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
- .st-key-xsmn_weekday [data-testid="stRadio"] label { min-height:58px !important; }
- .st-key-xsmn_weekday [data-testid="stRadio"] label p,
- [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:1.08rem !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] > div { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] label { min-height:54px !important; padding:8px 3px !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] label p { font-size:.92rem !important; white-space:normal !important; }
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { white-space:nowrap !important; padding:8px 4px !important; }
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
+   font-size:.92rem !important; white-space:nowrap !important; overflow:visible !important;
+ }
 }
 
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
@@ -314,7 +317,7 @@ try:
     default_day = weekday_names[today_index]
     st.markdown("### Chọn thứ mở thưởng")
     weekday = st.radio(
-        "Ngày trong tuần",
+        "",
         weekday_names,
         index=today_index,
         horizontal=True,
