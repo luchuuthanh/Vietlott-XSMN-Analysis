@@ -167,11 +167,7 @@ try:
     flat = subset["last2"].astype(int).tolist()
     freq = frequency_table(flat, 99, start=0)
     gaps = gap_table(draws, 99, start=0)
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Tỉnh đã chọn", province)
-    c2.metric("Ngày có dữ liệu", len(dates))
-    c3.metric("Số kết quả", len(data))
-    c4.metric("Số tỉnh trong kho", raw["province"].nunique())
+    st.metric("Tỉnh đã chọn", province)
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
     tab_labels = ["Lịch sử kết quả", "Lô tô 2 số", "Thuật toán", "Backtest"]
