@@ -154,11 +154,26 @@ with st.container(key="hidden-xsmn-overview"):
     st.title("Tổng quan XSMN")
     st.caption("Không gian phân tích dữ liệu miền Nam")
 
+source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
+upload = None
 with st.sidebar:
-    st.header("Dữ liệu XSMN")
-    source = st.radio("Nguồn dữ liệu", ["Kho lịch sử 5 năm", "Tải CSV riêng"])
-    upload = st.file_uploader("Tải CSV lịch sử XSMN", type=["csv"]) if source == "Tải CSV riêng" else None
-    st.caption("Kho lịch sử công khai: SQLite theo quý. Cửa sổ mục tiêu từ 04/11/2021.")
+    st.header("XSMN")
+    # Nguồn dữ liệu là tùy chọn nâng cao; thu gọn để sidebar trên điện thoại gọn hơn.
+    with st.expander("Tùy chọn dữ liệu nâng cao", expanded=False):
+        source = st.radio(
+            "Nguồn dữ liệu",
+            ["Kho lịch sử 5 năm", "Tải CSV riêng"],
+            key="xsmn_data_source",
+        )
+        if source == "Tải CSV riêng":
+            st.file_uploader(
+                "Tải CSV lịch sử XSMN",
+                type=["csv"],
+                key="xsmn_csv_upload",
+            )
+        st.caption("Kho lịch sử công khai: SQLite theo quý. Cửa sổ mục tiêu từ 04/11/2021.")
+source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
+upload = st.session_state.get("xsmn_csv_upload") if source == "Tải CSV riêng" else None
 
 raw = pd.DataFrame()
 archive_status = pd.DataFrame()
@@ -206,7 +221,15 @@ try:
     if "last2" not in raw.columns:
         raw["last2"] = raw["number"].astype(str).str[-2:].astype(int)
     provinces = sorted(raw["province"].dropna().unique().tolist())
-    province = st.sidebar.selectbox("Tỉnh", provinces)
+    # Đưa bộ chọn tỉnh ra nội dung chính để dễ chạm và tìm trên điện thoại.
+    st.markdown("### Chọn tỉnh / đài")
+    province = st.selectbox(
+        "Tỉnh đang xem",
+        provinces,
+        key="xsmn_main_province",
+        help="Chạm vào ô rồi gõ tên tỉnh để tìm nhanh.",
+        label_visibility="collapsed",
+    )
     data = raw[raw["province"] == province].copy()
     dates = sorted(data["date"].dropna().unique())
     if not dates:
