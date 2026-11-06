@@ -42,7 +42,7 @@ def main():
         try: draw_date=date.fromisoformat(day["d"])
         except Exception:
             errors.append({"type":"invalid_date","value":day.get("d")}); continue
-        if not (START <= draw_date <= today): continue
+        if not (START <= draw_date <= end_date): continue
         daily_dates.add(draw_date.isoformat())
         weekday=day.get("w")
         if weekday not in SCHEDULE:
@@ -79,7 +79,7 @@ def main():
     expected_pairs=set()
     expected_dates=set()
     cursor=START
-    while cursor <= today:
+    while cursor <= end_date:
         iso=cursor.isoformat()
         expected_dates.add(iso)
         wd=("mon","tue","wed","thu","fri","sat","sun")[cursor.weekday()]
@@ -98,7 +98,7 @@ def main():
     report={
       "source":"383.im third-party API; not independently verified",
       "schema":root.get("schema"),"updated_at":root.get("updated_at"),
-      "window_start":START.isoformat(),"window_end":today.isoformat(),
+      "window_start":START.isoformat(),"window_end":end_date.isoformat(),\n      "api_latest_date":max(available_dates).isoformat(),
       "days":len(daily_dates),"province_count":len({r[1] for r in rows}),
       "rows":len(rows),"station_day_pairs":len(actual_pairs),
       "expected_station_day_pairs":len(expected_pairs),
