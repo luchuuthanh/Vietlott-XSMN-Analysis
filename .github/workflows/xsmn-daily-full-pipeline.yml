@@ -131,7 +131,7 @@ jobs:
           v=json.load(open('xsmn_independent_audit/today_comparison.json',encoding='utf-8'))
           a=json.load(open('xsmn_audit/summary.json',encoding='utf-8'))
           feed=json.load(open('xsmn_383_supplement/validation_report.json',encoding='utf-8'))
-          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_latest':v.get('status')=='PASS' and v.get('start_date')==feed.get('window_end') and v.get('end_date')==feed.get('window_end'),'archive_quarters':a.get('quarter_count_missing_or_error')==0}
+          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_latest':v.get('status')=='PASS' and v.get('window_start')==feed.get('window_end') and v.get('window_end')==feed.get('window_end'),'archive_quarters':a.get('quarter_count_missing_or_error')==0}
           print(json.dumps({'checks':checks,'normalization':n,'independent_latest':v},ensure_ascii=False,indent=2))
           if not all(checks.values()): sys.exit('Final gate failed; canonical dataset will not be changed')
           df=pd.read_csv('xsmn_5y_normalized/xsmn_5y_normalized.csv',dtype={'number':str,'last2':str})
