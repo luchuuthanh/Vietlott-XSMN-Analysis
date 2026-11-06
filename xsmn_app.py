@@ -43,9 +43,17 @@ def suffix_statistics(frame, province, digits, periods, prize_scope):
     dates = sorted(df["date"].dropna().unique())
     selected_dates = dates[-max(1, int(periods)):]
     df = df[df["date"].isin(selected_dates)].copy()
-    digits_only = df["number"].astype(str).str.replace(r"\\D", "", regex=True)
+    def clean_digits(value):
+        if pd.isna(value):
+            return ""
+        text = str(value).strip()
+        if text.endswith(".0") and text[:-2].isdigit():
+            text = text[:-2]
+        return "".join(ch for ch in text if ch.isdigit())
+
+    digits_only = df["number"].map(clean_digits)
     df["_suffix"] = digits_only.str[-digits:].str.zfill(digits)
-    df = df[df["_suffix"].str.fullmatch(r"\\d{" + str(digits) + r"}", na=False)]
+    df = df[df["_suffix"].str.fullmatch(r"\d{" + str(digits) + r"}", na=False)]
     draws = [
         sorted({int(value) for value in group["_suffix"].tolist()})
         for _, group in df.groupby("date", sort=True)
