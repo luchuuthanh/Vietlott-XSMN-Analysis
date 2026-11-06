@@ -282,17 +282,17 @@ try:
         freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
         st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
 
-        st.markdown("### Thống kê cặp số")
         max_pair_periods = max(1, len(history))
         pair_periods = st.slider(
-            "Số kỳ dùng để thống kê cặp số",
+            "Số kỳ thống kê",
             min_value=1,
             max_value=max_pair_periods,
             value=min(30, max_pair_periods),
             key="loto_pair_periods",
         )
+        st.markdown("### Thống kê cặp")
         pair_rows = pair_frequency(history[-pair_periods:], top=100)
-        st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
+        st.caption(f"Các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Số lâu chưa xuất hiện")
