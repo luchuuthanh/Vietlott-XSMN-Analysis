@@ -151,6 +151,36 @@ hr { border-color:var(--line); }
 @media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:100px minmax(0,1fr); gap:9px; padding:10px 9px; } .prize-name { font-size:.82rem; padding:5px 7px 5px 0; } .prize-numbers { gap:7px; } .number-chip { min-width:102px; min-height:58px; font-size:1.24rem; padding:9px 10px; } .jackpot-chip { min-width:145px; min-height:64px; font-size:1.35rem; } }
 
 [data-testid="stAlert"] { border-radius:13px; }
+/* Chữ tiêu đề chọn thứ lớn, đậm và cân giữa trong khung */
+.st-key-xsmn_weekday [data-testid="stRadio"] > label {
+ font-size:1.55rem !important; font-weight:900 !important;
+ color:#f4fbfc !important; letter-spacing:.01em !important;
+ min-height:68px !important;
+}
+/* Thanh điều hướng: phủ hết chiều ngang, tối đa 2 hàng */
+.st-key-xsmn_main_navigation [role="radiogroup"] {
+ display:grid !important;
+ grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+ gap:9px !important; width:100% !important;
+}
+.st-key-xsmn_main_navigation [role="radiogroup"] label {
+ width:100% !important; min-width:0 !important;
+ min-height:58px !important; box-sizing:border-box !important;
+ display:flex !important; align-items:center !important; justify-content:center !important;
+ text-align:center !important; padding:8px 6px !important; margin:0 !important;
+}
+.st-key-xsmn_main_navigation [role="radiogroup"] label p {
+ font-size:clamp(.78rem,2.8vw,1rem) !important;
+ line-height:1.2 !important; text-align:center !important;
+ white-space:normal !important; display:-webkit-box !important;
+ -webkit-line-clamp:2 !important; -webkit-box-orient:vertical !important;
+ overflow:hidden !important; margin:0 !important;
+}
+@media (max-width:600px) {
+ .st-key-xsmn_weekday [data-testid="stRadio"] > label { font-size:1.55rem !important; }
+ .st-key-xsmn_main_navigation [role="radiogroup"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:7px !important; }
+ .st-key-xsmn_main_navigation [role="radiogroup"] label { min-height:60px !important; padding:7px 3px !important; }
+}
 /* Tiêu đề nằm trong ô riêng; chỉ các lựa chọn ngày mới là thẻ */
 .st-key-xsmn_weekday [data-testid="stRadio"] > label {
  display:flex !important; align-items:center !important; justify-content:center !important;
