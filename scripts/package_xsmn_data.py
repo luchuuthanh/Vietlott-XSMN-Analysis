@@ -41,14 +41,14 @@ def main() -> None:
     sums_file = OUT_DIR / "SHA256SUMS.txt"
     sums_file.write_text(checksum, encoding="utf-8")
     files = [
-        CSV_FILE,
-        META_FILE,
-        ROOT / "README_DATA.md",
-        sums_file,
+        (CSV_FILE, "data/xsmn_5y_canonical.csv"),
+        (META_FILE, "data/xsmn_5y_canonical.json"),
+        (ROOT / "README_DATA.md", "README_DATA.md"),
+        (sums_file, "SHA256SUMS.txt"),
     ]
     with zipfile.ZipFile(ZIP_FILE, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-        for path in files:
-            z.write(path, path.relative_to(ROOT) if path.is_relative_to(ROOT) else Path("SHA256SUMS.txt"))
+        for path, archive_name in files:
+            z.write(path, archive_name)
     print(f"PASS: {rows} data rows; {len(files)} files packaged; {ZIP_FILE.stat().st_size} bytes")
     print(checksum, end="")
 
