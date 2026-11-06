@@ -248,7 +248,8 @@ try:
     scheduled = schedule[weekday]
     def normalize_station_name(value):
         import unicodedata
-        value = unicodedata.normalize("NFKD", str(value).strip().casefold())
+        value = str(value).strip().casefold().replace("đ", "d")
+        value = unicodedata.normalize("NFKD", value)
         value = "".join(ch for ch in value if not unicodedata.combining(ch))
         value = re.sub(r"[^a-z0-9]+", " ", value).strip()
         value = re.sub(r"^(tinh|thanh pho|tp)\\s+", "", value)
@@ -258,7 +259,7 @@ try:
         aliases = {
             "TP.HCM": ["TP.HCM", "TP HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh",
                        "Hồ Chí Minh", "Ho Chi Minh", "Ho Chi Minh City", "HCM"],
-            "Đà Lạt": ["Đà Lạt", "Lâm Đồng"],
+            "Đà Lạt": ["Đà Lạt", "Da Lat", "Lâm Đồng"],
         }
         candidates = [label, *aliases.get(label, [])]
         normalized = {normalize_station_name(p): p for p in available_provinces}
