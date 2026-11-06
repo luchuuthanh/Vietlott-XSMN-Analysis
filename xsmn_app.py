@@ -315,12 +315,9 @@ try:
         c2.metric("Ngày có dữ liệu", len(dates))
         c3.metric("Số kết quả", len(data))
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
-    show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
-    # Điều hướng chính dùng các nút chọn dạng pill; Backtest vẫn giữ mã nhưng ẩn như trước.
-    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
-    if show_live_tab:
-        nav_options.insert(0, "🔴 Trực tuyến")
+    # Tab trực tuyến luôn hiển thị để người dùng có thể chủ động cập nhật
+    # cả sau giờ mở thưởng; không khóa theo khung giờ 16:10–16:50.
+    nav_options = ["🔴 Trực tuyến", "Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
     st.markdown("""
     <style>
     div[data-testid="stRadio"] > div {
@@ -344,7 +341,7 @@ try:
         label_visibility="collapsed",
         key="xsmn_main_navigation",
     )
-    if show_live_tab and selected_nav == "🔴 Trực tuyến":
+    if selected_nav == "🔴 Trực tuyến":
         st.subheader("Kết quả XSMN trực tuyến")
         st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
         if st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn"):
