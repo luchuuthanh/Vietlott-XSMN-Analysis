@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate and export the 383.im XSMN supplement without merging it into the archive."""
 from __future__ import annotations
-import csv, json, sys
+import csv, json, os, sys
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -45,7 +45,10 @@ def main():
             pass
     if not available_dates:
         raise SystemExit("API contains no valid draw dates; refusing to export an empty supplement.")
-    end_date=min(today,max(available_dates))
+    api_latest_date=max(available_dates)
+    if os.environ.get("XSMN_REQUIRE_TODAY") == "1" and api_latest_date != today:
+        raise SystemExit(f"Daily XSMN feed is stale: API latest date={api_latest_date.isoformat()}, expected={today.isoformat()}. No supplement accepted.")
+    end_date=min(today,api_latest_date)
     rows=[]; errors=[]; seen=set(); actual_pairs=set(); daily_dates=set()
     for day in root["items"]:
         try: draw_date=date.fromisoformat(day["d"])
@@ -112,19 +115,26 @@ def main():
     ]
     applied=[]
     for correction in corrections:
-        matches=[i for i,row in enumerate(rows)
-                 if row[0]==correction["date"] and row[1]==correction["province"]
-                 and row[2]==correction["prize"] and row[4]==correction["old"]]
-        if len(matches)!=1:
+        base=[i for i,row in enumerate(rows)
+              if row[0]==correction["date"] and row[1]==correction["province"]
+              and row[2]==correction["prize"]]
+        old_matches=[i for i in base if rows[i][4]==correction["old"]]
+        new_matches=[i for i in base if rows[i][4]==correction["new"]]
+        if len(base)!=1 or (len(old_matches),len(new_matches)) not in ((1,0),(0,1)):
             errors.append({"type":"documented_correction_not_unique",
-                           "correction":correction,"matches":len(matches)})
+                           "correction":correction,"matches":len(base),
+                           "old_matches":len(old_matches),"new_matches":len(new_matches)})
             continue
-        i=matches[0]
+        i=(old_matches or new_matches)[0]
         original=list(rows[i])
-        rows[i]=(original[0],original[1],original[2],original[3],correction["new"])
-        applied.append({**correction,"prize_order":original[3]})
+        if old_matches:
+            rows[i]=(original[0],original[1],original[2],original[3],correction["new"])
+            correction_status="applied_by_local_audit_rule"
+        else:
+            correction_status="already_corrected_in_source"
+        applied.append({**correction,"prize_order":original[3],"status":correction_status})
     if len(applied)!=len(corrections):
-        raise SystemExit("Refusing to export: one or more documented corrections were not applied exactly once.")
+        raise SystemExit("Refusing to export: one or more documented corrections were not resolved exactly once.")
 
     OUT.mkdir(exist_ok=True)
     with (OUT/"xsmn_383_supplement.csv").open("w",newline="",encoding="utf-8-sig") as f:
