@@ -157,7 +157,7 @@ hr { border-color:var(--line); }
  text-align:center !important; min-height:62px !important; padding:10px 14px !important;
  margin:0 0 8px 0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
  border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
- color:#f2f8fa !important; font-size:1.2rem !important; font-weight:900 !important;
+ color:#f2f8fa !important; font-size:1.42rem !important; font-weight:900 !important; letter-spacing:.01em !important;
 }
 .st-key-xsmn_weekday [data-testid="stRadio"] [role="radiogroup"] {
  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important;
@@ -179,10 +179,11 @@ hr { border-color:var(--line); }
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
 .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
- display:flex !important; flex-wrap:nowrap !important; gap:8px !important; align-items:stretch !important;
+ display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+ gap:8px !important; align-items:stretch !important; width:100% !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] {
- min-width:0 !important; width:0 !important; flex:1 1 0 !important;
+ min-width:0 !important; width:auto !important; flex:none !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { min-height:64px; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
@@ -208,9 +209,9 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
- .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { flex-wrap:nowrap !important; }
+ .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { padding:8px 2px !important; }
- [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.76rem !important; }
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.78rem !important; }
 }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
