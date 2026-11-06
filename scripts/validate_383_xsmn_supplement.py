@@ -37,6 +37,15 @@ def main():
     if root.get("schema") != "lottery_region_v1" or not isinstance(root.get("items"),list):
         raise SystemExit("Unexpected API schema; refusing to export.")
     today=date.today()
+    available_dates=[]
+    for item in root["items"]:
+        try:
+            available_dates.append(date.fromisoformat(item["d"]))
+        except Exception:
+            pass
+    if not available_dates:
+        raise SystemExit("API contains no valid draw dates; refusing to export an empty supplement.")
+    end_date=min(today,max(available_dates))
     rows=[]; errors=[]; seen=set(); actual_pairs=set(); daily_dates=set()
     for day in root["items"]:
         try: draw_date=date.fromisoformat(day["d"])
