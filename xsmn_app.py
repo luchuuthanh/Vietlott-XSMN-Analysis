@@ -226,13 +226,13 @@ try:
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
     # Ẩn tab Backtest khỏi giao diện nhưng giữ nguyên toàn bộ nội dung và phép kiểm định.
-    backtest_tab_index = 6 if show_live_tab else 5
+    backtest_tab_index = 7 if show_live_tab else 6
     st.markdown(
         f"<style>[data-testid='stTabs'] [role='tab']:nth-child({backtest_tab_index}) "
         "{display:none !important;}</style>",
         unsafe_allow_html=True,
     )
-    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thống kê hai số", "Thuật toán", "Backtest"]
+    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thống kê hai số", "Thống kê ba số", "Thuật toán", "Backtest"]
     if show_live_tab:
         tab_labels.insert(0, "🔴 Trực tuyến")
     tabs = st.tabs(tab_labels)
@@ -280,8 +280,8 @@ try:
                 st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
                 st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
     history_offset = 1 if show_live_tab else 0
-    thistory, t1, t_two, t_algo, t_backtest = [
-        tabs[i] for i in range(history_offset, history_offset + 5)
+    thistory, t1, t_two, t_three, t_algo, t_backtest = [
+        tabs[i] for i in range(history_offset, history_offset + 6)
     ]
     with thistory:
         st.subheader(f"Kết quả lịch sử XSMN — {province}")
@@ -327,19 +327,28 @@ try:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
     with t1:
-        # 2) Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
+        # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
+        st.markdown("### Thống kê cặp số")
+        pair_periods = st.slider(
+            "Số kỳ dùng để thống kê cặp số", 1, max(1, len(history)),
+            min(30, max(1, len(history))), key="loto_pair_periods"
+        )
+        selected_history = history[-pair_periods:]
+        pair_rows = pair_frequency(selected_history, top=100)
+        st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
+        st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
+
+    with t_three:
+        # Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
         st.markdown("### Thống kê ba số")
-        three_col1, three_col2 = st.columns(2)
-        with three_col1:
-            three_periods = st.slider(
-                "Số kỳ thống kê ba số", 1, max(1, len(dates)),
-                min(30, max(1, len(dates))), key="stats_three_periods"
-            )
-        with three_col2:
-            three_scope = st.selectbox(
-                "Chọn giải (ba số)", ["G7", "Tất cả giải"],
-                key="stats_three_scope"
-            )
+        three_periods = st.slider(
+            "Số kỳ thống kê ba số", 1, max(1, len(dates)),
+            min(30, max(1, len(dates))), key="stats_three_periods"
+        )
+        three_scope = st.radio(
+            "Chọn giải", ["G7", "Tất cả giải"],
+            horizontal=True, key="stats_three_scope"
+        )
         three_freq, three_gaps, three_used = suffix_statistics(
             raw, province, 3, three_periods, three_scope
         )
@@ -352,16 +361,6 @@ try:
         three_gaps_display["Số"] = three_gaps_display["Số"].map(lambda n: f"{int(n):03d}")
         st.dataframe(three_gaps_display.head(20), use_container_width=True, hide_index=True)
 
-        # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
-        st.markdown("### Thống kê cặp số")
-        pair_periods = st.slider(
-            "Số kỳ dùng để thống kê cặp số", 1, max(1, len(history)),
-            min(30, max(1, len(history))), key="loto_pair_periods"
-        )
-        selected_history = history[-pair_periods:]
-        pair_rows = pair_frequency(selected_history, top=100)
-        st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
-        st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
     with t_two:
         # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
