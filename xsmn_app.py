@@ -240,14 +240,21 @@ hr { border-color:var(--line); }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { min-height:64px; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
  display:flex !important; align-items:center !important; justify-content:center !important;
- width:100% !important; min-height:62px !important; padding:10px 5px !important;
+ width:100% !important; min-height:62px !important; padding:8px 2px !important;
  margin:0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
  border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
- white-space:nowrap !important;
+ white-space:nowrap !important; gap:3px !important; box-sizing:border-box !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
- color:#e8f1f4 !important; font-size:1rem !important; font-weight:800 !important;
+ color:#e8f1f4 !important; font-size:.72rem !important; font-weight:800 !important;
  text-align:center !important; margin:0 !important; white-space:nowrap !important;
+ overflow:visible !important; text-overflow:clip !important; letter-spacing:-.02em !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:last-child {
+ min-width:0 !important; flex:0 1 auto !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label input {
+ width:16px !important; height:16px !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
  background:linear-gradient(145deg,#15534f,#123744) !important;
@@ -263,7 +270,7 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
  .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { grid-auto-flow:column !important; grid-auto-columns:minmax(0,1fr) !important; gap:6px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { padding:8px 2px !important; }
- [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.78rem !important; }
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.68rem !important; }
 }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
