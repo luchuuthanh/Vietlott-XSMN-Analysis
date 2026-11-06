@@ -1,0 +1,37 @@
+name: Package XSMN 5-year dataset
+
+on:
+  push:
+    paths:
+      - "data/xsmn_5y_canonical.csv"
+      - "data/xsmn_5y_canonical.json"
+      - "README_DATA.md"
+      - "scripts/package_xsmn_data.py"
+      - ".github/workflows/xsmn-package-data.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Package and verify canonical dataset
+        run: python scripts/package_xsmn_data.py
+      - name: Upload ZIP package
+        uses: actions/upload-artifact@v4
+        with:
+          name: XSMN-5Y-DATA
+          path: dist/XSMN_5Y_DATA.zip
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: XSMN-5Y-SHA256
+          path: dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 90
