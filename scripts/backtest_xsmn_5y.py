@@ -2,9 +2,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pandas as pd
-from xsmn_algorithms import prepare_xsmn_frame, rolling_backtest
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0, str(ROOT))
+from xsmn_algorithms import prepare_xsmn_frame, rolling_backtest
 CSV = ROOT / "data" / "xsmn_5y_canonical.csv"
 META = ROOT / "data" / "xsmn_5y_canonical.json"
 OUT = ROOT / "dist" / "xsmn_backtest"
