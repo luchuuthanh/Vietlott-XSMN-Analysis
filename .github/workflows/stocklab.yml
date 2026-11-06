@@ -11,7 +11,7 @@ on:
       - ".github/workflows/stocklab.yml"
   workflow_dispatch:
   schedule:
-    - cron: '30 9 * * 1-5'
+    - cron: '15 10 * * 1-5'  # 17:15 Vietnam time, after the HOSE/HNX/UPCoM session closes
 
 permissions:
   contents: write
@@ -124,14 +124,29 @@ jobs:
           data = pd.DataFrame(rows)
           if data.empty:
               raise SystemExit(f"No usable market data. Errors: {errors[:20]}")
-          passed = data[(data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])]
-          passed = passed.sort_values("ROC14", ascending=False)
+          coverage = len(data) / max(1, len(universe))
+          if coverage < 0.80:
+              raise SystemExit(
+                  f"Refusing to publish partial scan: usable={len(data)}/{len(universe)} "
+                  f"({coverage:.1%}); errors={len(errors)}. Sample: {errors[:20]}"
+              )
+          # Publish the two independent momentum screens. Shared conditions:
+          # 20-session average volume >= 50,000 and close >= EMA100.
+          common = (data["VOL20"] >= 50000) & (data["close"] >= data["EMA100"])
+          passed = data[common & ((data["MOM10"] >= 4) | (data["ROC14"] >= 4))].copy()
+          passed = passed.sort_values(["ROC14", "MOM10"], ascending=[False, False])
           from datetime import datetime, timezone
-          data["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
-          passed["updated_at_utc"] = data["updated_at_utc"].iloc[0]
+          stamp = datetime.now(timezone.utc).isoformat()
+          data["updated_at_utc"] = stamp
+          passed["updated_at_utc"] = stamp
           data.to_csv("stocklab_market_all.csv", index=False)
           passed.to_csv("stocklab_market_passed.csv", index=False)
-          print(f"SCAN COMPLETE: scanned={len(universe)}; usable={len(data)}; errors={len(errors)}; passed={len(passed)}")
+          # Also publish independent pre-filtered files for audit/download use.
+          data[common & (data["MOM10"] >= 4)].sort_values("MOM10", ascending=False).assign(updated_at_utc=stamp).to_csv("stocklab_market_mom10.csv", index=False)
+          data[common & (data["ROC14"] >= 4)].sort_values("ROC14", ascending=False).assign(updated_at_utc=stamp).to_csv("stocklab_market_roc14.csv", index=False)
+          print(f"SCAN COMPLETE: scanned={len(universe)}; usable={len(data)}; coverage={coverage:.1%}; errors={len(errors)}; union_passed={len(passed)}")
+          print(f"Independent screens: MOM10={int((common & (data['MOM10'] >= 4)).sum())}; ROC14={int((common & (data['ROC14'] >= 4)).sum())}")
+          print(f"Latest market date: {pd.to_datetime(data['date']).max().date()}")
           print("TOP 3 FILTERED:")
           print(passed.head(3).to_string(index=False))
           print(f"CSV files saved. Sample errors: {errors[:10]}")
@@ -141,14 +156,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add stocklab_market_all.csv stocklab_market_passed.csv
+          git add stocklab_market_all.csv stocklab_market_passed.csv stocklab_market_mom10.csv stocklab_market_roc14.csv
           if ! git diff --cached --quiet; then
             git commit -m "Update daily StockLab market scan"
             git fetch origin main
             # A newer code commit may update the tracked CSVs while this scan runs.
             # Keep this run's freshly generated scan outputs if those CSVs conflict.
             if ! git rebase origin/main; then
-              git checkout --theirs -- stocklab_market_all.csv stocklab_market_passed.csv
+              git checkout --theirs -- stocklab_market_all.csv stocklab_market_passed.csv stocklab_market_mom10.csv stocklab_market_roc14.csv
               git add stocklab_market_all.csv stocklab_market_passed.csv
               GIT_EDITOR=true git rebase --continue
             fi
