@@ -18,8 +18,8 @@ s.headers.update({
 for i, url in enumerate(URLS, 1):
     r = s.get(url, timeout=30)
     r.raise_for_status()
-    (out / f"page_{i}.html").write_text(r.text, encoding="utf-8")
-    soup = BeautifulSoup(r.text, "html.parser")
+    (out / f"page_{i}.html").write_bytes(r.content)
+    soup = BeautifulSoup(r.content, "html.parser", from_encoding="utf-8")
     lines = [
         f"URL: {url}",
         f"FINAL_URL: {r.url}",
