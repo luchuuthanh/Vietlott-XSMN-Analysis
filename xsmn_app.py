@@ -188,7 +188,7 @@ try:
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
-    tab_labels = ["Lịch sử kết quả", "Lô tô 2 số", "Thuật toán", "Backtest"]
+    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thuật toán", "Backtest"]
     if show_live_tab:
         tab_labels.insert(0, "🔴 Trực tuyến")
     tabs = st.tabs(tab_labels)
