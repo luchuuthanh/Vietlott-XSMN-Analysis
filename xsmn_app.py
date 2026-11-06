@@ -29,6 +29,34 @@ def format_prize_number(prize, number):
     return value[-digits:].zfill(digits)
 
 
+def suffix_statistics(frame, province, digits, periods, prize_scope):
+    """Count unique last-N-digit results per draw for the selected province/prize scope."""
+    df = frame[frame["province"].astype(str) == str(province)].copy()
+    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.normalize()
+    df = df.dropna(subset=["date"])
+    if prize_scope != "Tất cả giải":
+        labels = df["prize"].astype(str).str.strip().str.upper()
+        if prize_scope == "ĐB":
+            df = df[labels.isin({"ĐB", "DB", "GĐB"})]
+        else:
+            df = df[labels == prize_scope]
+    dates = sorted(df["date"].dropna().unique())
+    selected_dates = dates[-max(1, int(periods)):]
+    df = df[df["date"].isin(selected_dates)].copy()
+    digits_only = df["number"].astype(str).str.replace(r"\\D", "", regex=True)
+    df["_suffix"] = digits_only.str[-digits:].str.zfill(digits)
+    df = df[df["_suffix"].str.fullmatch(r"\\d{" + str(digits) + r"}", na=False)]
+    draws = [
+        sorted({int(value) for value in group["_suffix"].tolist()})
+        for _, group in df.groupby("date", sort=True)
+    ]
+    flat = [value for draw in draws for value in draw]
+    universe = (10 ** digits) - 1
+    freq = frequency_table(flat, universe, start=0)
+    gaps = gap_table(draws, universe, start=0)
+    return freq, gaps, len(selected_dates)
+
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
@@ -288,38 +316,58 @@ try:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
     with t1:
-        max_pair_periods = max(1, len(history))
-        pair_periods = st.slider(
-            "Số kỳ dùng để thống kê cặp số",
-            min_value=1,
-            max_value=max_pair_periods,
-            value=min(30, max_pair_periods),
-            key="loto_pair_periods",
-        )
-        # Dùng cùng số kỳ đã chọn để tính lại toàn bộ thống kê hai số.
-        selected_history = history[-pair_periods:]
-        selected_draws = [nums for _, nums in selected_history]
-        selected_flat = [n for nums in selected_draws for n in nums]
-        period_freq = frequency_table(selected_flat, 99, start=0)
-        period_gaps = gap_table(selected_draws, 99, start=0)
-
+        # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
         st.markdown("### Thống kê hai số")
-        # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
-        freq_display = period_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
-        freq_display["Số"] = freq_display["Số"].map(lambda n: f"{int(n):02d}")
-        st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
+        two_col1, two_col2 = st.columns(2)
+        with two_col1:
+            two_periods = st.slider(
+                "Số kỳ thống kê hai số", 1, max(1, len(dates)),
+                min(30, max(1, len(dates))), key="stats_two_periods"
+            )
+        with two_col2:
+            two_scope = st.selectbox(
+                "Chọn giải (hai số)", ["G8", "ĐB", "Tất cả giải"],
+                key="stats_two_scope"
+            )
+        two_freq, two_gaps, two_used = suffix_statistics(
+            raw, province, 2, two_periods, two_scope
+        )
+        two_display = two_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
+        two_display["Số"] = two_display["Số"].map(lambda n: f"{int(n):02d}")
+        st.caption(f"Phạm vi: {two_scope} · {two_used} kỳ gần nhất.")
+        st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
 
+        # 2) Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
+        st.markdown("### Thống kê ba số")
+        three_col1, three_col2 = st.columns(2)
+        with three_col1:
+            three_periods = st.slider(
+                "Số kỳ thống kê ba số", 1, max(1, len(dates)),
+                min(30, max(1, len(dates))), key="stats_three_periods"
+            )
+        with three_col2:
+            three_scope = st.selectbox(
+                "Chọn giải (ba số)", ["G7", "Tất cả giải"],
+                key="stats_three_scope"
+            )
+        three_freq, three_gaps, three_used = suffix_statistics(
+            raw, province, 3, three_periods, three_scope
+        )
+        three_display = three_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
+        three_display["Số"] = three_display["Số"].map(lambda n: f"{int(n):03d}")
+        st.caption(f"Phạm vi: {three_scope} · {three_used} kỳ gần nhất.")
+        st.dataframe(three_display.head(20), use_container_width=True, hide_index=True)
+
+        # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
         st.markdown("### Thống kê cặp số")
+        pair_periods = st.slider(
+            "Số kỳ dùng để thống kê cặp số", 1, max(1, len(history)),
+            min(30, max(1, len(history))), key="loto_pair_periods"
+        )
+        selected_history = history[-pair_periods:]
         pair_rows = pair_frequency(selected_history, top=100)
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
-
-        st.markdown("### Số lâu chưa xuất hiện")
-        gaps_display = period_gaps.copy()
-        gaps_display["Số"] = gaps_display["Số"].map(lambda n: f"{int(n):02d}")
-        st.dataframe(gaps_display.head(20), use_container_width=True, hide_index=True)
-        st.bar_chart(period_freq.set_index("Số")["Số lần"])
-        st.caption(f"Các thống kê trên được tính theo {pair_periods} kỳ gần nhất của tỉnh đã chọn.")
 
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
     with st.container(key="hidden-xsmn-prize"):
