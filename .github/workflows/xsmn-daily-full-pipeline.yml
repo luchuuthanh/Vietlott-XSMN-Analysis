@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 90
     env:
       TZ: Asia/Ho_Chi_Minh
-      XSMN_REQUIRE_TODAY: "1"
+      XSMN_REQUIRE_TODAY: ${{ github.event_name == 'schedule' && '1' || '0' }}
       PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +43,9 @@ jobs:
           set -uo pipefail
           mkdir -p xsmn_383_probe xsmn_run_status
           deadline=$(date -d '17:00:00' +%s)
+          recovery_deadline=$(date -d '23:00:00' +%s)
+          scheduled=0
+          if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then scheduled=1; fi
           reported=0
           attempt=0
           while true; do
@@ -54,6 +57,14 @@ jobs:
               exit 0
             fi
             now=$(date +%s)
+            if (( scheduled == 0 && attempt >= 2 )); then
+              echo '::error::Non-scheduled validation run could not validate the latest available feed after two attempts.'
+              exit 1
+            fi
+            if (( scheduled == 1 && now >= recovery_deadline )); then
+              echo '::error::Scheduled recovery window ended at 23:00; canonical dataset remains unchanged.'
+              exit 1
+            fi
             if (( now >= deadline && reported == 0 )); then
               echo "::warning::17:00 report: feed is not yet complete and validated; continuing recovery."
               python - <<'PY'
@@ -107,10 +118,10 @@ jobs:
           python scripts/normalize_xsmn_five_year.py --archive xsmn_audit/xsmn_cleaned_rows.csv --supplement xsmn_383_supplement/xsmn_383_supplement.csv --out xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/normalization_report.json
       - name: Apply only reviewed corrections
         run: python scripts/apply_xsmn_reviewed_corrections.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/reconciliation_report.json
-      - name: Independently compare today's station results
+      - name: Independently compare latest complete station results
         run: |
-          TODAY=$(date +%F)
-          python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/today_comparison.csv --start "$TODAY" --end "$TODAY"
+          LATEST=$(python -c "import json; print(json.load(open('xsmn_383_supplement/validation_report.json',encoding='utf-8'))['window_end'])")
+          python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/today_comparison.csv --start "$LATEST" --end "$LATEST"
       - name: Final gate and prepare app dataset
         run: |
           python - <<'PY'
@@ -119,8 +130,9 @@ jobs:
           c=json.load(open('xsmn_5y_normalized/reconciliation_report.json',encoding='utf-8'))
           v=json.load(open('xsmn_independent_audit/today_comparison.json',encoding='utf-8'))
           a=json.load(open('xsmn_audit/summary.json',encoding='utf-8'))
-          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_today':v.get('status')=='PASS','archive_quarters':a.get('quarter_count_missing_or_error')==0}
-          print(json.dumps({'checks':checks,'normalization':n,'independent_today':v},ensure_ascii=False,indent=2))
+          feed=json.load(open('xsmn_383_supplement/validation_report.json',encoding='utf-8'))
+          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_latest':v.get('status')=='PASS' and v.get('start_date')==feed.get('window_end') and v.get('end_date')==feed.get('window_end'),'archive_quarters':a.get('quarter_count_missing_or_error')==0}
+          print(json.dumps({'checks':checks,'normalization':n,'independent_latest':v},ensure_ascii=False,indent=2))
           if not all(checks.values()): sys.exit('Final gate failed; canonical dataset will not be changed')
           df=pd.read_csv('xsmn_5y_normalized/xsmn_5y_normalized.csv',dtype={'number':str,'last2':str})
           df.to_csv('data/xsmn_5y_canonical.csv',index=False,encoding='utf-8-sig')
