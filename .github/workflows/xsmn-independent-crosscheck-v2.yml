@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/xsmn-independent-crosscheck-v2.yml'
       - 'scripts/verify_xsmn_supplement_sources_v2.py'
+      - 'scripts/diagnose_xosotin_html.py'
 permissions:
   contents: read
 jobs:
@@ -22,6 +23,9 @@ jobs:
       - run: mkdir -p xsmn_383_probe && curl --fail --silent --show-error --location --retry 3 https://api.383.im/lottery/region/mn.json -o xsmn_383_probe/region_sample.json
       - run: python scripts/validate_383_xsmn_supplement.py
       - run: python scripts/normalize_xsmn_five_year.py --archive xsmn_audit/xsmn_cleaned_rows.csv --supplement xsmn_383_supplement/xsmn_383_supplement.csv --out xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/normalization_report.json
+      - name: Capture XoSoTin HTML structure
+        if: always()
+        run: python scripts/diagnose_xosotin_html.py
       - run: python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/xsmn_source_comparison.csv
       - uses: actions/upload-artifact@v4
         if: always()
@@ -30,5 +34,6 @@ jobs:
           path: |
             xsmn_5y_normalized/
             xsmn_independent_audit/
+            xsmn_html_diagnostics/
           if-no-files-found: warn
           retention-days: 90
