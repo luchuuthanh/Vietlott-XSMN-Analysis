@@ -154,45 +154,45 @@ jobs:
           done
           echo '::error::17:00 deadline reached before full verification passed; canonical dataset unchanged.'
           exit 1
-      - name: Report only failures at or after the 17:00 deadline
-        if: always()
-        shell: bash
-        run: |
+          - name: Report only failures at or after the 17:00 deadline
+            if: always()
+            shell: bash
+            run: |
           mkdir -p xsmn_run_status
           python - <<'PY'
       import json, os, subprocess
-      from datetime import datetime
-      from zoneinfo import ZoneInfo
-      from pathlib import Path
-      now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-      status = {
-        "reported_at_vietnam": now.isoformat(),
-        "deadline": "17:00 Asia/Ho_Chi_Minh",
-        "workflow_job_status": os.environ.get("JOB_STATUS", "unknown"),
-        "canonical_dataset_updated": False,
-        "rule": "No user-facing failure report when all required work finishes successfully by 17:00. If any required step fails or the deadline is missed, record exact failed stage and evidence.",
-      }
-      try:
-        status["canonical_dataset_updated"] = subprocess.run(
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+          status = {
+            "reported_at_vietnam": now.isoformat(),
+            "deadline": "17:00 Asia/Ho_Chi_Minh",
+            "workflow_job_status": os.environ.get("JOB_STATUS", "unknown"),
+            "canonical_dataset_updated": False,
+            "rule": "No user-facing failure report when all required work finishes successfully by 17:00. If any required step fails or the deadline is missed, record exact failed stage and evidence.",
+          }
+          try:
+            status["canonical_dataset_updated"] = subprocess.run(
           ["git", "diff", "--quiet", "--", "data/xsmn_5y_canonical.csv", "data/xsmn_5y_canonical.json"]
-        ).returncode == 1
-      except Exception:
-        pass
-      missed_deadline = now.hour > 17 or (now.hour == 17 and now.minute > 0)
-      failed = os.environ.get("JOB_STATUS") != "success" or missed_deadline
-      if missed_deadline:
-        status["deadline_missed"] = True
-      if failed:
-        status["overall_status"] = "ERROR_NEEDS_PROCESS_REVIEW"
-        status["message"] = "Quy trình không hoàn tất đúng hạn hoặc có bước lỗi. Cần xem log bước lỗi và chuẩn hóa cách xử lý; dữ liệu chuẩn cũ phải được giữ nguyên nếu chưa PASS."
-        status["failed_stage"] = "See the first failed step in the GitHub Actions job log"
-        Path("xsmn_run_status/failure-after-deadline.json").write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding="utf-8")
-        print("::error::XSMN pipeline failed or missed the 17:00 completion deadline; inspect failure report.")
-        print(json.dumps(status,ensure_ascii=False,indent=2))
-      else:
-        status["overall_status"] = "PASS"
-        status["message"] = "Hoàn tất thành công; không cần gửi báo cáo riêng."
-        print("XSMN PASS: completed; no separate failure report.")
+            ).returncode == 1
+          except Exception:
+            pass
+          missed_deadline = now.hour > 17 or (now.hour == 17 and now.minute > 0)
+          failed = os.environ.get("JOB_STATUS") != "success" or missed_deadline
+          if missed_deadline:
+            status["deadline_missed"] = True
+          if failed:
+            status["overall_status"] = "ERROR_NEEDS_PROCESS_REVIEW"
+            status["message"] = "Quy trình không hoàn tất đúng hạn hoặc có bước lỗi. Cần xem log bước lỗi và chuẩn hóa cách xử lý; dữ liệu chuẩn cũ phải được giữ nguyên nếu chưa PASS."
+            status["failed_stage"] = "See the first failed step in the GitHub Actions job log"
+            Path("xsmn_run_status/failure-after-deadline.json").write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding="utf-8")
+            print("::error::XSMN pipeline failed or missed the 17:00 completion deadline; inspect failure report.")
+            print(json.dumps(status,ensure_ascii=False,indent=2))
+          else:
+            status["overall_status"] = "PASS"
+            status["message"] = "Hoàn tất thành công; không cần gửi báo cáo riêng."
+            print("XSMN PASS: completed; no separate failure report.")
           PY
         env:
           JOB_STATUS: ${{ job.status }}
