@@ -155,12 +155,12 @@ jobs:
           echo '::error::17:00 deadline reached before full verification passed; canonical dataset unchanged.'
           exit 1
           - name: Report only failures at or after the 17:00 deadline
-            if: always()
-            shell: bash
-            run: |
+        if: always()
+        shell: bash
+        run: |
           mkdir -p xsmn_run_status
           python - <<'PY'
-      import json, os, subprocess
+          import json, os, subprocess
           from datetime import datetime
           from zoneinfo import ZoneInfo
           from pathlib import Path
@@ -174,7 +174,7 @@ jobs:
           }
           try:
             status["canonical_dataset_updated"] = subprocess.run(
-          ["git", "diff", "--quiet", "--", "data/xsmn_5y_canonical.csv", "data/xsmn_5y_canonical.json"]
+              ["git", "diff", "--quiet", "--", "data/xsmn_5y_canonical.csv", "data/xsmn_5y_canonical.json"]
             ).returncode == 1
           except Exception:
             pass
