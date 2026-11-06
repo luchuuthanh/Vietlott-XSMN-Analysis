@@ -2,6 +2,14 @@ name: Daily XSMN full pipeline
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/xsmn-daily-full-pipeline.yml"
+      - "scripts/validate_383_xsmn_supplement.py"
+      - "scripts/normalize_xsmn_five_year.py"
+      - "scripts/apply_xsmn_reviewed_corrections.py"
+      - "scripts/verify_xsmn_supplement_sources_v2.py"
+      - "scripts/audit_xsmn_archive.py"
   schedule:
     - cron: "45 9 * * *" # 16:45 Asia/Ho_Chi_Minh
 
