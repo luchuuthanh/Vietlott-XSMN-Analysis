@@ -8,6 +8,7 @@ from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
+from xsmn_live import fetch_live_xsmn
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -143,9 +144,50 @@ try:
     c2.metric("Ngày có dữ liệu", len(dates))
     c3.metric("Số kết quả", len(data))
     c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    tlive, t1, t2, t3, t4, t5, t6 = st.tabs(["Kết quả mới nhất", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
+    tlive, thistory, t1, t2, t3, t4, t5, t6 = st.tabs(["🔴 Trực tuyến", "Lịch sử kết quả", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
     with tlive:
-        st.subheader(f"Kết quả XSMN — {province}")
+        st.subheader("Kết quả XSMN trực tuyến")
+        st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
+        if st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn"):
+            st.cache_data.clear()
+        @st.cache_data(ttl=60, show_spinner=False)
+        def _load_live_xsmn():
+            return fetch_live_xsmn()
+        try:
+            with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
+                live_frame, live_source = _load_live_xsmn()
+            live_provinces = sorted(live_frame["province"].unique().tolist())
+            preferred = province if province in live_provinces else live_provinces[0]
+            live_province = st.selectbox(
+                "Chọn đài",
+                live_provinces,
+                index=live_provinces.index(preferred),
+                key="live_xsmn_province",
+            )
+            live_station = live_frame[live_frame["province"] == live_province].copy()
+            live_station["number"] = live_station["number"].astype(str).str.zfill(6)
+            order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+            live_station["_order"] = live_station["prize"].map(order).fillna(99)
+            live_station = live_station.sort_values("_order")
+            live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
+            st.markdown(f"**{live_province} · {live_date}**")
+            for prize, rows in live_station.groupby("prize", sort=False):
+                prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
+                values = "".join(
+                    f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
+                    for v in rows["number"].tolist()
+                )
+                st.markdown(
+                    f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
+                    f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
+                    unsafe_allow_html=True,
+                )
+            st.caption("Nguồn dữ liệu: SXMN · Tự làm mới mỗi 60 giây khi mở ứng dụng.")
+        except Exception as exc:
+            st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
+            st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
+    with thistory:
+        st.subheader(f"Kết quả lịch sử XSMN — {province}")
         st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
         live_dates = sorted(data["date"].dropna().astype(str).unique(), reverse=True)
         if live_dates:
