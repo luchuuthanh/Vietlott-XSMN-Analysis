@@ -38,10 +38,13 @@ def fetch_live_xsmn() -> tuple[pd.DataFrame, str]:
     if not parsed:
         raise ValueError("Không tìm thấy bảng giải XSMN trên nguồn dữ liệu.")
 
-    header_index = next(
-        (i for i, row in enumerate(parsed) if row and row[0].strip().upper() in {"TỈNH", "GIẢI", "GIẢI "}),
-        0,
+    first_prize_row = next(
+        (i for i, row in enumerate(parsed) if row and row[0].strip().upper() == "G8"),
+        None,
     )
+    if first_prize_row is None or first_prize_row == 0:
+        raise ValueError("Không xác định được hàng tiêu đề tỉnh trong bảng kết quả.")
+    header_index = first_prize_row - 1
     headers = parsed[header_index]
     provinces = [str(name).strip() for name in headers[1:] if str(name).strip()]
     if not provinces:
