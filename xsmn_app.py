@@ -174,7 +174,7 @@ try:
     c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
-    tab_labels = ["Lịch sử kết quả", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"]
+    tab_labels = ["Lịch sử kết quả", "Lô tô 2 số", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"]
     if show_live_tab:
         tab_labels.insert(0, "🔴 Trực tuyến")
     tabs = st.tabs(tab_labels)
@@ -222,7 +222,7 @@ try:
                 st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
                 st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
     history_offset = 1 if show_live_tab else 0
-    thistory, t1, t2, t3, t4, t5, t6 = [tabs[i] for i in range(history_offset, history_offset + 7)]
+    thistory, t1, t3, t4, t5, t6 = [tabs[i] for i in range(history_offset, history_offset + 6)]
     with thistory:
         st.subheader(f"Kết quả lịch sử XSMN — {province}")
         st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
@@ -275,9 +275,7 @@ try:
             st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
         st.bar_chart(freq.set_index("Số")["Số lần"])
         st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
-    with t2:
-        by_prize = subset.groupby("prize")["number"].count().sort_values(ascending=False).rename("Số kết quả")
-        st.dataframe(by_prize, use_container_width=True)
+
     with t3:
         st.dataframe(data.sort_values(["date", "prize"], ascending=[False, True]), use_container_width=True, hide_index=True)
         st.download_button("Tải dữ liệu tỉnh CSV", data.to_csv(index=False).encode("utf-8-sig"), "xsmn_clean.csv", "text/csv")
