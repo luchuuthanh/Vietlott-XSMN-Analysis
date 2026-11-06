@@ -1,0 +1,37 @@
+name: XSMN strict final holdout
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/backtest_xsmn_final_holdout.py"
+      - "xsmn_algorithms.py"
+      - "data/xsmn_5y_canonical.csv"
+      - "data/xsmn_5y_canonical.json"
+      - ".github/workflows/xsmn-final-holdout.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  final-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install numpy pandas
+      - name: Compile and run strict holdout
+        run: |
+          python -m py_compile xsmn_algorithms.py scripts/backtest_xsmn_final_holdout.py
+          python scripts/backtest_xsmn_final_holdout.py
+      - name: Upload final holdout reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: XSMN-FINAL-HOLDOUT-VALIDATION
+          path: dist/xsmn_final_holdout/
+          if-no-files-found: error
+          retention-days: 90
