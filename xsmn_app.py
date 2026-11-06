@@ -283,9 +283,11 @@ try:
         method = st.selectbox("Phương pháp xếp hạng", ["blend", "freq_30", "freq_90", "freq_365", "gap"],
                               format_func=lambda x: {"blend":"Kết hợp tần suất + gan", "freq_30":"Tần suất 30 kỳ",
                               "freq_90":"Tần suất 90 kỳ", "freq_365":"Tần suất 365 kỳ",
-                              "gap":"Độ gan"}[x])
+                              "gap":"Số ít xuất hiện"}[x])
         top_k = st.slider("Số lượng số hiển thị", 5, 30, 10, key="algorithm_top_k")
         ranked = rank_numbers(history, method, top_k)
+        if method == "gap":
+            ranked = ranked.rename(columns={"Điểm": "Số lần chưa xuất hiện"})
         st.dataframe(ranked, use_container_width=True, hide_index=True)
         pairs = pair_frequency(history, 30)
         st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
