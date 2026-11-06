@@ -1,6 +1,7 @@
 """Ứng dụng phân tích XSMN độc lập."""
 from datetime import date
 from pathlib import Path
+import html
 import streamlit as st
 import pandas as pd
 from analytics import frequency_table, gap_table
@@ -38,6 +39,23 @@ p, label, .stCaption { color:var(--muted); }
 .stButton button:hover, .stDownloadButton button:hover { background:#6be6c9; color:#06231f; }
 input, textarea, [data-baseweb="select"] > div { background:#10232c !important; border-color:var(--line) !important; border-radius:10px !important; }
 hr { border-color:var(--line); }
+
+.draw-heading { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px 22px; margin:8px 0 16px; border:1px solid rgba(69,220,184,.28); border-radius:18px; background:linear-gradient(115deg,#123b40,#102832 65%,#172b36); box-shadow:0 12px 30px rgba(0,0,0,.18); }
+.draw-eyebrow { color:#68dfbf; font-size:.68rem; font-weight:800; letter-spacing:.16em; }
+.draw-date { color:#f4fbfc; font-size:1.8rem; line-height:1.25; font-weight:800; margin-top:5px; }
+.draw-location { color:#a9c2c8; font-size:.82rem; margin-top:4px; }
+.draw-count { min-width:72px; text-align:center; border-left:1px solid rgba(255,255,255,.13); padding-left:16px; }
+.draw-count strong { display:block; color:#65e0c0; font-size:1.65rem; line-height:1.1; }
+.draw-count span { color:#9eb7be; font-size:.72rem; }
+.prize-row { display:grid; grid-template-columns:92px 1fr; align-items:center; gap:12px; padding:13px 15px; margin:8px 0; border:1px solid rgba(148,190,199,.15); border-radius:14px; background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96)); }
+.prize-name { color:#9db8c0; font-size:.8rem; font-weight:800; letter-spacing:.04em; }
+.prize-numbers { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:88px; padding:9px 12px; border-radius:9px; background:#1a3943; border:1px solid rgba(89,205,183,.2); color:#f0f8fa; font-size:1.08rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+.prize-jackpot { border-color:rgba(242,198,109,.48); background:linear-gradient(105deg,rgba(82,59,28,.55),rgba(31,43,45,.96)); padding-top:17px; padding-bottom:17px; }
+.prize-jackpot .prize-name { color:#f2c66d; }
+.jackpot-chip { min-width:150px; padding:13px 16px; color:#ffe5a3; border-color:rgba(242,198,109,.48); background:linear-gradient(135deg,#5b421e,#342d25); font-size:1.35rem; letter-spacing:.1em; }
+@media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:1fr; gap:8px; padding:12px; } .prize-numbers { gap:7px; } .number-chip { min-width:78px; font-size:1rem; padding:8px 9px; } .jackpot-chip { min-width:130px; font-size:1.2rem; } }
+
 [data-testid="stAlert"] { border-radius:13px; }
 @media (max-width: 700px) {
  .block-container { padding:1rem .8rem 2rem .8rem; }
@@ -128,7 +146,7 @@ try:
     tlive, t1, t2, t3, t4, t5, t6 = st.tabs(["Kết quả mới nhất", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
     with tlive:
         st.subheader(f"Kết quả XSMN — {province}")
-        st.caption("Bảng được dựng trực tiếp trong XSMN Analysis Lab từ kho dữ liệu lịch sử đã tải. Đây không phải luồng kết quả trực tiếp; ngày mới nhất phụ thuộc lần cập nhật kho dữ liệu.")
+        st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
         live_dates = sorted(data["date"].dropna().astype(str).unique(), reverse=True)
         if live_dates:
             latest_date = live_dates[0]
@@ -141,17 +159,30 @@ try:
             )
             live_result = data[data["date"].astype(str) == selected_live_date].copy()
             live_result["number"] = live_result["number"].astype(str).str.zfill(6)
-            live_result = live_result.sort_values("prize", ascending=True)
-            m1, m2 = st.columns(2)
-            m1.metric("Ngày mở thưởng", pd.to_datetime(selected_live_date).strftime("%d/%m/%Y"))
-            m2.metric("Số kết quả", len(live_result))
-            st.dataframe(
-                live_result[["prize", "number"]].rename(
-                    columns={"prize": "Giải", "number": "Kết quả"}
-                ),
-                use_container_width=True,
-                hide_index=True,
-            )
+            prize_order = {"ĐB": 0, "DB": 0, "GĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+            live_result["_order"] = live_result["prize"].astype(str).str.upper().map(prize_order).fillna(99)
+            live_result = live_result.sort_values(["_order", "prize"], ascending=True)
+            date_label = pd.to_datetime(selected_live_date).strftime("%d/%m/%Y")
+            st.markdown(f"""
+            <div class="draw-heading">
+              <div><div class="draw-eyebrow">KẾT QUẢ MỞ THƯỞNG</div>
+              <div class="draw-date">{date_label}</div>
+              <div class="draw-location">{html.escape(str(province))} · Miền Nam</div></div>
+              <div class="draw-count"><strong>{len(live_result)}</strong><span>con số</span></div>
+            </div>
+            """, unsafe_allow_html=True)
+            grouped = list(live_result.groupby("prize", sort=False))
+            for prize, rows in grouped:
+                prize_label = str(prize).upper()
+                values = [html.escape(str(v)) for v in rows["number"].tolist()]
+                is_jackpot = prize_label in {"ĐB", "DB", "GĐB"}
+                chips = "".join(f'<span class="number-chip {"jackpot-chip" if is_jackpot else ""}">{v}</span>' for v in values)
+                st.markdown(
+                    f'<div class="prize-row {"prize-jackpot" if is_jackpot else ""}>'
+                    f'<div class="prize-name">{"ĐẶC BIỆT" if is_jackpot else "GIẢI " + html.escape(prize_label)}</div>'
+                    f'<div class="prize-numbers">{chips}</div></div>',
+                    unsafe_allow_html=True,
+                )
             st.download_button(
                 "Tải kết quả ngày này (CSV)",
                 live_result[["date", "province", "prize", "number"]].to_csv(index=False).encode("utf-8-sig"),
