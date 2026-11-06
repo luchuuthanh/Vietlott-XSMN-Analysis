@@ -1,18 +1,22 @@
-# XSMN official source collector — phase 1
+# XSMN daily result feed and validation
 
-This workflow discovers and preserves result-notice pages and their original media from the Southern Lottery Council information portal:
+## Primary daily source
+The project already has a direct-access third-party result feed:
+- Regional history: https://api.383.im/lottery/region/mn.json
+- Live endpoint: https://api.383.im/lottery/live.json
+The daily GitHub Actions validation runs at **16:35 Vietnam time**, after the result feed is normally available around 16:20. It fetches the regional feed and checks that the latest date is today's date. A stale feed fails closed and is not accepted as a daily update.
 
-- https://xsktmiennam.vn/
-- Runs daily at 18:40 Vietnam time and can be run manually from GitHub Actions.
-- Captures HTML, image/PDF-linked media where exposed as page images, SHA-256 hashes, source URLs, company-name hints and date hints.
-- Stores the run as a 90-day GitHub Actions artifact.
+## What the daily validation checks
+- Continuous calendar dates from 2026-07-01 through the latest feed date.
+- Expected station schedule and all 21 station identifiers.
+- All nine prize classes and expected number counts / digit lengths.
+- Missing or unexpected draw dates and station-days.
+- Duplicate rows and documented correction rules, with audit evidence.
+- Preserves the API response and generated validation report as a 90-day workflow artifact.
 
-## Data-integrity rule
+## Data integrity boundary
+383.im is a third-party feed, not an official lottery issuer. Passing structural validation means the feed is complete and internally consistent for the checked period; it does not by itself prove every winning number is correct.
+The daily workflow currently **validates and archives evidence as an artifact**. It does not yet write into or overwrite the five-year canonical dataset. Canonical integration must remain a separate, guarded step after the daily artifact is checked. The historical 66 discrepancy groups are already reviewed and are not reopened by this daily workflow.
 
-This phase is **source discovery and evidence capture**, not yet a verified direct-company result feed. The Council portal is an information portal and is not the issuing company website itself. The collector does not OCR images or insert extracted values into the canonical five-year dataset. No result is accepted merely because a page title or image exists.
-
-## Next implementation phase
-
-For each of the 21 issuing companies, verify its own official domain and its result-publication path/API. Add a dedicated parser for each actual format (HTML, PDF or image), preserve the original response, and test the parsed nine prize groups against the issuer notice. Only after a source is confirmed as belonging to the issuer should its parsed results be eligible for the official-source comparison ledger.
-
-The known direct issuer website confirmed in the current inventory is XSKT TP.HCM: https://www.xskthcm.com/. The Council portal is the discovery starting point for other issuer links and notices.
+## Optional issuer websites
+The separate `XSMN issuer websites — optional manual evidence capture` workflow is manual-only. It is a secondary evidence route, not the daily primary feed.
