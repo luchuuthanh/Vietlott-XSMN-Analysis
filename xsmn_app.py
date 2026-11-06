@@ -345,6 +345,14 @@ try:
         st.caption(f"Phạm vi: {two_scope} · {two_used} kỳ gần nhất.")
         st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
 
+        # Khôi phục bảng số lâu chưa xuất hiện và biểu đồ tần suất hai số.
+        st.markdown("### Số lâu chưa xuất hiện")
+        two_gaps_display = two_gaps.copy()
+        two_gaps_display["Số"] = two_gaps_display["Số"].map(lambda n: f"{int(n):02d}")
+        st.dataframe(two_gaps_display.head(20), use_container_width=True, hide_index=True)
+        st.markdown("### Biểu đồ tần suất hai số")
+        st.bar_chart(two_freq.set_index("Số")["Số lần"])
+
         # 2) Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
         st.markdown("### Thống kê ba số")
         three_col1, three_col2 = st.columns(2)
@@ -365,6 +373,10 @@ try:
         three_display["Số"] = three_display["Số"].map(lambda n: f"{int(n):03d}")
         st.caption(f"Phạm vi: {three_scope} · {three_used} kỳ gần nhất.")
         st.dataframe(three_display.head(20), use_container_width=True, hide_index=True)
+        st.markdown("### Số ba chữ số lâu chưa xuất hiện")
+        three_gaps_display = three_gaps.copy()
+        three_gaps_display["Số"] = three_gaps_display["Số"].map(lambda n: f"{int(n):03d}")
+        st.dataframe(three_gaps_display.head(20), use_container_width=True, hide_index=True)
 
         # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
         st.markdown("### Thống kê cặp số")
