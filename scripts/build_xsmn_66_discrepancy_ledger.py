@@ -4,6 +4,8 @@ import argparse, csv, json
 from pathlib import Path
 import pandas as pd
 
+PRIZES = ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7"]
+
 CASES = {
     ("2024-11-15", "Tra Vinh"): {
         "url1": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/tra-vinh/15-11-2024.html",
@@ -60,8 +62,6 @@ CASES = {
         "note": "Full regional tables from multiple secondary result pages."
     },
 }
-PRIZES = ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7"]
-
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--archive",required=True)
