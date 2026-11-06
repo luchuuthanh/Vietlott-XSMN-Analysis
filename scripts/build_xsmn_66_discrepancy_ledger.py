@@ -47,19 +47,19 @@ CASES = {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/02-05-2026.html",
         "url3": "https://xosonay.com/xsmn/02-05-2026/",
-        "note": "Full regional tables from multiple secondary result pages."
+        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES
     },
     ("2026-05-02", "Long An"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/02-05-2026.html",
         "url3": "https://xosonay.com/xsmn/02-05-2026/",
-        "note": "Full regional tables from multiple secondary result pages."
+        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES
     },
     ("2026-05-02", "TP. HCM"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/02-05-2026.html",
         "url3": "https://xosonay.com/xsmn/02-05-2026/",
-        "note": "Full regional tables from multiple secondary result pages."
+        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES
     },
 }
 def main():
