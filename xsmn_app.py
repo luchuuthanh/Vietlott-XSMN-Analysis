@@ -220,52 +220,43 @@ hr { border-color:var(--line); }
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
-/* Ô đài: 3 cột đều; checkbox cố định trái, tên đài căn giữa phần còn lại */
+/* Station cards use independent checkbox + text, not Streamlit's truncated checkbox label */
 .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
  display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
- grid-auto-flow:row !important; gap:8px !important; width:100% !important;
+ gap:8px !important; width:100% !important; align-items:stretch !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] {
- width:100% !important; min-width:0 !important; max-width:none !important;
+ width:auto !important; min-width:0 !important; max-width:none !important;
  flex:none !important; padding:0 !important; margin:0 !important;
 }
-.st-key-xsmn-station-row [data-testid="column"] > div,
-.st-key-xsmn-station-row [data-testid="stCheckbox"],
-[class*="st-key-xsmn_station_"] { width:100% !important; min-width:0 !important; max-width:none !important; }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label {
- position:relative !important; display:flex !important; align-items:center !important;
- justify-content:center !important; width:100% !important; min-width:0 !important;
- height:68px !important; box-sizing:border-box !important;
- padding:8px 8px 8px 34px !important; margin:0 !important;
+[class*="st-key-xsmn-station-card-"] {
+ width:100% !important; min-width:0 !important; min-height:68px !important;
+ box-sizing:border-box !important; padding:8px 5px !important;
  border:2px solid rgba(150,190,200,.42) !important; border-radius:16px !important;
- background:linear-gradient(145deg,#142d37,#10232c) !important; overflow:hidden !important;
-}
-/* Streamlit đổi cấu trúc checkbox giữa các phiên bản: áp dụng cho cả span và div */
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > :first-child {
- position:absolute !important; left:10px !important; top:50% !important;
- transform:translateY(-50%) !important; width:20px !important; min-width:20px !important;
- flex:0 0 20px !important; margin:0 !important; padding:0 !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > :last-child {
+ background:linear-gradient(145deg,#142d37,#10232c) !important;
  display:flex !important; align-items:center !important; justify-content:center !important;
- flex:1 1 auto !important; width:100% !important; min-width:0 !important;
- margin:0 !important; padding:0 !important; text-align:center !important;
 }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p,
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label span {
- color:#e8f1f4 !important; font-size:clamp(14px,2.8vw,18px) !important;
- font-weight:800 !important; text-align:center !important; line-height:1.15 !important;
- margin:0 !important; padding:0 !important; white-space:nowrap !important;
- overflow:visible !important; text-overflow:clip !important; letter-spacing:0 !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
+[class*="st-key-xsmn-station-card-"]:has(input:checked) {
  background:linear-gradient(145deg,#15534f,#123744) !important;
- border:2px solid #35d0ae !important; box-shadow:0 5px 16px rgba(53,208,174,.16);
+ border:2px solid #35d0ae !important; box-shadow:0 5px 16px rgba(53,208,174,.16) !important;
 }
-@media (max-width:600px) {
- .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
- .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
- .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
+[class*="st-key-xsmn-station-card-"] [data-testid="stHorizontalBlock"] {
+ display:flex !important; align-items:center !important; gap:2px !important;
+ width:100% !important;
+}
+[class*="st-key-xsmn-station-card-"] [data-testid="column"] {
+ min-width:0 !important; padding:0 !important; flex:none !important;
+}
+[class*="st-key-xsmn-station-card-"] [data-testid="column"]:first-child { width:25% !important; }
+[class*="st-key-xsmn-station-card-"] [data-testid="column"]:last-child { width:75% !important; }
+[class*="st-key-xsmn-station-card-"] [data-testid="stCheckbox"] { margin:0 !important; padding:0 !important; }
+[class*="st-key-xsmn-station-card-"] [data-testid="stCheckbox"] label { justify-content:center !important; }
+[class*="st-key-xsmn-station-card-"] [data-testid="stMarkdown"] { width:100% !important; }
+[class*="st-key-xsmn-station-card-"] p {
+ color:#e8f1f4 !important; font-size:clamp(12px,2.7vw,16px) !important;
+ font-weight:800 !important; text-align:center !important; line-height:1.15 !important;
+ margin:0 !important; padding:0 !important; white-space:normal !important;
+ overflow-wrap:anywhere !important;
 }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
@@ -422,38 +413,29 @@ try:
     missing_stations = [label for label in scheduled if station_map[label] is None]
     for missing in missing_stations:
         st.warning(f"Chưa tìm thấy dữ liệu tỉnh: {missing}")
-    # Ép bố cục các cột đài thành lưới CSS thật trên điện thoại; không để Streamlit tự xếp dọc.
-    st.markdown("""
-    <style>
-    .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
-        display:grid !important;
-        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-        grid-auto-flow:row !important;
-        gap:8px !important;
-        width:100% !important;
-        align-items:stretch !important;
-    }
-    .st-key-xsmn-station-row [data-testid="column"] {
-        width:auto !important; min-width:0 !important; max-width:none !important;
-        flex:none !important; padding:0 !important; margin:0 !important;
-    }
-    .st-key-xsmn-station-row [data-testid="column"] > div {
-        width:100% !important; min-width:0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Thẻ đài riêng: checkbox không chứa nhãn; tên đài là phần tử độc lập để không bị Streamlit cắt chữ.
     with st.container(key="xsmn-station-row"):
         for row_start in range(0, len(valid_stations), 3):
             cols = st.columns(3, gap="small")
             for col_idx, (label, actual) in enumerate(valid_stations[row_start:row_start + 3]):
                 with cols[col_idx]:
-                    checked = st.checkbox(
-                        label,
-                        value=True,
-                        key=f"xsmn_station_{weekday}_{label}",
-                    )
-                if checked:
-                    selected_stations.append(actual)
+                    card_key = f"xsmn-station-card-{weekday}-{row_start + col_idx}"
+                    with st.container(key=card_key):
+                        check_col, name_col = st.columns([1, 3], gap="small", vertical_alignment="center")
+                        with check_col:
+                            checked = st.checkbox(
+                                " ",
+                                value=True,
+                                key=f"xsmn_station_{weekday}_{label}",
+                                label_visibility="collapsed",
+                            )
+                        with name_col:
+                            st.markdown(
+                                f"<p>{label}</p>",
+                                unsafe_allow_html=True,
+                            )
+                    if checked:
+                        selected_stations.append(actual)
     if not selected_stations:
         st.info("Hãy tích chọn ít nhất một đài để xem dữ liệu.")
         st.stop()
