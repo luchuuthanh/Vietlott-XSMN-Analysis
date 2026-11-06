@@ -23,7 +23,7 @@ def prize(s):
 def cells(row):
  c=row.find_all(["th","td"],recursive=True);return c or row.find_all(attrs={"role":"cell"},recursive=True)
 def parse_daily(html):
- soup=BeautifulSoup(html,"html.parser");groups=[]
+ soup=BeautifulSoup(html,"html.parser",from_encoding="utf-8");groups=[]
  for t in soup.find_all("table"):
   r=t.find_all("tr")
   if r:groups.append(r)
@@ -57,7 +57,7 @@ def main():
  for d in dates:
   u=f"https://xosotin.net/ket-qua/xsmn/{date.fromisoformat(d):%d-%m-%Y}.html"
   try:
-   r=s.get(u,timeout=20);r.raise_for_status();p=parse_daily(r.text)
+   r=s.get(u,timeout=20);r.raise_for_status();p=parse_daily(r.content)
    if p:
     for st,pr in p.items():obs[(d,st)]=pr
    else:
