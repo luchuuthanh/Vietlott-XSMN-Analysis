@@ -277,11 +277,6 @@ try:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
     with t1:
-        st.markdown("### Tần suất xuất hiện")
-        # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
-        freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
-        st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
-
         max_pair_periods = max(1, len(history))
         pair_periods = st.slider(
             "Số kỳ dùng để thống kê cặp số",
@@ -290,6 +285,11 @@ try:
             value=min(30, max_pair_periods),
             key="loto_pair_periods",
         )
+        st.markdown("### Tần suất xuất hiện")
+        # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
+        freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
+        st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
+
         st.markdown("### Thống kê cặp số")
         pair_rows = pair_frequency(history[-pair_periods:], top=100)
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
