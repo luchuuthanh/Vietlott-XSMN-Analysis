@@ -1,0 +1,122 @@
+name: Daily XSMN full pipeline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 9 * * *" # 16:45 Asia/Ho_Chi_Minh
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xsmn-daily-publish
+  cancel-in-progress: false
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TZ: Asia/Ho_Chi_Minh
+      XSMN_REQUIRE_TODAY: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pipeline dependencies
+        run: python -m pip install --upgrade pandas requests beautifulsoup4
+      - name: Fetch and structurally validate today's supplement with retries until 17:00
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p xsmn_383_probe
+          deadline=$(date -d '17:00:00' +%s)
+          attempt=0
+          while (( $(date +%s) < deadline )); do
+            attempt=$((attempt + 1))
+            rm -f xsmn_383_probe/region_sample.json
+            if curl --fail --silent --show-error --location --max-time 35 https://api.383.im/lottery/region/mn.json -o xsmn_383_probe/region_sample.json &&
+               python scripts/validate_383_xsmn_supplement.py; then
+              if (( $(date +%s) < deadline )); then
+                echo "XSMN_FEED_PASS=1" >> "$GITHUB_ENV"
+                exit 0
+              fi
+              echo "Feed became valid after 17:00; reject this run."
+              exit 1
+            fi
+            now=$(date +%s); remaining=$((deadline-now))
+            (( remaining <= 0 )) && break
+            sleep_for=300; (( remaining < sleep_for )) && sleep_for=$remaining
+            sleep "$sleep_for"
+          done
+          echo "::error::No complete valid XSMN feed by 17:00 Vietnam time."
+          exit 1
+      - name: Audit all quarterly five-year archive files
+        run: |
+          python scripts/audit_xsmn_archive.py
+          python - <<'PY'
+          import json,sys
+          p=json.load(open('xsmn_audit/summary.json',encoding='utf-8'))
+          print(json.dumps(p,ensure_ascii=False,indent=2))
+          if p['quarter_count_missing_or_error'] != 0: sys.exit('Archive has missing/error quarters; refusing publication')
+          if p['result_rows'] == 0 or p['actual_data_start'] is None: sys.exit('Archive is empty; refusing publication')
+          if p['duplicate_rows_flagged'] or p['invalid_number_rows']: sys.exit('Archive has duplicate/invalid rows; refusing publication')
+          PY
+      - name: Normalize five-year archive plus complete supplement
+        run: |
+          python scripts/normalize_xsmn_five_year.py --archive xsmn_audit/xsmn_cleaned_rows.csv --supplement xsmn_383_supplement/xsmn_383_supplement.csv --out xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/normalization_report.json
+      - name: Apply only reviewed corrections
+        run: python scripts/apply_xsmn_reviewed_corrections.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --report xsmn_5y_normalized/reconciliation_report.json
+      - name: Independently compare today's station results
+        run: |
+          TODAY=$(date +%F)
+          python scripts/verify_xsmn_supplement_sources_v2.py --csv xsmn_5y_normalized/xsmn_5y_normalized.csv --out xsmn_independent_audit/today_comparison.csv --start "$TODAY" --end "$TODAY"
+      - name: Final gate and prepare app dataset
+        run: |
+          python - <<'PY'
+          import json,sys,pandas as pd
+          n=json.load(open('xsmn_5y_normalized/normalization_report.json',encoding='utf-8'))
+          c=json.load(open('xsmn_5y_normalized/reconciliation_report.json',encoding='utf-8'))
+          v=json.load(open('xsmn_independent_audit/today_comparison.json',encoding='utf-8'))
+          a=json.load(open('xsmn_audit/summary.json',encoding='utf-8'))
+          checks={'normalization':n.get('status')=='PASS','corrections':c.get('status')=='PASS','independent_today':v.get('status')=='PASS','archive_quarters':a.get('quarter_count_missing_or_error')==0}
+          print(json.dumps({'checks':checks,'normalization':n,'independent_today':v},ensure_ascii=False,indent=2))
+          if not all(checks.values()): sys.exit('Final gate failed; canonical dataset will not be changed')
+          df=pd.read_csv('xsmn_5y_normalized/xsmn_5y_normalized.csv',dtype={'number':str,'last2':str})
+          df.to_csv('data/xsmn_5y_canonical.csv',index=False,encoding='utf-8-sig')
+          open('data/xsmn_5y_canonical.json','w',encoding='utf-8').write(json.dumps({
+            'status':'PASS','updated_at_vietnam':pd.Timestamp.now(tz='Asia/Ho_Chi_Minh').isoformat(),
+            'window_start':n['window_start'],'window_end':n['window_end'],'rows':len(df),
+            'source':'audited quarterly archive + structurally validated 383 supplement',
+            'independent_check':'XoSoTin daily page for latest draw date',
+            'note':'Only published after all gates pass.'
+          },ensure_ascii=False,indent=2))
+          PY
+      - name: Publish canonical dataset for app (only after all gates pass)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json
+          if git diff --cached --quiet; then
+            echo "Canonical dataset already current; no commit needed."
+          else
+            git commit -m "Publish verified daily XSMN five-year dataset"
+            git push
+          fi
+      - name: Preserve full run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xsmn-daily-full-pipeline
+          path: |
+            xsmn_383_probe/
+            xsmn_383_supplement/
+            xsmn_audit/
+            xsmn_5y_normalized/
+            xsmn_independent_audit/
+          if-no-files-found: warn
+          retention-days: 90
