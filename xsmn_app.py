@@ -47,14 +47,14 @@ hr { border-color:var(--line); }
 .draw-count { min-width:72px; text-align:center; border-left:1px solid rgba(255,255,255,.13); padding-left:16px; }
 .draw-count strong { display:block; color:#65e0c0; font-size:1.65rem; line-height:1.1; }
 .draw-count span { color:#9eb7be; font-size:.72rem; }
-.prize-row { display:grid; grid-template-columns:92px 1fr; align-items:center; gap:12px; padding:13px 15px; margin:8px 0; border:1px solid rgba(148,190,199,.15); border-radius:14px; background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96)); }
-.prize-name { color:#9db8c0; font-size:.8rem; font-weight:800; letter-spacing:.04em; }
-.prize-numbers { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-.number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:88px; padding:9px 12px; border-radius:9px; background:#1a3943; border:1px solid rgba(89,205,183,.2); color:#f0f8fa; font-size:1.08rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+.prize-row { display:grid; grid-template-columns:116px minmax(0,1fr); align-items:stretch; gap:14px; padding:14px; margin:9px 0; border:1px solid rgba(148,190,199,.18); border-radius:15px; background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96)); }
+.prize-name { display:flex; align-items:center; justify-content:center; text-align:center; color:#75dfc5; font-size:.9rem; line-height:1.35; font-weight:800; letter-spacing:.035em; border-right:1px solid rgba(148,190,199,.18); padding:6px 10px 6px 2px; }
+.prize-numbers { display:flex; flex-wrap:wrap; gap:9px; align-items:center; min-width:0; }
+.number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:112px; min-height:58px; padding:11px 14px; border-radius:11px; background:#1a3943; border:1px solid rgba(89,205,183,.25); color:#f0f8fa; font-size:1.32rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.075em; }
 .prize-jackpot { border-color:rgba(242,198,109,.48); background:linear-gradient(105deg,rgba(82,59,28,.55),rgba(31,43,45,.96)); padding-top:17px; padding-bottom:17px; }
 .prize-jackpot .prize-name { color:#f2c66d; }
-.jackpot-chip { min-width:150px; padding:13px 16px; color:#ffe5a3; border-color:rgba(242,198,109,.48); background:linear-gradient(135deg,#5b421e,#342d25); font-size:1.35rem; letter-spacing:.1em; }
-@media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:1fr; gap:8px; padding:12px; } .prize-numbers { gap:7px; } .number-chip { min-width:78px; font-size:1rem; padding:8px 9px; } .jackpot-chip { min-width:130px; font-size:1.2rem; } }
+.jackpot-chip { min-width:176px; min-height:68px; padding:14px 18px; color:#ffe5a3; border-color:rgba(242,198,109,.48); background:linear-gradient(135deg,#5b421e,#342d25); font-size:1.55rem; letter-spacing:.1em; }
+@media (max-width:600px) { .draw-heading { padding:16px; } .draw-date { font-size:1.55rem; } .prize-row { grid-template-columns:100px minmax(0,1fr); gap:9px; padding:10px 9px; } .prize-name { font-size:.82rem; padding:5px 7px 5px 0; } .prize-numbers { gap:7px; } .number-chip { min-width:102px; min-height:58px; font-size:1.24rem; padding:9px 10px; } .jackpot-chip { min-width:145px; min-height:64px; font-size:1.35rem; } }
 
 [data-testid="stAlert"] { border-radius:13px; }
 @media (max-width: 700px) {
