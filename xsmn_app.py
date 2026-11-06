@@ -434,10 +434,18 @@ try:
     if selected_nav == "Thuật toán":
         st.subheader("Xếp hạng thống kê 00–99")
         st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
-        method = st.selectbox("Phương pháp xếp hạng", ["freq_30", "freq_90", "freq_365", "gap"],
-                              format_func=lambda x: {"freq_30":"Tần suất 30 kỳ",
-                              "freq_90":"Tần suất 90 kỳ", "freq_365":"Tần suất 365 kỳ",
-                              "gap":"Số ít xuất hiện"}[x])
+        method = st.radio(
+            "Phương pháp xếp hạng",
+            ["freq_30", "freq_90", "freq_365", "gap"],
+            format_func=lambda x: {
+                "freq_30": "Tần suất 30 kỳ",
+                "freq_90": "Tần suất 90 kỳ",
+                "freq_365": "Tần suất 365 kỳ",
+                "gap": "Số ít xuất hiện",
+            }[x],
+            horizontal=True,
+            key="algorithm_method",
+        )
         top_k = st.slider("Số lượng số hiển thị", 5, 30, 10, key="algorithm_top_k")
         ranked = rank_numbers(history, method, top_k)
         if method == "gap":
