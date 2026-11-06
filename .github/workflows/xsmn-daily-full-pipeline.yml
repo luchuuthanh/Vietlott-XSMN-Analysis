@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - ".github/workflows/xsmn-daily-full-pipeline.yml"
+      - "xsmn_app.py"
+      - "xsmn_live.py"
       - "scripts/validate_383_xsmn_supplement.py"
       - "scripts/normalize_xsmn_five_year.py"
       - "scripts/apply_xsmn_reviewed_corrections.py"
