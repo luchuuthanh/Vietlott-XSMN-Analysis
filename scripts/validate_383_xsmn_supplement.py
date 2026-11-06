@@ -98,7 +98,8 @@ def main():
     report={
       "source":"383.im third-party API; not independently verified",
       "schema":root.get("schema"),"updated_at":root.get("updated_at"),
-      "window_start":START.isoformat(),"window_end":end_date.isoformat(),\n      "api_latest_date":max(available_dates).isoformat(),
+      "window_start":START.isoformat(),"window_end":end_date.isoformat(),
+      "api_latest_date":max(available_dates).isoformat(),
       "days":len(daily_dates),"province_count":len({r[1] for r in rows}),
       "rows":len(rows),"station_day_pairs":len(actual_pairs),
       "expected_station_day_pairs":len(expected_pairs),
