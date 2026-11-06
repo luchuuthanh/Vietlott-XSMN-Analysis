@@ -177,17 +177,29 @@ hr { border-color:var(--line); }
  overflow:hidden !important; margin:0 !important;
 }
 @media (max-width:600px) {
- .st-key-xsmn_weekday [data-testid="stRadio"] > label { font-size:1.55rem !important; }
+ .st-key-xsmn_weekday [data-testid="stRadio"] > label,
+ .st-key-xsmn_weekday [data-testid="stRadio"] > label p,
+ .st-key-xsmn_weekday [data-testid="stRadio"] > label span,
+ .st-key-xsmn_weekday [data-testid="stRadio"] > label div {
+   font-size:1.75rem !important; font-weight:1000 !important; min-height:76px !important;
+ }
  .st-key-xsmn_main_navigation [role="radiogroup"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_main_navigation [role="radiogroup"] label { min-height:60px !important; padding:7px 3px !important; }
 }
 /* Tiêu đề nằm trong ô riêng; chỉ các lựa chọn ngày mới là thẻ */
 .st-key-xsmn_weekday [data-testid="stRadio"] > label {
  display:flex !important; align-items:center !important; justify-content:center !important;
- text-align:center !important; min-height:62px !important; padding:10px 14px !important;
+ text-align:center !important; min-height:76px !important; padding:10px 14px !important;
  margin:0 0 8px 0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
  border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
- color:#f2f8fa !important; font-size:1.42rem !important; font-weight:900 !important; letter-spacing:.01em !important;
+ color:#ffffff !important; font-size:1.85rem !important; font-weight:1000 !important;
+ letter-spacing:.015em !important; line-height:1.15 !important;
+}
+.st-key-xsmn_weekday [data-testid="stRadio"] > label p,
+.st-key-xsmn_weekday [data-testid="stRadio"] > label span,
+.st-key-xsmn_weekday [data-testid="stRadio"] > label div {
+ color:#ffffff !important; font-size:1.85rem !important;
+ font-weight:1000 !important; line-height:1.15 !important;
 }
 .st-key-xsmn_weekday [data-testid="stRadio"] [role="radiogroup"] {
  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important;
