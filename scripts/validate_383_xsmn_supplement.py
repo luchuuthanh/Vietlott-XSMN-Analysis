@@ -133,8 +133,20 @@ def main():
         else:
             correction_status="already_corrected_in_source"
         applied.append({**correction,"prize_order":original[3],"status":correction_status})
-    if len(applied)!=len(corrections):
-        raise SystemExit("Refusing to export: one or more documented corrections were not resolved exactly once.")
+    unresolved = [e for e in errors if e.get("type") == "documented_correction_not_unique"]
+    if unresolved:
+        print(json.dumps({
+            "status": "CORRECTION_REVIEW_REQUIRED",
+            "message": "A documented correction did not match exactly one source row. No corrected supplement was exported.",
+            "unresolved_corrections": unresolved,
+            "candidate_rows": [
+                {"date": row[0], "province": row[1], "prize": row[2], "prize_order": row[3], "number": row[4]}
+                for row in rows
+                if any(row[0] == x["correction"]["date"] and row[1] == x["correction"]["province"]
+                       and row[2] == x["correction"]["prize"] for x in unresolved)
+            ]
+        }, ensure_ascii=False, indent=2))
+        raise SystemExit("Refusing to export: documented correction source rows need review; details printed above.")
 
     OUT.mkdir(exist_ok=True)
     with (OUT/"xsmn_383_supplement.csv").open("w",newline="",encoding="utf-8-sig") as f:
