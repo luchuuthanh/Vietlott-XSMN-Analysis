@@ -220,39 +220,40 @@ hr { border-color:var(--line); }
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
+/* Hàng đài: dùng flex tự nhiên của Streamlit, không ép chiều rộng gây tràn */
 .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
- display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important;
- gap:3px !important; align-items:stretch !important; width:100% !important;
- max-width:100% !important; overflow:visible !important;
+ display:flex !important; flex-flow:row nowrap !important;
+ gap:6px !important; width:100% !important; max-width:100% !important;
+ overflow:hidden !important; align-items:stretch !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] {
- min-width:0 !important; width:0 !important; max-width:none !important;
- flex:1 1 0% !important; padding:0 !important; margin:0 !important;
+ flex:1 1 0 !important; width:0 !important; min-width:0 !important;
+ max-width:100% !important; padding:0 !important; margin:0 !important;
 }
-.st-key-xsmn-station-row [data-testid="column"] > div {
+.st-key-xsmn-station-row [data-testid="column"] > div,
+.st-key-xsmn-station-row [data-testid="stCheckbox"] {
  width:100% !important; min-width:0 !important; padding:0 !important; margin:0 !important;
-}
-.st-key-xsmn-station-row [data-testid="stCheckbox"] { width:100% !important; min-width:0 !important; }
-.st-key-xsmn-station-row [data-testid="stCheckbox"] label {
- box-sizing:border-box !important; width:100% !important; min-width:0 !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { min-height:64px; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
  display:flex !important; align-items:center !important; justify-content:center !important;
- width:100% !important; min-height:62px !important; padding:8px 2px !important;
- margin:0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
- border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
- white-space:nowrap !important; gap:2px !important; box-sizing:border-box !important;
- overflow:visible !important;
+ width:100% !important; min-width:0 !important; min-height:62px !important;
+ padding:6px 2px !important; margin:0 !important;
+ border:1.5px solid rgba(150,190,200,.42) !important; border-radius:15px !important;
+ background:linear-gradient(145deg,#142d37,#10232c) !important;
+ gap:3px !important; box-sizing:border-box !important; overflow:hidden !important;
 }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
- color:#e8f1f4 !important; font-size:.62rem !important; font-weight:800 !important;
- text-align:center !important; margin:0 !important; white-space:nowrap !important;
- width:max-content !important; max-width:none !important; min-width:max-content !important;
- flex:0 0 auto !important; overflow:visible !important; text-overflow:clip !important; letter-spacing:-.035em !important;
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:first-child {
+ flex:0 0 15px !important; width:15px !important; min-width:15px !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:last-child {
- min-width:max-content !important; width:max-content !important; flex:0 0 auto !important; overflow:visible !important;
+ flex:1 1 0 !important; width:0 !important; min-width:0 !important; overflow:hidden !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
+ color:#e8f1f4 !important; font-size:clamp(.48rem,2.1vw,.72rem) !important;
+ font-weight:800 !important; text-align:center !important; margin:0 !important;
+ white-space:nowrap !important; overflow:hidden !important; text-overflow:clip !important;
+ letter-spacing:-.035em !important; width:100% !important; min-width:0 !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label input {
  width:16px !important; height:16px !important;
@@ -269,7 +270,7 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
- .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { grid-auto-flow:column !important; grid-auto-columns:minmax(0,1fr) !important; gap:6px !important; }
+ .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { flex-flow:row nowrap !important; gap:4px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { padding:8px 2px !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:.60rem !important; }
 }
