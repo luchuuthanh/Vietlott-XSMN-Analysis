@@ -462,7 +462,7 @@ try:
     flat = subset["last2"].astype(int).tolist()
     freq = frequency_table(flat, 99, start=0)
     gaps = gap_table(draws, 99, start=0)
-    st.metric("Đài đã chọn", len(selected_stations))
+    # Ẩn chỉ số 'Đài đã chọn' khỏi giao diện theo yêu cầu.
     # Giữ lại 3 chỉ số cũ nhưng ẩn khỏi giao diện theo yêu cầu.
     with st.container(key="hidden-xsmn-metrics"):
         c2, c3, c4 = st.columns(3)
