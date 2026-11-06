@@ -186,6 +186,15 @@ hr { border-color:var(--line); }
  .st-key-xsmn_main_navigation [role="radiogroup"] { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_main_navigation [role="radiogroup"] label { min-height:60px !important; padding:7px 3px !important; }
 }
+.weekday-heading {
+ display:flex !important; align-items:center !important; justify-content:center !important;
+ width:100% !important; height:88px !important; box-sizing:border-box !important;
+ margin:0 0 8px 0 !important; padding:8px 12px !important;
+ border:1.5px solid rgba(150,190,200,.42) !important; border-radius:15px !important;
+ background:linear-gradient(145deg,#142d37,#10232c) !important;
+ color:#ffffff !important; text-align:center !important;
+ font-size:1.75rem !important; font-weight:900 !important; line-height:1.15 !important;
+}
 /* Tiêu đề nằm trong ô riêng; chỉ các lựa chọn ngày mới là thẻ */
 .st-key-xsmn_weekday [data-testid="stRadio"] > label {
  display:grid !important; place-items:center !important;
@@ -379,13 +388,17 @@ try:
     weekday_names = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
     today_index = (date.today().weekday())
     default_day = weekday_names[today_index]
+    st.markdown(
+        '<div class="weekday-heading">Chọn thứ mở thưởng</div>',
+        unsafe_allow_html=True,
+    )
     weekday = st.radio(
-        "Chọn thứ mở thưởng",
+        " ",
         weekday_names,
         index=today_index,
         horizontal=True,
         key="xsmn_weekday",
-        label_visibility="visible",
+        label_visibility="collapsed",
     )
     scheduled = schedule[weekday]
     def normalize_station_name(value):
