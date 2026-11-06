@@ -6,6 +6,7 @@ import pandas as pd
 from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
+from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 st.title("🍀 XSMN ANALYSIS LAB")
@@ -79,7 +80,7 @@ try:
     c2.metric("Ngày có dữ liệu", len(dates))
     c3.metric("Số kết quả", len(data))
     c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    t1, t2, t3, t4 = st.tabs(["Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ"])
+    t1, t2, t3, t4, t5, t6 = st.tabs(["Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
     with t1:
         a, b = st.columns(2)
         with a:
@@ -102,6 +103,45 @@ try:
         if not archive_status.empty:
             st.dataframe(archive_status, use_container_width=True, hide_index=True)
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
+    history = draw_history(raw, province)
+    with t5:
+        st.subheader("Xếp hạng thống kê 00–99")
+        st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
+        method = st.selectbox("Phương pháp xếp hạng", ["blend", "freq_30", "freq_90", "freq_365", "ewma", "gap"],
+                              format_func=lambda x: {"blend":"Kết hợp tần suất + gan", "freq_30":"Tần suất 30 kỳ",
+                              "freq_90":"Tần suất 90 kỳ", "freq_365":"Tần suất 365 kỳ",
+                              "ewma":"Trọng số giảm dần theo thời gian", "gap":"Độ gan"}[x])
+        top_k = st.slider("Số lượng số hiển thị", 5, 30, 10, key="algorithm_top_k")
+        ranked = rank_numbers(history, method, top_k)
+        st.dataframe(ranked, use_container_width=True, hide_index=True)
+        pairs = pair_frequency(history, 30)
+        st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
+        st.dataframe(pairs.head(20), use_container_width=True, hide_index=True)
+        report = distribution_report(history)
+        a, b, d = st.columns(3)
+        a.metric("Số kỳ lịch sử", report["draws"])
+        b.metric("Tổng lượt xuất hiện", report["observations"])
+        d.metric("Tổng trung bình mỗi kỳ", report.get("mean_sum") or 0)
+    with t6:
+        st.subheader("Kiểm định cuốn chiếu – không nhìn trước kết quả")
+        st.caption("Mỗi kỳ được dự đoán chỉ sử dụng dữ liệu của các kỳ trước đó. So sánh với mức kỳ vọng nếu chọn ngẫu nhiên cùng số lượng.")
+        min_history = st.slider("Số kỳ lịch sử tối thiểu trước lần kiểm tra đầu", 30, 180, 90, step=10)
+        backtest_k = st.slider("Số ứng viên mỗi kỳ", 5, 30, 10, key="backtest_top_k")
+        if len(history) <= min_history:
+            st.warning(f"Tỉnh này chỉ có {len(history)} kỳ; cần nhiều hơn {min_history} kỳ để backtest.")
+        else:
+            with st.spinner("Đang chạy kiểm định cuốn chiếu trên lịch sử tỉnh đã chọn..."):
+                detail, summary = rolling_backtest(raw, province, top_k=backtest_k, min_history=min_history)
+            if summary.empty:
+                st.warning("Không đủ dữ liệu hợp lệ để tính backtest.")
+            else:
+                st.markdown("**So sánh các phương pháp**")
+                st.dataframe(summary, use_container_width=True, hide_index=True)
+                st.caption("Lift > 1 chỉ cho biết kết quả backtest cao hơn mức ngẫu nhiên trong mẫu đã kiểm tra; chưa chứng minh hiệu quả ở tương lai.")
+                st.markdown("**Chi tiết từng kỳ kiểm tra**")
+                st.dataframe(detail, use_container_width=True, hide_index=True)
+                st.download_button("Tải kết quả backtest CSV", detail.to_csv(index=False).encode("utf-8-sig"),
+                                   f"xsmn_backtest_{province}.csv", "text/csv")
 except Exception as exc:
     st.error(f"Không thể phân tích dữ liệu XSMN: {exc}")
     st.info("CSV cần có các cột: date, province, prize, number.")
