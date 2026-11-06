@@ -411,7 +411,26 @@ try:
     missing_stations = [label for label in scheduled if station_map[label] is None]
     for missing in missing_stations:
         st.warning(f"Chưa tìm thấy dữ liệu tỉnh: {missing}")
-    # Chia ô đài thành 3 cột mỗi hàng, đồng bộ kích thước các ô điều hướng bên dưới.
+    # Ép bố cục các cột đài thành lưới CSS thật trên điện thoại; không để Streamlit tự xếp dọc.
+    st.markdown("""
+    <style>
+    .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
+        display:grid !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        grid-auto-flow:row !important;
+        gap:8px !important;
+        width:100% !important;
+        align-items:stretch !important;
+    }
+    .st-key-xsmn-station-row [data-testid="column"] {
+        width:auto !important; min-width:0 !important; max-width:none !important;
+        flex:none !important; padding:0 !important; margin:0 !important;
+    }
+    .st-key-xsmn-station-row [data-testid="column"] > div {
+        width:100% !important; min-width:0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     with st.container(key="xsmn-station-row"):
         for row_start in range(0, len(valid_stations), 3):
             cols = st.columns(3, gap="small")
