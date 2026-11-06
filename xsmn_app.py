@@ -245,15 +245,30 @@ try:
         label_visibility="collapsed",
     )
     scheduled = schedule[weekday]
+    def normalize_station_name(value):
+        import unicodedata
+        value = unicodedata.normalize("NFKD", str(value).strip().casefold())
+        value = "".join(ch for ch in value if not unicodedata.combining(ch))
+        value = re.sub(r"[^a-z0-9]+", " ", value).strip()
+        value = re.sub(r"^(tinh|thanh pho|tp)\\s+", "", value)
+        return value
+
     def resolve_station(label):
-        candidates = {
-            "TP.HCM": ["TP.HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh", "Hồ Chí Minh"],
+        aliases = {
+            "TP.HCM": ["TP.HCM", "TP HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh",
+                       "Hồ Chí Minh", "Ho Chi Minh", "Ho Chi Minh City", "HCM"],
             "Đà Lạt": ["Đà Lạt", "Lâm Đồng"],
-        }.get(label, [label])
+        }
+        candidates = [label, *aliases.get(label, [])]
+        normalized = {normalize_station_name(p): p for p in available_provinces}
         for candidate in candidates:
-            match = next((p for p in available_provinces if p.casefold() == candidate.casefold()), None)
+            match = normalized.get(normalize_station_name(candidate))
             if match:
                 return match
+        target = normalize_station_name(label)
+        for name, actual in normalized.items():
+            if target and (name.endswith(" " + target) or name.startswith(target + " ")):
+                return actual
         return None
     station_map = {label: resolve_station(label) for label in scheduled}
     st.markdown("**Chọn đài (có thể tích nhiều đài)**")
