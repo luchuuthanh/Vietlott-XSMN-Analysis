@@ -298,7 +298,8 @@ try:
 
         st.markdown("### Thống kê hai số")
         # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
-        freq_display = period_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
+        freq_display = period_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
+        freq_display["Số"] = freq_display["Số"].map(lambda n: f"{int(n):02d}")
         st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Thống kê cặp số")
@@ -307,7 +308,9 @@ try:
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Số lâu chưa xuất hiện")
-        st.dataframe(period_gaps.head(20), use_container_width=True, hide_index=True)
+        gaps_display = period_gaps.copy()
+        gaps_display["Số"] = gaps_display["Số"].map(lambda n: f"{int(n):02d}")
+        st.dataframe(gaps_display.head(20), use_container_width=True, hide_index=True)
         st.bar_chart(period_freq.set_index("Số")["Số lần"])
         st.caption(f"Các thống kê trên được tính theo {pair_periods} kỳ gần nhất của tỉnh đã chọn.")
 
