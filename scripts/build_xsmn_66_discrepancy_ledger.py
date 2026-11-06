@@ -8,12 +8,12 @@ CASES = {
     ("2024-11-15", "Tra Vinh"): {
         "url1": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/tra-vinh/15-11-2024.html",
         "url2": "https://xskt.com.vn/ngay/15-11-2024",
-        "note": "DB 084786 appears in both published result tables."
+        "note": "DB 084786 appears in both published result tables.", "prizes": ["DB"]
     },
     ("2025-06-28", "Binh Phuoc"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
         "url2": "https://xs.com.vn/xsmn-ngay-28-6-2025.html",
-        "note": "Full regional table; compare all prize classes DB through G7."
+        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES
     },
     ("2025-06-28", "Hau Giang"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
@@ -33,13 +33,13 @@ CASES = {
     ("2025-08-23", "Binh Phuoc"): {
         "url1": "https://xskt.com.vn/xsbp/ngay-23-8-2025",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/binh-phuoc/23-08-2025.html",
-        "note": "Both pages show G4 includes 79028."
+        "note": "Both pages show G4 includes 79028.", "prizes": ["G4"]
     },
     ("2026-05-02", "Binh Phuoc"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
         "url2": "https://www.minhngoc.net.vn/free/ket-qua-xo-so/mien-nam/02-05-2026.html",
         "url3": "https://xosonay.com/xsmn/02-05-2026/",
-        "note": "Full regional tables from multiple secondary result pages."
+        "note": "Full regional tables from multiple secondary result pages.", "prizes": PRIZES
     },
     ("2026-05-02", "Hau Giang"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-2-5-2026",
@@ -73,7 +73,7 @@ def main():
     rows=[]
     errors=[]
     for (day,province),ev in CASES.items():
-        for prize in PRIZES:
+        for prize in ev["prizes"]:
             g=df[(df.date==day)&(df.province==province)&(df.prize.astype(str).str.upper()==prize)].sort_values("prize_order")
             expected={"DB":1,"G1":1,"G2":1,"G3":2,"G4":7,"G5":1,"G6":3,"G7":1}[prize]
             if len(g)!=expected:
