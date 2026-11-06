@@ -140,6 +140,7 @@ hr { border-color:var(--line); }
  [data-testid="stMetric"] { padding:12px; }
 }
  .st-key-hidden-xsmn-overview { display:none !important; }
+.st-key-hidden-xsmn-validated-data-caption { display:none !important; }
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
@@ -171,7 +172,8 @@ if source == "Kho lịch sử 5 năm":
             if meta.get("status") != "PASS":
                 raise ValueError("Manifest chưa xác nhận PASS")
             raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
-            st.caption(f"Dữ liệu chuẩn đã kiểm định: {meta.get('window_start')} → {meta.get('window_end')} · {meta.get('rows')} dòng · cập nhật {meta.get('updated_at_vietnam')}")
+            with st.container(key="hidden-xsmn-validated-data-caption"):
+                st.caption(f"Dữ liệu chuẩn đã kiểm định: {meta.get('window_start')} → {meta.get('window_end')} · {meta.get('rows')} dòng · cập nhật {meta.get('updated_at_vietnam')}")
         except Exception as exc:
             st.error(f"Không đọc được bản dữ liệu chuẩn đã xuất bản: {exc}")
             st.stop()
