@@ -220,24 +220,30 @@ hr { border-color:var(--line); }
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
-/* Ô đài: chỉ tạo kiểu hiển thị; bố cục cột được đặt động theo số đài */
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] {
- width:100% !important; min-width:0 !important;
-}
+/* Ô đài đồng bộ kiểu thẻ điều hướng: 3 ô mỗi hàng, chữ căn giữa, checkbox cố định bên trái */
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { width:100% !important; min-width:0 !important; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
+ position:relative !important; display:flex !important; align-items:center !important;
+ justify-content:center !important; width:100% !important; min-width:0 !important;
+ height:62px !important; box-sizing:border-box !important; padding:8px 6px 8px 30px !important;
+ margin:0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
+ border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
+ overflow:hidden !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:first-child {
+ position:absolute !important; left:10px !important; top:50% !important;
+ transform:translateY(-50%) !important; width:17px !important; min-width:17px !important;
+ margin:0 !important; padding:0 !important;
+}
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:last-child {
  display:flex !important; align-items:center !important; justify-content:center !important;
- gap:4px !important; width:100% !important; min-width:0 !important;
- min-height:62px !important; box-sizing:border-box !important;
- padding:5px 3px !important; margin:0 !important;
- border:1.5px solid rgba(150,190,200,.42) !important; border-radius:13px !important;
- background:linear-gradient(145deg,#142d37,#10232c) !important;
- overflow:hidden !important; white-space:nowrap !important;
+ width:100% !important; min-width:0 !important; margin:0 !important; padding:0 !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
- color:#e8f1f4 !important; font-size:clamp(.58rem,2.4vw,.78rem) !important;
- font-weight:800 !important; text-align:center !important; line-height:1.1 !important;
+ color:#e8f1f4 !important; font-size:clamp(.72rem,2.8vw,.95rem) !important;
+ font-weight:800 !important; text-align:center !important; line-height:1.15 !important;
  margin:0 !important; padding:0 !important; white-space:nowrap !important;
- overflow:hidden !important; text-overflow:clip !important; letter-spacing:-.025em !important;
+ overflow:hidden !important; text-overflow:clip !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
  background:linear-gradient(145deg,#15534f,#123744) !important;
@@ -405,41 +411,19 @@ try:
     missing_stations = [label for label in scheduled if station_map[label] is None]
     for missing in missing_stations:
         st.warning(f"Chưa tìm thấy dữ liệu tỉnh: {missing}")
-    # Éặt lưới CSS theo đúng số đài của thứ đang chọn; tránh Streamlit tự xếp dọc trên mobile.
-    station_col_count = len(valid_stations)
-    st.markdown(
-        f"""
-        <style>
-        .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {{
-            display:grid !important;
-            grid-template-columns:repeat({station_col_count}, minmax(0, 1fr)) !important;
-            grid-auto-flow:row !important;
-            gap:6px !important;
-            width:100% !important;
-            align-items:stretch !important;
-        }}
-        .st-key-xsmn-station-row [data-testid="column"] {{
-            width:auto !important; min-width:0 !important; max-width:none !important;
-            flex:none !important; padding:0 !important; margin:0 !important;
-        }}
-        .st-key-xsmn-station-row [data-testid="column"] > div {{
-            width:100% !important; min-width:0 !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    # Chia ô đài thành 3 cột mỗi hàng, đồng bộ kích thước các ô điều hướng bên dưới.
     with st.container(key="xsmn-station-row"):
-        cols = st.columns(len(valid_stations), gap="small")
-        for idx, (label, actual) in enumerate(valid_stations):
-            with cols[idx]:
-                checked = st.checkbox(
-                    label,
-                    value=True,
-                    key=f"xsmn_station_{weekday}_{label}",
-                )
-            if checked:
-                selected_stations.append(actual)
+        for row_start in range(0, len(valid_stations), 3):
+            cols = st.columns(3, gap="small")
+            for col_idx, (label, actual) in enumerate(valid_stations[row_start:row_start + 3]):
+                with cols[col_idx]:
+                    checked = st.checkbox(
+                        label,
+                        value=True,
+                        key=f"xsmn_station_{weekday}_{label}",
+                    )
+                if checked:
+                    selected_stations.append(actual)
     if not selected_stations:
         st.info("Hãy tích chọn ít nhất một đài để xem dữ liệu.")
         st.stop()
