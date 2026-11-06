@@ -278,7 +278,9 @@ try:
         a, b = st.columns(2)
         with a:
             st.markdown("**Tần suất xuất hiện**")
-            st.dataframe(freq.head(20), use_container_width=True, hide_index=True)
+            # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
+            freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
+            st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
         with b:
             st.markdown("**Số lâu chưa xuất hiện**")
             st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
