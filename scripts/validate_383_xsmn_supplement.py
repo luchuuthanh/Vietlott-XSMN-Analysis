@@ -101,9 +101,39 @@ def main():
     if extra_dates: errors.append({"type":"unexpected_draw_dates","count":len(extra_dates),"dates":extra_dates[:30]})
     if missing: errors.append({"type":"missing_station_days","count":len(missing),"examples":missing[:30]})
     if extra: errors.append({"type":"unexpected_station_days","count":len(extra),"examples":extra[:30]})
+    # Explicitly documented corrections supported by the project owner's screenshots.
+    # Match by full row identity and old value; fail closed if the expected source value is absent
+    # or appears more than once. Original values are retained in correction_audit.json.
+    corrections = [
+        {"date":"2026-08-29","province":"Long An","prize":"G2","old":"76719","new":"79719",
+         "evidence":"User-supplied screenshot of VOH result text, 2026-11-06."},
+        {"date":"2026-10-23","province":"Vinh Long","prize":"G4","old":"87992","new":"87962",
+         "evidence":"User-supplied screenshot of Minh Ngoc/VOH result text explicitly noting supervisory correction, 2026-11-06."},
+    ]
+    applied=[]
+    for correction in corrections:
+        matches=[i for i,row in enumerate(rows)
+                 if row[0]==correction["date"] and row[1]==correction["province"]
+                 and row[2]==correction["prize"] and row[4]==correction["old"]]
+        if len(matches)!=1:
+            errors.append({"type":"documented_correction_not_unique",
+                           "correction":correction,"matches":len(matches)})
+            continue
+        i=matches[0]
+        original=list(rows[i])
+        rows[i]=(original[0],original[1],original[2],original[3],correction["new"])
+        applied.append({**correction,"prize_order":original[3]})
+    if len(applied)!=len(corrections):
+        raise SystemExit("Refusing to export: one or more documented corrections were not applied exactly once.")
+
     OUT.mkdir(exist_ok=True)
     with (OUT/"xsmn_383_supplement.csv").open("w",newline="",encoding="utf-8-sig") as f:
         w=csv.writer(f); w.writerow(["date","province","prize","prize_order","number"]); w.writerows(sorted(rows))
+    (OUT/"correction_audit.json").write_text(
+        json.dumps({"corrections_applied":applied,
+                    "note":"Original values are preserved in this audit log; canonical CSV contains corrected values.",
+                    "evidence_class":"user-supplied screenshots; secondary-source corroboration, not official issuer certification"},
+                   ensure_ascii=False,indent=2),encoding="utf-8")
     report={
       "source":"383.im third-party API; not independently verified",
       "schema":root.get("schema"),"updated_at":root.get("updated_at"),
@@ -116,7 +146,8 @@ def main():
       "missing_station_days":len(missing),"unexpected_station_days":len(extra),
       "duplicate_rows":sum(e["type"]=="duplicate_row" for e in errors),
       "error_count":len(errors),"errors":errors,
-      "merge_status":"NOT_MERGED; keep as a separate supplement until independently verified"
+      "corrections_applied":applied,
+      "merge_status":"NOT_MERGED; keep as a separate supplement; documented corrections applied with audit trail"
     }
     (OUT/"validation_report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False,indent=2))
