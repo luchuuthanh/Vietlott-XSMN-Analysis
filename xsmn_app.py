@@ -225,13 +225,13 @@ try:
     now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     show_live_tab = time(16, 10) <= now_vn <= time(16, 50)
     # Ẩn tab Backtest khỏi giao diện nhưng giữ nguyên toàn bộ nội dung và phép kiểm định.
-    backtest_tab_index = 5 if show_live_tab else 4
+    backtest_tab_index = 6 if show_live_tab else 5
     st.markdown(
         f"<style>[data-testid='stTabs'] [role='tab']:nth-child({backtest_tab_index}) "
         "{display:none !important;}</style>",
         unsafe_allow_html=True,
     )
-    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thuật toán", "Backtest"]
+    tab_labels = ["Lịch sử kết quả", "Thống kê", "Thống kê hai số", "Thuật toán", "Backtest"]
     if show_live_tab:
         tab_labels.insert(0, "🔴 Trực tuyến")
     tabs = st.tabs(tab_labels)
@@ -279,7 +279,9 @@ try:
                 st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
                 st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
     history_offset = 1 if show_live_tab else 0
-    thistory, t1, t5, t6 = [tabs[i] for i in range(history_offset, history_offset + 4)]
+    thistory, t1, t_two, t_algo, t_backtest = [
+        tabs[i] for i in range(history_offset, history_offset + 5)
+    ]
     with thistory:
         st.subheader(f"Kết quả lịch sử XSMN — {province}")
         st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
@@ -324,35 +326,6 @@ try:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
     with t1:
-        # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
-        st.markdown("### Thống kê hai số")
-        two_col1, two_col2 = st.columns(2)
-        with two_col1:
-            two_periods = st.slider(
-                "Số kỳ thống kê hai số", 1, max(1, len(dates)),
-                min(30, max(1, len(dates))), key="stats_two_periods"
-            )
-        with two_col2:
-            two_scope = st.selectbox(
-                "Chọn giải (hai số)", ["G8", "ĐB", "Tất cả giải"],
-                key="stats_two_scope"
-            )
-        two_freq, two_gaps, two_used = suffix_statistics(
-            raw, province, 2, two_periods, two_scope
-        )
-        two_display = two_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
-        two_display["Số"] = two_display["Số"].map(lambda n: f"{int(n):02d}")
-        st.caption(f"Phạm vi: {two_scope} · {two_used} kỳ gần nhất.")
-        st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
-
-        # Khôi phục bảng số lâu chưa xuất hiện và biểu đồ tần suất hai số.
-        st.markdown("### Số lâu chưa xuất hiện")
-        two_gaps_display = two_gaps.copy()
-        two_gaps_display["Số"] = two_gaps_display["Số"].map(lambda n: f"{int(n):02d}")
-        st.dataframe(two_gaps_display.head(20), use_container_width=True, hide_index=True)
-        st.markdown("### Biểu đồ tần suất hai số")
-        st.bar_chart(two_freq.set_index("Số")["Số lần"])
-
         # 2) Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
         st.markdown("### Thống kê ba số")
         three_col1, three_col2 = st.columns(2)
@@ -389,6 +362,37 @@ try:
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
+    with t_two:
+        # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
+        st.markdown("### Thống kê hai số")
+        two_col1, two_col2 = st.columns(2)
+        with two_col1:
+            two_periods = st.slider(
+                "Số kỳ thống kê hai số", 1, max(1, len(dates)),
+                min(30, max(1, len(dates))), key="stats_two_periods"
+            )
+        with two_col2:
+            two_scope = st.selectbox(
+                "Chọn giải (hai số)", ["G8", "ĐB", "Tất cả giải"],
+                key="stats_two_scope"
+            )
+        two_freq, two_gaps, two_used = suffix_statistics(
+            raw, province, 2, two_periods, two_scope
+        )
+        two_display = two_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore").copy()
+        two_display["Số"] = two_display["Số"].map(lambda n: f"{int(n):02d}")
+        st.caption(f"Phạm vi: {two_scope} · {two_used} kỳ gần nhất.")
+        st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
+
+        # Khôi phục bảng số lâu chưa xuất hiện và biểu đồ tần suất hai số.
+        st.markdown("### Số lâu chưa xuất hiện")
+        two_gaps_display = two_gaps.copy()
+        two_gaps_display["Số"] = two_gaps_display["Số"].map(lambda n: f"{int(n):02d}")
+        st.dataframe(two_gaps_display.head(20), use_container_width=True, hide_index=True)
+        st.markdown("### Biểu đồ tần suất hai số")
+        st.bar_chart(two_freq.set_index("Số")["Số lần"])
+
+
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
     with st.container(key="hidden-xsmn-prize"):
         by_prize = subset.groupby("prize")["number"].count().sort_values(ascending=False).rename("Số kết quả")
@@ -407,7 +411,7 @@ try:
             st.dataframe(archive_status, use_container_width=True, hide_index=True)
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
 
-    with t5:
+    with t_algo:
         st.subheader("Xếp hạng thống kê 00–99")
         st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
         method = st.selectbox("Phương pháp xếp hạng", ["freq_30", "freq_90", "freq_365", "gap"],
@@ -436,7 +440,7 @@ try:
             a.metric("Số kỳ lịch sử", report["draws"])
             b.metric("Tổng lượt xuất hiện", report["observations"])
             d.metric("Tổng trung bình mỗi kỳ", report.get("mean_sum") or 0)
-    with t6:
+    with t_backtest:
         st.subheader("Kiểm định cuốn chiếu – không nhìn trước kết quả")
         st.caption("Mỗi kỳ được dự đoán chỉ sử dụng dữ liệu của các kỳ trước đó. So sánh với mức kỳ vọng nếu chọn ngẫu nhiên cùng số lượng.")
         min_history = st.slider("Số kỳ lịch sử tối thiểu trước lần kiểm tra đầu", 30, 180, 90, step=10)
