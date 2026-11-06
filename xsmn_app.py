@@ -97,14 +97,39 @@ p, label, .stCaption { color:var(--muted); }
 
 /* Nút cập nhật kết quả trực tuyến: màu đỏ riêng */
 [class*="st-key-refresh_live_xsmn"] button {
- background:linear-gradient(100deg,#a91424,#dc3545) !important;
- color:#fff !important;
- border:1px solid rgba(255,255,255,.16) !important;
+ background:linear-gradient(100deg,#b5122a,#f04455) !important;
+ color:#ffffff !important;
+ border:2px solid #ff8995 !important;
+ border-radius:14px !important;
+ min-height:58px !important;
+ padding:12px 22px !important;
+ box-shadow:0 5px 18px rgba(220,45,70,.28) !important;
+}
+[class*="st-key-refresh_live_xsmn"] button *,
+[class*="st-key-refresh_live_xsmn"] button p,
+[class*="st-key-refresh_live_xsmn"] button span {
+ color:#ffffff !important;
+ font-size:1.08rem !important;
+ font-weight:900 !important;
+ letter-spacing:.01em !important;
+ opacity:1 !important;
 }
 [class*="st-key-refresh_live_xsmn"] button:hover {
- background:#ef4050 !important;
- color:#fff !important;
+ background:#fa5365 !important;
+ color:#ffffff !important;
+ border-color:#ffd0d5 !important;
 }
+.station-heading {
+ display:flex; align-items:center; gap:10px;
+ margin:22px 0 10px; padding:13px 17px;
+ border:2px solid #35d0ae; border-left:7px solid #35d0ae;
+ border-radius:14px;
+ background:linear-gradient(100deg,#15534f,#123744 72%,#1a3544);
+ color:#f4fffd; font-size:1.18rem; line-height:1.35;
+ font-weight:900; letter-spacing:.025em;
+ box-shadow:0 7px 20px rgba(0,0,0,.22);
+}
+.station-heading:before { content:"🎯"; font-size:1.05rem; }
 input, textarea, [data-baseweb="select"] > div { background:#10232c !important; border-color:var(--line) !important; border-radius:10px !important; }
 hr { border-color:var(--line); }
 
@@ -363,7 +388,7 @@ try:
             live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
             st.markdown(f"**{live_date} · Kết quả theo từng đài**")
             for station, station_rows in live_station.groupby("province", sort=False):
-                st.markdown(f"### {html.escape(str(station))}")
+                st.markdown(f'<div class="station-heading">{html.escape(str(station))}</div>', unsafe_allow_html=True)
                 for prize, rows in station_rows.groupby("prize", sort=False):
                     prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
                     values = "".join(
@@ -408,7 +433,7 @@ try:
             </div>
             """, unsafe_allow_html=True)
             for station, station_rows in live_result.groupby("province", sort=False):
-                st.markdown(f"### {html.escape(str(station))}")
+                st.markdown(f'<div class="station-heading">{html.escape(str(station))}</div>', unsafe_allow_html=True)
                 for prize, rows in station_rows.groupby("prize", sort=False):
                     prize_label = str(prize).upper()
                     values = [html.escape(str(v)) for v in rows["number"].tolist()]
