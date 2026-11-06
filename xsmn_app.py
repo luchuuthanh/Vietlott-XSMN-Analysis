@@ -277,18 +277,6 @@ try:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     history = draw_history(raw, province)
     with t1:
-        a, b = st.columns(2)
-        with a:
-            st.markdown("**Tần suất xuất hiện**")
-            # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
-            freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
-            st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
-        with b:
-            st.markdown("**Số lâu chưa xuất hiện**")
-            st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
-        st.bar_chart(freq.set_index("Số")["Số lần"])
-        st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
-
         st.markdown("### Thống kê cặp số")
         max_pair_periods = max(1, len(history))
         pair_periods = st.slider(
@@ -301,6 +289,18 @@ try:
         pair_rows = pair_frequency(history[-pair_periods:], top=100)
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
+
+        a, b = st.columns(2)
+        with a:
+            st.markdown("**Tần suất xuất hiện**")
+            # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
+            freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
+            st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
+        with b:
+            st.markdown("**Số lâu chưa xuất hiện**")
+            st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
+        st.bar_chart(freq.set_index("Số")["Số lần"])
+        st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
 
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
     with st.container(key="hidden-xsmn-prize"):
