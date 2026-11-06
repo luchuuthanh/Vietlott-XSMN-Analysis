@@ -1,0 +1,23 @@
+name: XSMN rolling five-draw backtest
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/backtest_xsmn_rolling5.py"
+      - "data/xsmn_5y_canonical.csv"
+      - ".github/workflows/xsmn-rolling5-backtest.yml"
+jobs:
+  rolling5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pandas numpy
+      - run: python scripts/backtest_xsmn_rolling5.py --data data/xsmn_5y_canonical.csv --outdir artifacts/rolling5
+      - uses: actions/upload-artifact@v4
+        with:
+          name: XSMN-ROLLING5-BACKTEST
+          path: artifacts/rolling5/
+          retention-days: 90
