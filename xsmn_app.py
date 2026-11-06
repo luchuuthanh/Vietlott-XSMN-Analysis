@@ -1,5 +1,6 @@
 """Ứng dụng phân tích XSMN độc lập."""
 from datetime import date
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 from analytics import frequency_table, gap_table
@@ -19,15 +20,30 @@ with st.sidebar:
 raw = pd.DataFrame()
 archive_status = pd.DataFrame()
 if source == "Kho lịch sử 5 năm":
-    with st.spinner("Đang tải và kiểm tra các kho dữ liệu XSMN theo quý..."):
+    canonical = Path("data/xsmn_5y_canonical.csv")
+    manifest = Path("data/xsmn_5y_canonical.json")
+    if canonical.exists() and manifest.exists():
         try:
-            archive, archive_status = fetch_xsmn_five_years(date.today().isoformat())
-            if not archive.empty:
-                raw = archive.rename(columns={"last2": "last2"}).copy()
-            else:
-                st.error("Chưa tải được dữ liệu từ kho lịch sử. Có thể chuyển sang tải CSV.")
+            import json
+            meta = json.loads(manifest.read_text(encoding="utf-8"))
+            if meta.get("status") != "PASS":
+                raise ValueError("Manifest chưa xác nhận PASS")
+            raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
+            st.caption(f"Dữ liệu chuẩn đã kiểm định: {meta.get('window_start')} → {meta.get('window_end')} · {meta.get('rows')} dòng · cập nhật {meta.get('updated_at_vietnam')}")
         except Exception as exc:
-            st.error(f"Không tải được kho lịch sử: {exc}")
+            st.error(f"Không đọc được bản dữ liệu chuẩn đã xuất bản: {exc}")
+            st.stop()
+    else:
+        st.warning("Chưa có bản dữ liệu chuẩn được xuất bản; đang dùng kho SQLite dự phòng.")
+        with st.spinner("Đang tải kho SQLite XSMN theo quý..."):
+            try:
+                archive, archive_status = fetch_xsmn_five_years(date.today().isoformat())
+                if not archive.empty:
+                    raw = archive.copy()
+                else:
+                    st.error("Chưa tải được dữ liệu từ kho lịch sử. Có thể chuyển sang tải CSV.")
+            except Exception as exc:
+                st.error(f"Không tải được kho lịch sử: {exc}")
 elif upload is not None:
     try:
         raw = load_xsmn(upload)
