@@ -20,17 +20,17 @@ CASES = {
     ("2025-06-28", "Hau Giang"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
         "url2": "https://xs.com.vn/xsmn-ngay-28-6-2025.html",
-        "note": "Full regional table; compare all prize classes DB through G7."
+        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES
     },
     ("2025-06-28", "Long An"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
         "url2": "https://xs.com.vn/xsmn-ngay-28-6-2025.html",
-        "note": "Full regional table; compare all prize classes DB through G7."
+        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES
     },
     ("2025-06-28", "TP. HCM"): {
         "url1": "https://xskt.com.vn/xsmn/ngay-28-6-2025",
         "url2": "https://xs.com.vn/xsmn-ngay-28-6-2025.html",
-        "note": "Full regional table; compare all prize classes DB through G7."
+        "note": "Full regional table; compare all prize classes DB through G7.", "prizes": PRIZES
     },
     ("2025-08-23", "Binh Phuoc"): {
         "url1": "https://xskt.com.vn/xsbp/ngay-23-8-2025",
