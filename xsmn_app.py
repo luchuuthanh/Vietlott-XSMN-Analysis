@@ -87,6 +87,7 @@ hr { border-color:var(--line); }
 
 [data-testid="stAlert"] { border-radius:13px; }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
+.st-key-hidden-xsmn-summary-metrics,
 .st-key-hidden-xsmn-lookback,
 .st-key-hidden-xsmn-metrics,
 .st-key-hidden-xsmn-prize,
@@ -351,10 +352,12 @@ try:
             st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
             st.dataframe(pairs.head(20), use_container_width=True, hide_index=True)
         report = distribution_report(history)
-        a, b, d = st.columns(3)
-        a.metric("Số kỳ lịch sử", report["draws"])
-        b.metric("Tổng lượt xuất hiện", report["observations"])
-        d.metric("Tổng trung bình mỗi kỳ", report.get("mean_sum") or 0)
+        # Giữ nguyên ba chỉ số và phép tính; chỉ ẩn khỏi giao diện theo yêu cầu.
+        with st.container(key="hidden-xsmn-summary-metrics"):
+            a, b, d = st.columns(3)
+            a.metric("Số kỳ lịch sử", report["draws"])
+            b.metric("Tổng lượt xuất hiện", report["observations"])
+            d.metric("Tổng trung bình mỗi kỳ", report.get("mean_sum") or 0)
     with t6:
         st.subheader("Kiểm định cuốn chiếu – không nhìn trước kết quả")
         st.caption("Mỗi kỳ được dự đoán chỉ sử dụng dữ liệu của các kỳ trước đó. So sánh với mức kỳ vọng nếu chọn ngẫu nhiên cùng số lượng.")
