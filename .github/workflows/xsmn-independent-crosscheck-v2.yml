@@ -6,7 +6,8 @@ on:
     paths:
       - '.github/workflows/xsmn-independent-crosscheck-v2.yml'
       - 'scripts/verify_xsmn_supplement_sources_v2.py'
-      - 'scripts/diagnose_xosotin_html.py'\n      - 'scripts/validate_383_xsmn_supplement.py'
+      - 'scripts/diagnose_xosotin_html.py'
+      - 'scripts/validate_383_xsmn_supplement.py'
 permissions:
   contents: read
 jobs:
