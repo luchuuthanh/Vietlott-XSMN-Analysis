@@ -220,45 +220,24 @@ hr { border-color:var(--line); }
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
-/* Các đài luôn nằm trên một hàng ngang; cột chia đều và không co về kích thước nội dung */
-.st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
- display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important;
- align-items:stretch !important; justify-content:space-between !important;
- gap:6px !important; width:100% !important; max-width:100% !important;
+/* Ô đài: chỉ tạo kiểu hiển thị; bố cục cột được đặt động theo số đài */
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] {
+ width:100% !important; min-width:0 !important;
 }
-.st-key-xsmn-station-row [data-testid="column"] {
- display:block !important; flex:1 1 0% !important;
- width:auto !important; min-width:0 !important; max-width:none !important;
- padding:0 !important; margin:0 !important;
-}
-.st-key-xsmn-station-row [data-testid="column"] > div,
-.st-key-xsmn-station-row [data-testid="stCheckbox"] {
- display:block !important; width:100% !important; min-width:0 !important;
- padding:0 !important; margin:0 !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] { width:100% !important; min-height:62px !important; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label {
- display:flex !important; flex-direction:row !important; align-items:center !important;
- justify-content:center !important; gap:5px !important;
- width:100% !important; min-width:0 !important; min-height:62px !important;
- box-sizing:border-box !important; padding:5px 3px !important; margin:0 !important;
+ display:flex !important; align-items:center !important; justify-content:center !important;
+ gap:4px !important; width:100% !important; min-width:0 !important;
+ min-height:62px !important; box-sizing:border-box !important;
+ padding:5px 3px !important; margin:0 !important;
  border:1.5px solid rgba(150,190,200,.42) !important; border-radius:13px !important;
  background:linear-gradient(145deg,#142d37,#10232c) !important;
- overflow:hidden !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:first-child {
- position:static !important; flex:0 0 17px !important; width:17px !important;
- min-width:17px !important; height:auto !important; overflow:visible !important; clip:auto !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label > div:last-child {
- display:block !important; flex:1 1 0% !important; width:0 !important;
- min-width:0 !important; overflow:hidden !important;
+ overflow:hidden !important; white-space:nowrap !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
- color:#e8f1f4 !important; font-size:clamp(.62rem,2.5vw,.82rem) !important;
+ color:#e8f1f4 !important; font-size:clamp(.58rem,2.4vw,.78rem) !important;
  font-weight:800 !important; text-align:center !important; line-height:1.1 !important;
  margin:0 !important; padding:0 !important; white-space:nowrap !important;
- overflow:hidden !important; text-overflow:clip !important; letter-spacing:-.02em !important;
+ overflow:hidden !important; text-overflow:clip !important; letter-spacing:-.025em !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
  background:linear-gradient(145deg,#15534f,#123744) !important;
@@ -268,10 +247,8 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
- .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] { flex-wrap:nowrap !important; gap:4px !important; }
- .st-key-xsmn-station-row [data-testid="column"] { flex:1 1 0% !important; min-width:0 !important; }
  [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label { padding:5px 2px !important; gap:3px !important; }
- [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:clamp(.58rem,2.25vw,.72rem) !important; }
+ [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:clamp(.54rem,2.1vw,.68rem) !important; }
 }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
@@ -428,8 +405,32 @@ try:
     missing_stations = [label for label in scheduled if station_map[label] is None]
     for missing in missing_stations:
         st.warning(f"Chưa tìm thấy dữ liệu tỉnh: {missing}")
+    # Éặt lưới CSS theo đúng số đài của thứ đang chọn; tránh Streamlit tự xếp dọc trên mobile.
+    station_col_count = len(valid_stations)
+    st.markdown(
+        f"""
+        <style>
+        .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {{
+            display:grid !important;
+            grid-template-columns:repeat({station_col_count}, minmax(0, 1fr)) !important;
+            grid-auto-flow:row !important;
+            gap:6px !important;
+            width:100% !important;
+            align-items:stretch !important;
+        }}
+        .st-key-xsmn-station-row [data-testid="column"] {{
+            width:auto !important; min-width:0 !important; max-width:none !important;
+            flex:none !important; padding:0 !important; margin:0 !important;
+        }}
+        .st-key-xsmn-station-row [data-testid="column"] > div {{
+            width:100% !important; min-width:0 !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     with st.container(key="xsmn-station-row"):
-        cols = st.columns(len(valid_stations))
+        cols = st.columns(len(valid_stations), gap="small")
         for idx, (label, actual) in enumerate(valid_stations):
             with cols[idx]:
                 checked = st.checkbox(
