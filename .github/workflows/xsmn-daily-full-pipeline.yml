@@ -37,22 +37,18 @@ jobs:
           python-version: "3.12"
       - name: Install pipeline dependencies
         run: python -m pip install --upgrade pandas requests beautifulsoup4
-      - name: Prefetch from 16:20; begin full validation at 16:45 and recover until complete
+      - name: Prefetch from 16:20; validate and finish by 17:00
         shell: bash
         run: |
           set -uo pipefail
           mkdir -p xsmn_383_probe xsmn_run_status
           validation_start=$(date -d '16:45:00' +%s)
           deadline=$(date -d '17:00:00' +%s)
-          recovery_deadline=$(date -d '23:00:00' +%s)
           scheduled=0
           if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then scheduled=1; fi
-          reported=0
           attempt=0
           while true; do
             now=$(date +%s)
-            # At 16:20, fetch the live feed early and refresh it every five minutes.
-            # Do not run the 21-station / nine-prize validation before 16:45.
             if (( scheduled == 1 && now < validation_start )); then
               attempt=$((attempt + 1))
               rm -f xsmn_383_probe/region_sample.json
@@ -70,6 +66,11 @@ jobs:
               fi
               continue
             fi
+            now=$(date +%s)
+            if (( scheduled == 1 && now >= deadline )); then
+              echo '::error::17:00 deadline reached before feed validation passed; canonical dataset unchanged.'
+              exit 1
+            fi
             attempt=$((attempt + 1))
             rm -f xsmn_383_probe/region_sample.json
             if curl --fail --silent --show-error --location --max-time 35 https://api.383.im/lottery/region/mn.json -o xsmn_383_probe/region_sample.json &&
@@ -79,50 +80,18 @@ jobs:
             fi
             now=$(date +%s)
             if (( scheduled == 0 && attempt >= 2 )); then
-              echo '::error::Non-scheduled validation run could not validate the latest available feed after two attempts.'
+              echo '::error::Manual validation run failed after two attempts.'
               exit 1
             fi
-            if (( scheduled == 1 && now >= recovery_deadline )); then
-              echo '::error::Scheduled recovery window ended at 23:00; canonical dataset remains unchanged.'
+            if (( scheduled == 1 && now >= deadline )); then
+              echo '::error::17:00 deadline reached; feed is incomplete or validation failed. Canonical dataset unchanged.'
               exit 1
             fi
-            if (( now >= deadline && reported == 0 )); then
-              echo "::warning::17:00 report: feed is not yet complete and validated; continuing recovery."
-              python - <<'PY'
-          import json
-          from datetime import datetime
-          from zoneinfo import ZoneInfo
-          from pathlib import Path
-          p={"reported_at_vietnam":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
-             "deadline":"17:00 Asia/Ho_Chi_Minh","status":"INCOMPLETE_AT_DEADLINE",
-             "canonical_dataset_updated":False,
-             "message":"Chưa đủ dữ liệu lúc 17:00; pipeline tiếp tục thử lại, bản chuẩn cũ được giữ nguyên."}
-          Path("xsmn_run_status/17-00-status.json").write_text(json.dumps(p,ensure_ascii=False,indent=2),encoding="utf-8")
-          PY
-              reported=1
-            fi
-            sleep 300
+            remaining=$((deadline - now))
+            sleep_for=300
+            if (( remaining < sleep_for )); then sleep_for=$remaining; fi
+            if (( sleep_for > 0 )); then sleep "$sleep_for"; fi
           done
-      - name: Report deadline status at 17:00 and continue late-result recovery
-        if: always()
-        shell: bash
-        run: |
-          if [ "${XSMN_FEED_PASS:-}" != "1" ]; then
-            echo "::warning::17:00 report: XSMN data is not yet complete and validated. Previous canonical dataset remains unchanged; recovery is required."
-            mkdir -p xsmn_run_status
-            python - <<'PY'
-          import json
-          from datetime import datetime
-          from zoneinfo import ZoneInfo
-          from pathlib import Path
-          p={"reported_at_vietnam":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
-             "deadline":"17:00 Asia/Ho_Chi_Minh","status":"INCOMPLETE_AT_DEADLINE",
-             "canonical_dataset_updated":False,
-             "message":"Chưa đủ dữ liệu hoặc chưa vượt qua kiểm định lúc 17:00. Giữ nguyên bản chuẩn cũ; cần tiếp tục lấy dữ liệu và kiểm tra lại."}
-          Path("xsmn_run_status/17-00-status.json").write_text(json.dumps(p,ensure_ascii=False,indent=2),encoding="utf-8")
-          print(json.dumps(p,ensure_ascii=False,indent=2))
-          PY
-          fi
       - name: Audit all quarterly five-year archive files
         run: |
           python scripts/audit_xsmn_archive.py
@@ -176,42 +145,46 @@ jobs:
             git commit -m "Publish verified daily XSMN five-year dataset"
             git push
           fi
-      - name: Write final status report for user
+      - name: Report only failures at or after the 17:00 deadline
         if: always()
         shell: bash
         run: |
           mkdir -p xsmn_run_status
           python - <<'PY'
-          import json, os
+          import json, os, subprocess
           from datetime import datetime
           from zoneinfo import ZoneInfo
           from pathlib import Path
+          now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
           status = {
-            "reported_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
-            "workflow_job_status": os.environ.get("JOB_STATUS", "see GitHub Actions run"),
-            "canonical_dataset_updated": Path("data/xsmn_5y_canonical.csv").exists() and Path("data/xsmn_5y_canonical.json").exists(),
-            "note": "Nếu không PASS, giữ nguyên bản dữ liệu chuẩn trước đó. Mở các báo cáo và log của run để xác định phần còn thiếu rồi hoàn thiện; không tự đánh dấu hoàn tất."
+            "reported_at_vietnam": now.isoformat(),
+            "deadline": "17:00 Asia/Ho_Chi_Minh",
+            "workflow_job_status": os.environ.get("JOB_STATUS", "unknown"),
+            "canonical_dataset_updated": False,
+            "rule": "No user-facing failure report when all required work finishes successfully by 17:00. If any required step fails or the deadline is missed, record exact failed stage and evidence.",
           }
-          checks = {}
-          for name, path in {
-            "archive": "xsmn_audit/summary.json",
-            "normalization": "xsmn_5y_normalized/normalization_report.json",
-            "independent_source": "xsmn_independent_audit/today_comparison.json",
-            "corrections": "xsmn_5y_normalized/reconciliation_report.json"
-          }.items():
-            p=Path(path)
-            if p.exists():
-              try: checks[name]=json.loads(p.read_text(encoding="utf-8"))
-              except Exception as e: checks[name]={"read_error":str(e)}
-            else: checks[name]={"status":"NOT_RUN_OR_NO_REPORT"}
-          status["checks"]=checks
-          passed=all(isinstance(v,dict) and v.get("status")=="PASS" for k,v in checks.items() if k in ("normalization","independent_source","corrections"))
-          status["overall_status"]="PASS" if passed and Path("data/xsmn_5y_canonical.csv").exists() else "INCOMPLETE_NEEDS_FOLLOW_UP"
-          Path("xsmn_run_status/final-status.json").write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding="utf-8")
-          print(json.dumps(status,ensure_ascii=False,indent=2))
+          try:
+            status["canonical_dataset_updated"] = subprocess.run(
+              ["git", "diff", "--quiet", "--", "data/xsmn_5y_canonical.csv", "data/xsmn_5y_canonical.json"]
+            ).returncode == 1
+          except Exception:
+            pass
+          failed = os.environ.get("JOB_STATUS") != "success"
+          if failed:
+            status["overall_status"] = "ERROR_NEEDS_PROCESS_REVIEW"
+            status["message"] = "Quy trình không hoàn tất đúng hạn hoặc có bước lỗi. Cần xem log bước lỗi và chuẩn hóa cách xử lý; dữ liệu chuẩn cũ phải được giữ nguyên nếu chưa PASS."
+            status["failed_stage"] = os.environ.get("FAILED_STEP", "See failed step in GitHub Actions job log")
+            Path("xsmn_run_status/failure-after-deadline.json").write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding="utf-8")
+            print("::error::XSMN pipeline failed or missed the 17:00 completion deadline; inspect failure report.")
+            print(json.dumps(status,ensure_ascii=False,indent=2))
+          else:
+            status["overall_status"] = "PASS"
+            status["message"] = "Hoàn tất thành công; không cần gửi báo cáo riêng."
+            print("XSMN PASS: completed; no separate failure report.")
           PY
         env:
           JOB_STATUS: ${{ job.status }}
+          FAILED_STEP: ${{ steps.*.outcome }}
       - name: Preserve full run evidence
         if: always()
         uses: actions/upload-artifact@v4
