@@ -285,7 +285,7 @@ try:
             value=min(30, max_pair_periods),
             key="loto_pair_periods",
         )
-        st.markdown("### Tần suất xuất hiện")
+        st.markdown("### Thống kê hai số")
         # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
         freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
         st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
