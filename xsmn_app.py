@@ -91,7 +91,8 @@ hr { border-color:var(--line); }
 .st-key-hidden-xsmn-prize,
 .st-key-hidden-xsmn-data,
 .st-key-hidden-xsmn-coverage,
-.st-key-hidden-xsmn-archive-status { display:none !important; }
+.st-key-hidden-xsmn-archive-status,
+.st-key-hidden-xsmn-algo-pairs { display:none !important; }
 @media (max-width: 700px) {
  .block-container { padding:1rem .8rem 2rem .8rem; }
  .hero-xsmn { padding:20px 18px; border-radius:17px; }
@@ -274,6 +275,7 @@ try:
             st.caption(f"Ngày mới nhất hiện có trong kho của tỉnh này: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
         else:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
+    history = draw_history(raw, province)
     with t1:
         a, b = st.columns(2)
         with a:
@@ -286,6 +288,19 @@ try:
             st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
         st.bar_chart(freq.set_index("Số")["Số lần"])
         st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
+
+        st.markdown("### Thống kê cặp số")
+        max_pair_periods = max(1, len(history))
+        pair_periods = st.slider(
+            "Số kỳ dùng để thống kê cặp số",
+            min_value=1,
+            max_value=max_pair_periods,
+            value=min(30, max_pair_periods),
+            key="loto_pair_periods",
+        )
+        pair_rows = pair_frequency(history[-pair_periods:], top=100)
+        st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
+        st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
     with st.container(key="hidden-xsmn-prize"):
@@ -305,7 +320,6 @@ try:
             st.dataframe(archive_status, use_container_width=True, hide_index=True)
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
 
-    history = draw_history(raw, province)
     with t5:
         st.subheader("Xếp hạng thống kê 00–99")
         st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
@@ -322,9 +336,12 @@ try:
         else:
             display_ranked = ranked.drop(columns=["Điểm"], errors="ignore")
         st.dataframe(display_ranked, use_container_width=True, hide_index=True)
-        pairs = pair_frequency(history, 30)
-        st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
-        st.dataframe(pairs.head(20), use_container_width=True, hide_index=True)
+        # Giữ nguyên thống kê cặp cũ nhưng ẩn tại tab Thuật toán;
+        # bảng có bộ chọn số kỳ được hiển thị trong tab Lô tô 2 số.
+        with st.container(key="hidden-xsmn-algo-pairs"):
+            pairs = pair_frequency(history, 30)
+            st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
+            st.dataframe(pairs.head(20), use_container_width=True, hide_index=True)
         report = distribution_report(history)
         a, b, d = st.columns(3)
         a.metric("Số kỳ lịch sử", report["draws"])
