@@ -288,20 +288,27 @@ try:
             value=min(30, max_pair_periods),
             key="loto_pair_periods",
         )
+        # Dùng cùng số kỳ đã chọn để tính lại toàn bộ thống kê hai số.
+        selected_history = history[-pair_periods:]
+        selected_draws = [nums for _, nums in selected_history]
+        selected_flat = [n for nums in selected_draws for n in nums]
+        period_freq = frequency_table(selected_flat, 99, start=0)
+        period_gaps = gap_table(selected_draws, 99, start=0)
+
         st.markdown("### Thống kê hai số")
         # Chỉ ẩn cột tỷ lệ trên giao diện; giữ nguyên dữ liệu và phép tính gốc.
-        freq_display = freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
+        freq_display = period_freq.drop(columns=["Tỷ lệ (%)"], errors="ignore")
         st.dataframe(freq_display.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Thống kê cặp số")
-        pair_rows = pair_frequency(history[-pair_periods:], top=100)
+        pair_rows = pair_frequency(selected_history, top=100)
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
         st.dataframe(pair_rows.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Số lâu chưa xuất hiện")
-        st.dataframe(gaps.head(20), use_container_width=True, hide_index=True)
-        st.bar_chart(freq.set_index("Số")["Số lần"])
-        st.caption("Gan tính theo số kỳ có dữ liệu của tỉnh đã chọn, không phải số ngày lịch.")
+        st.dataframe(period_gaps.head(20), use_container_width=True, hide_index=True)
+        st.bar_chart(period_freq.set_index("Số")["Số lần"])
+        st.caption(f"Các thống kê trên được tính theo {pair_periods} kỳ gần nhất của tỉnh đã chọn.")
 
     # Khôi phục nội dung tab Theo giải; giữ nguyên nhưng ẩn khỏi giao diện.
     with st.container(key="hidden-xsmn-prize"):
