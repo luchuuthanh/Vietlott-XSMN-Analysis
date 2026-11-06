@@ -70,3 +70,26 @@ The two station-day mismatches are separate from the 66 historical archive-vs-38
 2. **2026-10-23 Vĩnh Long, G4 — confirmed 87962.** The normalized 383 supplement contains 87992, and several early result pages repeated 87992. However, the issuer's correction was reported by Tuổi Trẻ: the original 87992 was wrong because the person drawing the number held the wrong number board; the supervisory council's signed record was 87962, and the Vĩnh Long Lottery Company formally corrected the result to 87962. xskt.com.vn and other updated tables also show 87962. Source reporting the issuer's correction: https://tuoitre.vn/vu-nham-ket-qua-xo-so-vinh-long-nhung-van-de-phap-ly-dat-ra-20261106141008842.htm (alternate syndicated URL captured in search: https://waf-user-app.vngcloud.vn/vu-nham-ket-qua-xo-so-vinh-long-nhung-van-de-phap-ly-dat-ra-100261026141008842.htm). Updated result table: https://xskt.com.vn/xsvl/ngay-23-10-2026 . **Correct value: 87962.**
 
 **Required data corrections:** change Long An 2026-08-29 G2 from 76719 to 79719; change Vĩnh Long 2026-10-23 G4 item from 87992 to 87962. The user's earlier image was not accessible in the current file search, but the second correction is independently resolved by the issuer's formal correction as reported above. Preserve the original raw supplement as an immutable source snapshot and write corrected values into a reconciled/canonical layer with provenance; do not overwrite raw source evidence. Re-run the 402-day row-level comparison after applying these two corrections. Keep this QA scope separate from the 66 historical overlap discrepancies.
+
+
+## Independent supplement verification — 2026-11-06 (PASS)
+
+A complete row-level comparison of the 383.im supplement against the parsed XoSoTin daily result tables completed successfully in workflow run 42149973415.
+
+- Window: 2026-07-01 through 2026-11-05.
+- Dates requested: 128.
+- Expected station-days: 402.
+- Station-days parsed and compared: 402 / 402.
+- Exact station-day matches: 402 / 402.
+- Mismatching station-days: 0.
+- Missing source station-days: 0.
+- Prize-count mismatches: 0.
+- Matching prize numbers: 7,236 / 7,236.
+- Result: PASS.
+
+The saved source HTML confirms the daily result table was parsed (including the Vĩnh Long 23/10/2026 table, where G4 contains 87962). The normalized artifact also contains Long An 29/08/2026 G2 = 79719 and Vĩnh Long 23/10/2026 G4 = 87962. This confirms the current supplement snapshot, not every historical API snapshot.
+
+Artifact: https://github.com/luchuuthanh/Vietlott-XSMN-Analysis/actions/runs/42149973415/artifacts/13471308178
+Workflow run: https://github.com/luchuuthanh/Vietlott-XSMN-Analysis/actions/runs/42149973415
+
+The independent source is a secondary published results site, not an official issuer certification. The workflow has now been updated to use the verified parser (verify_xsmn_supplement_sources_v2.py) and retain the correction/reconciliation step for subsequent runs.
