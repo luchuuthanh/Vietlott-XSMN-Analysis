@@ -120,10 +120,16 @@ def main():
               and row[2]==correction["prize"]]
         old_matches=[i for i in base if rows[i][4]==correction["old"]]
         new_matches=[i for i in base if rows[i][4]==correction["new"]]
-        if len(base)!=1 or (len(old_matches),len(new_matches)) not in ((1,0),(0,1)):
+        # A prize can contain multiple numbers (notably G4 has seven).
+        # Identify the corrected value within that prize, rather than requiring
+        # the entire date/province/prize group to contain only one row.
+        if (len(old_matches),len(new_matches)) not in ((1,0),(0,1)):
             errors.append({"type":"documented_correction_not_unique",
                            "correction":correction,"matches":len(base),
-                           "old_matches":len(old_matches),"new_matches":len(new_matches)})
+                           "old_matches":len(old_matches),"new_matches":len(new_matches),
+                           "candidate_rows":[
+                               {"prize_order":rows[i][3],"number":rows[i][4]} for i in base
+                           ]})
             continue
         i=(old_matches or new_matches)[0]
         original=list(rows[i])
