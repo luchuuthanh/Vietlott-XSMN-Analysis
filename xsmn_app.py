@@ -196,24 +196,10 @@ hr { border-color:var(--line); }
  font-size:1.75rem !important; font-weight:900 !important; line-height:1.15 !important;
 }
 /* Tiêu đề nằm trong ô riêng; chỉ các lựa chọn ngày mới là thẻ */
+/* Radio không còn tiêu đề riêng; ẩn hẳn vùng label rỗng do Streamlit tạo */
 .st-key-xsmn_weekday [data-testid="stRadio"] > label {
- display:grid !important; place-items:center !important;
- text-align:center !important; height:88px !important; min-height:88px !important;
- box-sizing:border-box !important; padding:0 12px !important;
- margin:0 0 8px 0 !important; border:1.5px solid rgba(150,190,200,.42) !important;
- border-radius:15px !important; background:linear-gradient(145deg,#142d37,#10232c) !important;
- color:#ffffff !important; font-size:1.75rem !important; font-weight:900 !important;
- letter-spacing:.01em !important; line-height:1.15 !important;
-}
-.st-key-xsmn_weekday [data-testid="stRadio"] > label > div {
- display:grid !important; place-items:center !important;
- width:100% !important; height:100% !important; min-height:0 !important;
- margin:0 !important; padding:0 !important;
-}
-.st-key-xsmn_weekday [data-testid="stRadio"] > label p {
- color:#ffffff !important; font-size:1.75rem !important;
- font-weight:900 !important; line-height:1.15 !important;
- margin:0 !important; padding:0 !important; text-align:center !important;
+ display:none !important; height:0 !important; min-height:0 !important;
+ margin:0 !important; padding:0 !important; border:0 !important;
 }
 .st-key-xsmn_weekday [data-testid="stRadio"] [role="radiogroup"] {
  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important;
