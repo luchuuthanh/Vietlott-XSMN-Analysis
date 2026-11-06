@@ -2,7 +2,6 @@
 from datetime import date
 from pathlib import Path
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
@@ -126,13 +125,42 @@ try:
     c2.metric("Ngày có dữ liệu", len(dates))
     c3.metric("Số kết quả", len(data))
     c4.metric("Số tỉnh trong kho", raw["province"].nunique())
-    tlive, t1, t2, t3, t4, t5, t6 = st.tabs(["🔴 Kết quả trực tiếp", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
+    tlive, t1, t2, t3, t4, t5, t6 = st.tabs(["Kết quả mới nhất", "Lô tô 2 số", "Theo giải", "Dữ liệu", "Kiểm tra độ phủ", "Thuật toán", "Backtest"])
     with tlive:
-        st.subheader("Kết quả xổ số miền Nam")
-        st.caption("Bảng kết quả được nhúng từ nguồn SXMN bên ngoài. Đây không phải nguồn dữ liệu chính thức của công ty xổ số; hãy đối chiếu khi cần xác nhận.")
-        st.link_button("Mở trang kết quả trực tiếp ở tab mới", "https://sxmn.com.vn/")
-        components.iframe("https://sxmn.com.vn/", height=1050, scrolling=True)
-        st.caption("Nếu khung nhúng không hiển thị trên iPhone, dùng nút Mở trang kết quả trực tiếp ở phía trên.")
+        st.subheader(f"Kết quả XSMN — {province}")
+        st.caption("Bảng được dựng trực tiếp trong XSMN Analysis Lab từ kho dữ liệu lịch sử đã tải. Đây không phải luồng kết quả trực tiếp; ngày mới nhất phụ thuộc lần cập nhật kho dữ liệu.")
+        live_dates = sorted(data["date"].dropna().astype(str).unique(), reverse=True)
+        if live_dates:
+            latest_date = live_dates[0]
+            selected_live_date = st.selectbox(
+                "Ngày mở thưởng",
+                live_dates,
+                index=0,
+                format_func=lambda value: pd.to_datetime(value).strftime("%d/%m/%Y"),
+                key="xsmn_live_date",
+            )
+            live_result = data[data["date"].astype(str) == selected_live_date].copy()
+            live_result["number"] = live_result["number"].astype(str).str.zfill(6)
+            live_result = live_result.sort_values("prize", ascending=True)
+            m1, m2 = st.columns(2)
+            m1.metric("Ngày mở thưởng", pd.to_datetime(selected_live_date).strftime("%d/%m/%Y"))
+            m2.metric("Số kết quả", len(live_result))
+            st.dataframe(
+                live_result[["prize", "number"]].rename(
+                    columns={"prize": "Giải", "number": "Kết quả"}
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
+            st.download_button(
+                "Tải kết quả ngày này (CSV)",
+                live_result[["date", "province", "prize", "number"]].to_csv(index=False).encode("utf-8-sig"),
+                f"xsmn_{province}_{selected_live_date}.csv",
+                "text/csv",
+            )
+            st.caption(f"Ngày mới nhất hiện có trong kho của tỉnh này: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
+        else:
+            st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
     with t1:
         a, b = st.columns(2)
         with a:
