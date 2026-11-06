@@ -47,9 +47,9 @@ hr { border-color:var(--line); }
 .draw-count { min-width:72px; text-align:center; border-left:1px solid rgba(255,255,255,.13); padding-left:16px; }
 .draw-count strong { display:block; color:#65e0c0; font-size:1.65rem; line-height:1.1; }
 .draw-count span { color:#9eb7be; font-size:.72rem; }
-.prize-row { display:grid; grid-template-columns:116px minmax(0,1fr); align-items:stretch; gap:14px; padding:14px; margin:9px 0; border:1px solid rgba(148,190,199,.18); border-radius:15px; background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96)); }
+.prize-row { display:grid; grid-template-columns:116px minmax(0,1fr); align-items:center; gap:14px; padding:14px; margin:9px 0; border:1px solid rgba(148,190,199,.18); border-radius:15px; background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96)); }
 .prize-name { display:flex; align-items:center; justify-content:center; text-align:center; color:#75dfc5; font-size:.9rem; line-height:1.35; font-weight:800; letter-spacing:.035em; border-right:1px solid rgba(148,190,199,.18); padding:6px 10px 6px 2px; }
-.prize-numbers { display:flex; flex-wrap:wrap; gap:9px; align-items:center; min-width:0; }
+.prize-numbers { display:flex; flex-wrap:wrap; gap:9px; align-items:center; justify-content:center; min-width:0; }
 .number-chip { display:inline-flex; align-items:center; justify-content:center; min-width:112px; min-height:58px; padding:11px 14px; border-radius:11px; background:#1a3943; border:1px solid rgba(89,205,183,.25); color:#f0f8fa; font-size:1.32rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.075em; }
 .prize-jackpot { border-color:rgba(242,198,109,.48); background:linear-gradient(105deg,rgba(82,59,28,.55),rgba(31,43,45,.96)); padding-top:17px; padding-bottom:17px; }
 .prize-jackpot .prize-name { color:#f2c66d; }
@@ -183,12 +183,6 @@ try:
                     f'<div class="prize-numbers">{chips}</div></div>',
                     unsafe_allow_html=True,
                 )
-            st.download_button(
-                "Tải kết quả ngày này (CSV)",
-                live_result[["date", "province", "prize", "number"]].to_csv(index=False).encode("utf-8-sig"),
-                f"xsmn_{province}_{selected_live_date}.csv",
-                "text/csv",
-            )
             st.caption(f"Ngày mới nhất hiện có trong kho của tỉnh này: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
         else:
             st.warning("Chưa có ngày mở thưởng hợp lệ trong dữ liệu tỉnh đã chọn.")
