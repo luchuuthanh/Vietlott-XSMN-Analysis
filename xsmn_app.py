@@ -284,7 +284,10 @@ try:
         ranked = rank_numbers(history, method, top_k)
         if method == "gap":
             ranked = ranked.rename(columns={"Điểm": "Số lần chưa xuất hiện"})
-        st.dataframe(ranked, use_container_width=True, hide_index=True)
+            display_ranked = ranked
+        else:
+            display_ranked = ranked.drop(columns=["Điểm"], errors="ignore")
+        st.dataframe(display_ranked, use_container_width=True, hide_index=True)
         pairs = pair_frequency(history, 30)
         st.markdown("**Các cặp cùng xuất hiện nhiều nhất**")
         st.dataframe(pairs.head(20), use_container_width=True, hide_index=True)
