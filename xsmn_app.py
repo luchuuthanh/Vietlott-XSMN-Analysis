@@ -55,6 +55,17 @@ p, label, .stCaption { color:var(--muted); }
 [data-testid="stDataFrame"], [data-testid="stTable"] { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
 .stButton button, .stDownloadButton button { background:linear-gradient(100deg,#1ca98f,#35d0ae); color:#06231f; border:0; border-radius:11px; font-weight:800; }
 .stButton button:hover, .stDownloadButton button:hover { background:#6be6c9; color:#06231f; }
+
+/* Nút cập nhật kết quả trực tuyến: màu đỏ riêng */
+[class*="st-key-refresh_live_xsmn"] button {
+ background:linear-gradient(100deg,#a91424,#dc3545) !important;
+ color:#fff !important;
+ border:1px solid rgba(255,255,255,.16) !important;
+}
+[class*="st-key-refresh_live_xsmn"] button:hover {
+ background:#ef4050 !important;
+ color:#fff !important;
+}
 input, textarea, [data-baseweb="select"] > div { background:#10232c !important; border-color:var(--line) !important; border-radius:10px !important; }
 hr { border-color:var(--line); }
 
