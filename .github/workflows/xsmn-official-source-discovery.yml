@@ -1,6 +1,12 @@
-name: XSMN official-source discovery
+name: XSMN official issuer-source capture
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/xsmn-official-source-discovery.yml'
+      - 'scripts/collect_xsmn_official_notices.py'
+      - 'config/xsmn_official_sources.json'
   schedule:
     # 18:40 Vietnam time (11:40 UTC), after the usual afternoon draw window.
     - cron: "40 11 * * *"
@@ -12,14 +18,14 @@ concurrency:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install requests beautifulsoup4
-      - name: Capture result notices and original media from Council portal
+      - name: Capture notices from issuer websites and Council discovery portal
         run: python scripts/collect_xsmn_official_notices.py
       - uses: actions/upload-artifact@v4
         if: always()
