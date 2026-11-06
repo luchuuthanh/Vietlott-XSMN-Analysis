@@ -154,7 +154,7 @@ jobs:
           done
           echo '::error::17:00 deadline reached before full verification passed; canonical dataset unchanged.'
           exit 1
-          - name: Report only failures at or after the 17:00 deadline
+      - name: Report only failures at or after the 17:00 deadline
         if: always()
         shell: bash
         run: |
