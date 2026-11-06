@@ -283,8 +283,9 @@ try:
         top_k = st.slider("Số lượng số hiển thị", 5, 30, 10, key="algorithm_top_k")
         ranked = rank_numbers(history, method, top_k)
         if method == "gap":
-            ranked = ranked.rename(columns={"Điểm": "Số lần chưa xuất hiện"})
-            display_ranked = ranked
+            display_ranked = ranked.rename(columns={"Điểm": "Số lần chưa xuất hiện"})
+        elif method in {"freq_30", "freq_90", "freq_365"}:
+            display_ranked = ranked.rename(columns={"Điểm": "Số kỳ xuất hiện"})
         else:
             display_ranked = ranked.drop(columns=["Điểm"], errors="ignore")
         st.dataframe(display_ranked, use_container_width=True, hide_index=True)
