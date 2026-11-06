@@ -1,0 +1,34 @@
+name: XSMN five-year 21-province backtest
+
+on:
+  push:
+    paths:
+      - "scripts/backtest_xsmn_5y.py"
+      - "xsmn_algorithms.py"
+      - "data/xsmn_5y_canonical.csv"
+      - "data/xsmn_5y_canonical.json"
+      - ".github/workflows/xsmn-five-year-backtest.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install pandas numpy
+      - name: Run full 21-province walk-forward backtest
+        run: python scripts/backtest_xsmn_5y.py
+      - name: Upload reproducible reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: XSMN-5Y-BACKTEST-21-PROVINCES
+          path: dist/xsmn_backtest/*
+          if-no-files-found: error
+          retention-days: 90
