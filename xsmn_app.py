@@ -120,8 +120,9 @@ p, label, .stCaption { color:var(--muted); }
  border-color:#ffd0d5 !important;
 }
 .station-heading {
- display:flex; align-items:center; gap:10px;
+ display:flex; align-items:center; justify-content:center; text-align:center; gap:10px;
  margin:22px 0 10px; padding:13px 17px;
+ text-transform:uppercase;
  border:2px solid #35d0ae; border-left:7px solid #35d0ae;
  border-radius:14px;
  background:linear-gradient(100deg,#15534f,#123744 72%,#1a3544);
