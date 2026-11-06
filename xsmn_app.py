@@ -220,7 +220,7 @@ hr { border-color:var(--line); }
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
-/* Ô đài: mỗi widget chiếm trọn cột; chữ lớn và cân giữa vùng còn lại */
+/* Ô đài: 3 cột đều; checkbox cố định trái, tên đài căn giữa phần còn lại */
 .st-key-xsmn-station-row [data-testid="stHorizontalBlock"] {
  display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
  grid-auto-flow:row !important; gap:8px !important; width:100% !important;
@@ -230,39 +230,33 @@ hr { border-color:var(--line); }
  flex:none !important; padding:0 !important; margin:0 !important;
 }
 .st-key-xsmn-station-row [data-testid="column"] > div,
-.st-key-xsmn-station-row [data-testid="column"] [data-testid="stVerticalBlock"],
-.st-key-xsmn-station-row [data-testid="column"] [data-testid="stCheckbox"] {
- width:100% !important; min-width:0 !important; max-width:none !important;
-}
-[class*="st-key-xsmn_station_"] {
- display:block !important; width:100% !important; min-width:0 !important;
-}
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] {
- display:block !important; width:100% !important; min-width:0 !important;
-}
+.st-key-xsmn-station-row [data-testid="stCheckbox"],
+[class*="st-key-xsmn_station_"] { width:100% !important; min-width:0 !important; max-width:none !important; }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label {
  position:relative !important; display:flex !important; align-items:center !important;
  justify-content:center !important; width:100% !important; min-width:0 !important;
  height:68px !important; box-sizing:border-box !important;
- padding:8px 8px 8px 38px !important; margin:0 !important;
+ padding:8px 8px 8px 34px !important; margin:0 !important;
  border:2px solid rgba(150,190,200,.42) !important; border-radius:16px !important;
  background:linear-gradient(145deg,#142d37,#10232c) !important; overflow:hidden !important;
 }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > div:first-child {
- position:absolute !important; left:12px !important; top:50% !important;
+/* Streamlit đổi cấu trúc checkbox giữa các phiên bản: áp dụng cho cả span và div */
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > :first-child {
+ position:absolute !important; left:10px !important; top:50% !important;
  transform:translateY(-50%) !important; width:20px !important; min-width:20px !important;
- margin:0 !important; padding:0 !important;
+ flex:0 0 20px !important; margin:0 !important; padding:0 !important;
 }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > div:last-child {
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] > label > :last-child {
  display:flex !important; align-items:center !important; justify-content:center !important;
  flex:1 1 auto !important; width:100% !important; min-width:0 !important;
- margin:0 !important; padding:0 !important;
+ margin:0 !important; padding:0 !important; text-align:center !important;
 }
-[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p {
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p,
+[class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label span {
  color:#e8f1f4 !important; font-size:clamp(14px,2.8vw,18px) !important;
  font-weight:800 !important; text-align:center !important; line-height:1.15 !important;
  margin:0 !important; padding:0 !important; white-space:nowrap !important;
- overflow:visible !important; text-overflow:clip !important; letter-spacing:-.02em !important;
+ overflow:visible !important; text-overflow:clip !important; letter-spacing:0 !important;
 }
 [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label:has(input:checked) {
  background:linear-gradient(145deg,#15534f,#123744) !important;
@@ -272,7 +266,6 @@ hr { border-color:var(--line); }
  .st-key-xsmn_weekday [role="radiogroup"] { grid-template-columns:repeat(4,minmax(0,1fr)) !important; gap:7px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label { min-height:54px !important; padding:8px 2px !important; }
  .st-key-xsmn_weekday [role="radiogroup"] label p { font-size:.88rem !important; white-space:nowrap !important; }
- [class*="st-key-xsmn_station_"] [data-testid="stCheckbox"] label p { font-size:clamp(.54rem,2.1vw,.68rem) !important; }
 }
 /* Các mục người dùng yêu cầu ẩn: giữ nguyên nội dung/chức năng trong mã, chỉ ẩn giao diện */
 .st-key-hidden-xsmn-summary-metrics,
