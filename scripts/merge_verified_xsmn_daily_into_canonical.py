@@ -11,7 +11,7 @@ DAILY_META = Path("data/xsmn_daily_verified_2026-11-07.json")
 KEYS = ["date", "province", "prize", "prize_order"]
 COLS = ["date","province","prize","prize_order","number","number_length","last2","last2_numeric","source"]
 EXPECTED_STATIONS = {"Binh Phuoc","Hau Giang","Long An","TP. HCM"}
-EXPECTED_PRIZES = {"DB":1,"G1":1,"G2":1,"G3":2,"G4":7,"G5":1,"G6":3,"G7":1,"G8":1}
+EXPECTED_PRIZES = {"DB":4,"G1":4,"G2":4,"G3":8,"G4":28,"G5":4,"G6":12,"G7":4,"G8":4}
 
 def main():
     for p in (CANONICAL, MANIFEST, DAILY, DAILY_META):
