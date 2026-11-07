@@ -323,6 +323,19 @@ if source == "Kho lịch sử 5 năm":
             if meta.get("status") != "PASS":
                 raise ValueError("Manifest chưa xác nhận PASS")
             raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
+            # Merge separately verified daily results when the main archive pipeline
+            # has not published that draw yet. Canonical rows take precedence on overlap.
+            daily_verified = Path("data/xsmn_daily_verified_2026-11-07.csv")
+            daily_meta = Path("data/xsmn_daily_verified_2026-11-07.json")
+            if daily_verified.exists() and daily_meta.exists():
+                daily_info = json.loads(daily_meta.read_text(encoding="utf-8"))
+                if daily_info.get("status") == "PASS" and daily_info.get("actual_rows") == daily_info.get("expected_rows"):
+                    daily = pd.read_csv(daily_verified, dtype={"number": str, "last2": str})
+                    raw = pd.concat([raw, daily], ignore_index=True)
+                    raw = raw.drop_duplicates(
+                        subset=["date", "province", "prize", "prize_order"],
+                        keep="first",
+                    )
         except Exception as exc:
             st.error(f"Không đọc được bản dữ liệu chuẩn đã xuất bản: {exc}")
             st.stop()
