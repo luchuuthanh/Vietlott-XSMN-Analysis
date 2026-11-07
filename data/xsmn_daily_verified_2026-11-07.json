@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "date": "2026-11-07",
+  "station_count": 4,
+  "expected_rows": 72,
+  "actual_rows": 72,
+  "stations": [
+    "Binh Phuoc",
+    "Hau Giang",
+    "Long An",
+    "TP. HCM"
+  ],
+  "source_urls": [
+    "https://xosotin.net/ket-qua/xsmn/07-11-2026.html",
+    "https://www.xskt.net/xsmn",
+    "https://xsketqua.com/xsmn-thu-7.html",
+    "https://cvwork.vn/ket-qua-xo-so/mien-nam/07-11-2026"
+  ],
+  "verification": "All four stations and all prize values cross-checked; independent result pages agree.",
+  "caveat": "Secondary published result sources; official issuer confirmation remains authoritative."
+}
