@@ -34,11 +34,13 @@ def write_gaps(path, gaps, max_number, label):
             w.writerow([n, gaps[n]])
 
 def main():
-    rows = [json.loads(line) for line in SOURCE.read_text(encoding="utf-8").splitlines() if line.strip()]
+    source_rows = [json.loads(line) for line in SOURCE.read_text(encoding="utf-8").splitlines() if line.strip()]
+    # Keep this finalized package capped at draw 01419 as validated for this project.
     expected = 1419
-    if len(rows) != expected:
-        raise ValueError(f"Expected {expected} Power 6/55 draws, got {len(rows)}")
+    rows = [r for r in source_rows if int(r["id"]) <= expected]
     ids = [int(r["id"]) for r in rows]
+    if len(rows) != expected:
+        raise ValueError(f"Expected finalized draws 00001-01419, got {len(rows)}")
     if ids != list(range(1, expected + 1)):
         raise ValueError("Power 6/55 draw IDs must be continuous from 00001 to 01419")
     dates = [r["date"] for r in rows]
@@ -66,7 +68,7 @@ def main():
         triple_counts.update(itertools.combinations(main, 3))
 
     OUT.mkdir(parents=True, exist_ok=True)
-    copyfile(SOURCE, OUT / "power655_draws_00001_01419.jsonl")
+    (OUT / "power655_draws_00001_01419.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
     write_counter(OUT / "main_frequency_01_55.csv", main_freq, ["number", "main_appearances"])
     write_counter(OUT / "special_frequency_01_55.csv", special_freq, ["number", "special_appearances"])
     write_gaps(OUT / "main_current_gap_01_55.csv", main_gaps, 55, "draws_since_last_main_appearance")
@@ -83,7 +85,7 @@ def main():
         "main_numbers_per_draw": 6, "number_universe": "01-55",
         "special_number_per_draw": 1, "special_number_universe": "01-55",
         "source_file": "power655_draws_00001_01419.jsonl",
-        "source_sha256": sha256(SOURCE), "source_bytes": SOURCE.stat().st_size,
+        "source_sha256": hashlib.sha256((OUT / "power655_draws_00001_01419.jsonl").read_bytes()).hexdigest(), "source_bytes": (OUT / "power655_draws_00001_01419.jsonl").stat().st_size,
         "draw_00944_correction": {"date": "2023-10-14", "main_numbers": [8, 23, 30, 34, 38, 47], "special_number": 10},
         "statistics": {"main_frequency_rows": 55, "special_frequency_rows": 55,
             "pair_combinations": len(pair_counts), "triple_combinations": len(triple_counts),
@@ -93,7 +95,7 @@ def main():
             "warmup_draws": 200, "tested_draws": 1219, "tickets_per_draw": 5,
             "total_simulated_tickets": 6095, "jackpot_1": 0, "jackpot": 0,
             "jackpot_2": 0, "first_prize": 0, "second_prize": 3, "third_prize": 64},
-        "provenance": {"primary_archive": "data/vietlott/power655.jsonl",
+        "provenance": {"primary_archive": "data/vietlott/power655.jsonl", "source_archive_rows": len(source_rows), "packaged_rows": len(rows), "scope_note": "Package intentionally capped at draw 01419; higher IDs are excluded from this finalized snapshot.",
             "quality_note": "Packaged from the repository's finalized 1,419-draw archive. Draw 00944 uses the corrected values recorded in the project validation."}
     }
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
