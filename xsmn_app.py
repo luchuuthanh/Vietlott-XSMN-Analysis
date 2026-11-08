@@ -570,6 +570,7 @@ try:
                     try:
                         with st.spinner("Đang xác minh và ghi kết quả vào kho dữ liệu chuẩn..."):
                             ref_url = f"{api}/repos/{repo}/git/ref/heads/main"
+                            publish_ref_url = f"{api}/repos/{repo}/git/refs/heads/main"
                             ref_resp = requests.get(ref_url, headers=headers, timeout=30)
                             ref_resp.raise_for_status()
                             base_commit = ref_resp.json()["object"]["sha"]
@@ -636,7 +637,7 @@ try:
                                 latest_ref.raise_for_status()
                                 if latest_ref.json()["object"]["sha"] != base_commit:
                                     raise RuntimeError("Kho dữ liệu vừa thay đổi; chưa công bố tệp nào. Tải lại rồi thử lại.")
-                                publish = requests.patch(ref_url, headers=headers, json={"sha": new_commit, "force": False}, timeout=30)
+                                publish = requests.patch(publish_ref_url, headers=headers, json={"sha": new_commit, "force": False}, timeout=30)
                                 if publish.status_code == 422:
                                     raise RuntimeError("GitHub từ chối cập nhật nhánh do có thay đổi đồng thời; chưa công bố dữ liệu.")
                                 publish.raise_for_status()
