@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 import html
 import re
+import requests
 import streamlit as st
 import pandas as pd
 from analytics import frequency_table, gap_table
@@ -587,15 +588,16 @@ try:
                                 if len(matches) != 1:
                                     raise ValueError(f"Không ánh xạ được tên đài {station} duy nhất trong kho chuẩn.")
                                 canonical_station = matches[0]
-                                for _, row in group.iterrows():
-                                    number = str(row["number"])
-                                    prize = str(row["prize"])
-                                    new_rows.append({
-                                        "date": live_date.isoformat(), "province": canonical_station, "prize": prize,
-                                        "prize_order": prize_order[prize], "number": number, "number_length": len(number),
-                                        "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]),
-                                        "source": "live_sxmn_com_vn_validated"
-                                    })
+                                for prize, prize_rows in group.groupby("prize", sort=False):
+                                    for prize_index, (_, row) in enumerate(prize_rows.iterrows(), start=1):
+                                        number = str(row["number"])
+                                        prize = str(row["prize"])
+                                        new_rows.append({
+                                            "date": live_date.isoformat(), "province": canonical_station, "prize": prize,
+                                            "prize_order": prize_index, "number": number, "number_length": len(number),
+                                            "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]),
+                                            "source": "live_sxmn_com_vn_validated"
+                                        })
                             new_df = pd.DataFrame(new_rows, columns=required)
                             keys = ["date", "province", "prize", "prize_order"]
                             if new_df.duplicated(keys).any():
