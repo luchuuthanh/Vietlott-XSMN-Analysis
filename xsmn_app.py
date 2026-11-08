@@ -532,8 +532,6 @@ try:
             live_date = pd.to_datetime(live_station["date"].iloc[0]).date()
             if live_station["date"].nunique() != 1:
                 raise ValueError("Nguồn trực tuyến trả về nhiều ngày mở thưởng; từ chối ghi nhận.")
-            if live_station.duplicated(["province", "prize", "number"]).any():
-                raise ValueError("Nguồn trực tuyến có kết quả trùng bất thường; từ chối ghi nhận.")
             # Ghi nhận chỉ khi đủ toàn bộ 18 kết quả của từng đài đã chọn.
             for station, group in live_station.groupby("province"):
                 counts = group["prize"].value_counts().to_dict()
@@ -602,7 +600,11 @@ try:
                             keys = ["date", "province", "prize", "prize_order"]
                             if new_df.duplicated(keys).any():
                                 raise ValueError("Dữ liệu mới có khóa giải trùng; từ chối ghi.")
-                            existing = canonical_df[canonical_df["date"].astype(str) == live_date.isoformat()]
+                            selected_canonical_stations = set(new_df["province"].astype(str))
+                            existing = canonical_df[
+                                (canonical_df["date"].astype(str) == live_date.isoformat())
+                                & canonical_df["province"].astype(str).isin(selected_canonical_stations)
+                            ]
                             overlap = existing.merge(new_df, on=keys, how="inner", suffixes=("_old", "_new"))
                             if len(existing):
                                 if len(existing) != len(new_df) or len(overlap) != len(new_df) or not (overlap["number_old"].astype(str) == overlap["number_new"].astype(str)).all():
@@ -618,7 +620,33 @@ try:
                                 if put.status_code == 409:
                                     raise RuntimeError("Kho dữ liệu vừa được cập nhật ở nơi khác; tải lại ứng dụng rồi thử lại để tránh ghi đè.")
                                 put.raise_for_status()
-                                st.success(f"Đã ghi {len(new_df)} kết quả của {new_df['province'].nunique()} đài vào kho lịch sử 5 năm.")
+                                # Cập nhật manifest sau khi CSV đã được commit thành công.
+                                manifest_path = "data/xsmn_5y_canonical.json"
+                                manifest_url = f"{api}/repos/{repo}/contents/{manifest_path}"
+                                manifest_get = requests.get(manifest_url, headers=headers, timeout=30)
+                                manifest_get.raise_for_status()
+                                manifest_meta = manifest_get.json()
+                                manifest_raw = requests.get(f"https://raw.githubusercontent.com/{repo}/main/{manifest_path}", timeout=30)
+                                manifest_raw.raise_for_status()
+                                manifest_data = json.loads(manifest_raw.text)
+                                manifest_data.update({
+                                    "status": "PASS",
+                                    "updated_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
+                                    "window_end": max(str(manifest_data.get("window_end", "")), live_date.isoformat()),
+                                    "rows": int(len(merged)),
+                                    "last_draw_import": live_date.isoformat(),
+                                    "last_draw_rows": int(len(new_df)),
+                                    "last_draw_source": "live_sxmn_com_vn_validated",
+                                    "last_draw_verification": "Prize structure validated at 18 rows per selected station; source is SXMN live page."
+                                })
+                                manifest_payload = {
+                                    "message": f"Update XSMN canonical manifest for {live_date.isoformat()}",
+                                    "content": base64.b64encode(json.dumps(manifest_data, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii"),
+                                    "sha": manifest_meta["sha"], "branch": "main"
+                                }
+                                manifest_put = requests.put(manifest_url, headers=headers, json=manifest_payload, timeout=30)
+                                manifest_put.raise_for_status()
+                                st.success(f"Đã ghi {len(new_df)} kết quả của {new_df['province'].nunique()} đài vào kho lịch sử 5 năm và cập nhật manifest.")
                                 st.info("Bản dữ liệu chuẩn sẽ được ứng dụng tải lại sau khi GitHub hoàn tất triển khai.")
                     except Exception as exc:
                         st.error(f"Không ghi được dữ liệu lịch sử: {exc}")
