@@ -1,14 +1,10 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-07T21:45:18.306525+07:00",
+  "updated_at_vietnam": "2026-11-08T17:32:20.430797+07:00",
   "window_start": "2021-11-05",
-  "window_end": "2026-11-07",
-  "rows": 103482,
+  "window_end": "2026-11-08",
+  "rows": 103536,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Canonical five-year file includes the verified 2026-11-07 draw. Source provenance is retained per row.",
-  "last_draw_import": "2026-11-07",
-  "last_draw_rows": 72,
-  "last_draw_source": "manual_multi_source_verified",
-  "last_draw_verification": "Four independent published result pages agree; official issuer confirmation remains authoritative."
+  "note": "Only published after all gates pass."
 }
