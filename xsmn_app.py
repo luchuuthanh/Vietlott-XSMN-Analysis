@@ -510,24 +510,35 @@ try:
     if selected_nav == "🔴 Trực tuyến":
         st.subheader("Kết quả XSMN trực tuyến")
         st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
-        if st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn"):
-            st.cache_data.clear()
+        refresh_clicked = st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn")
         @st.cache_data(ttl=60, show_spinner=False)
         def _load_live_xsmn():
             return fetch_live_xsmn()
         try:
+            if refresh_clicked:
+                st.cache_data.clear()
             with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
-                live_frame, live_source = _load_live_xsmn()
+                live_frame, live_source = fetch_live_xsmn() if refresh_clicked else _load_live_xsmn()
             live_station = live_frame[live_frame["province"].astype(str).map(normalize_station_name).isin({normalize_station_name(p) for p in selected_stations})].copy()
             if live_station.empty:
                 raise ValueError("Nguồn trực tuyến chưa có kết quả cho các đài đã chọn.")
-            live_province = ", ".join(selected_stations)
-            live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
+            live_station["prize"] = live_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
             order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+            expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
+            live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
             live_station["_order"] = live_station["prize"].map(order).fillna(99)
-            live_station = live_station.sort_values("_order")
-            live_date = pd.to_datetime(live_station["date"].iloc[0]).strftime("%d/%m/%Y")
-            st.markdown(f"**{live_date} · Kết quả theo từng đài**")
+            live_station = live_station.sort_values(["province", "_order"])
+            live_date = pd.to_datetime(live_station["date"].iloc[0]).date()
+            if live_station["date"].nunique() != 1:
+                raise ValueError("Nguồn trực tuyến trả về nhiều ngày mở thưởng; từ chối ghi nhận.")
+            if live_station.duplicated(["province", "prize", "number"]).any():
+                raise ValueError("Nguồn trực tuyến có kết quả trùng bất thường; từ chối ghi nhận.")
+            # Ghi nhận chỉ khi đủ toàn bộ 18 kết quả của từng đài đã chọn.
+            for station, group in live_station.groupby("province"):
+                counts = group["prize"].value_counts().to_dict()
+                if counts != expected or len(group) != 18:
+                    raise ValueError(f"Đài {station}: chưa đủ cơ cấu 18 kết quả hoặc số giải không khớp; chưa ghi dữ liệu.")
+            st.markdown(f"**{live_date.strftime('%d/%m/%Y')} · Kết quả theo từng đài**")
             for station, station_rows in live_station.groupby("province", sort=False):
                 st.markdown(f'<div class="station-heading">{html.escape(str(station))}</div>', unsafe_allow_html=True)
                 for prize, rows in station_rows.groupby("prize", sort=False):
@@ -541,7 +552,76 @@ try:
                         f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
                         unsafe_allow_html=True,
                     )
-            st.caption("Nguồn dữ liệu: SXMN · Tự làm mới mỗi 60 giây khi mở ứng dụng.")
+            st.caption(f"Nguồn trực tuyến: {live_source} · Đủ 18 kết quả/đài · Tự làm mới mỗi 60 giây.")
+            st.divider()
+            st.markdown("**Ghi nhận kết quả vào kho lịch sử 5 năm**")
+            if st.button("Lưu kết quả đã kiểm tra vào dữ liệu lịch sử", key="save_live_xsmn"):
+                import base64
+                import json
+                import os
+                repo = "luchuuthanh/Vietlott-XSMN-Analysis"
+                token = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
+                if not token:
+                    st.error("Chưa cấu hình GITHUB_TOKEN trong Streamlit Secrets. Không có dữ liệu nào được ghi.")
+                else:
+                    api = "https://api.github.com"
+                    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+                    path = "data/xsmn_5y_canonical.csv"
+                    meta_url = f"{api}/repos/{repo}/contents/{path}"
+                    try:
+                        with st.spinner("Đang xác minh và ghi kết quả vào kho dữ liệu chuẩn..."):
+                            meta_resp = requests.get(meta_url, headers=headers, timeout=30)
+                            meta_resp.raise_for_status()
+                            file_meta = meta_resp.json()
+                            raw_resp = requests.get(f"https://raw.githubusercontent.com/{repo}/main/{path}", timeout=60)
+                            raw_resp.raise_for_status()
+                            from io import StringIO
+                            canonical_df = pd.read_csv(StringIO(raw_resp.text), dtype={"number": str, "last2": str})
+                            required = ["date", "province", "prize", "prize_order", "number", "number_length", "last2", "last2_numeric", "source"]
+                            if not set(required).issubset(canonical_df.columns):
+                                raise ValueError("Cấu trúc kho dữ liệu chuẩn không đúng; đã hủy ghi.")
+                            new_rows = []
+                            prize_order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+                            for station, group in live_station.groupby("province", sort=False):
+                                matches = canonical_df.loc[canonical_df["province"].astype(str).map(normalize_station_name) == normalize_station_name(station), "province"].drop_duplicates().tolist()
+                                if len(matches) != 1:
+                                    raise ValueError(f"Không ánh xạ được tên đài {station} duy nhất trong kho chuẩn.")
+                                canonical_station = matches[0]
+                                for _, row in group.iterrows():
+                                    number = str(row["number"])
+                                    prize = str(row["prize"])
+                                    new_rows.append({
+                                        "date": live_date.isoformat(), "province": canonical_station, "prize": prize,
+                                        "prize_order": prize_order[prize], "number": number, "number_length": len(number),
+                                        "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]),
+                                        "source": "live_sxmn_com_vn_validated"
+                                    })
+                            new_df = pd.DataFrame(new_rows, columns=required)
+                            keys = ["date", "province", "prize", "prize_order"]
+                            if new_df.duplicated(keys).any():
+                                raise ValueError("Dữ liệu mới có khóa giải trùng; từ chối ghi.")
+                            existing = canonical_df[canonical_df["date"].astype(str) == live_date.isoformat()]
+                            overlap = existing.merge(new_df, on=keys, how="inner", suffixes=("_old", "_new"))
+                            if len(existing):
+                                if len(existing) != len(new_df) or len(overlap) != len(new_df) or not (overlap["number_old"].astype(str) == overlap["number_new"].astype(str)).all():
+                                    raise ValueError("Ngày này đã có dữ liệu khác hoặc chỉ có một phần; không ghi đè kho chuẩn.")
+                                st.success("Kết quả ngày này đã được ghi nhận trước đó và khớp hoàn toàn. Không thêm dòng trùng.")
+                            else:
+                                merged = pd.concat([canonical_df[required], new_df], ignore_index=True)
+                                merged["date"] = pd.to_datetime(merged["date"], errors="raise").dt.strftime("%Y-%m-%d")
+                                merged = merged.sort_values(keys, kind="stable")
+                                csv_bytes = merged.to_csv(index=False).encode("utf-8-sig")
+                                payload = {"message": f"Record verified live XSMN draw {live_date.isoformat()}", "content": base64.b64encode(csv_bytes).decode("ascii"), "sha": file_meta["sha"], "branch": "main"}
+                                put = requests.put(meta_url, headers=headers, json=payload, timeout=90)
+                                if put.status_code == 409:
+                                    raise RuntimeError("Kho dữ liệu vừa được cập nhật ở nơi khác; tải lại ứng dụng rồi thử lại để tránh ghi đè.")
+                                put.raise_for_status()
+                                st.success(f"Đã ghi {len(new_df)} kết quả của {new_df['province'].nunique()} đài vào kho lịch sử 5 năm.")
+                                st.info("Bản dữ liệu chuẩn sẽ được ứng dụng tải lại sau khi GitHub hoàn tất triển khai.")
+                    except Exception as exc:
+                        st.error(f"Không ghi được dữ liệu lịch sử: {exc}")
+            else:
+                st.info("Chỉ ghi khi đủ 18 kết quả mỗi đài; dữ liệu thiếu, trùng hoặc xung đột sẽ bị từ chối.")
         except Exception as exc:
             st.error(f"Chưa lấy được kết quả trực tuyến: {exc}")
             st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
