@@ -711,6 +711,19 @@ try:
             st.error(f"Chưa lấy được kết quả trực tuyến: {live_error}")
             live_issue = st.session_state.get("xsmn_admin_issue")
             if live_issue:
+                try:
+                    token_for_issue = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
+                    issue_headers = {"Authorization": f"Bearer {token_for_issue}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+                    issue_check = requests.get(f"https://api.github.com/repos/luchuuthanh/Vietlott-XSMN-Analysis/issues/{live_issue['number']}", headers=issue_headers, timeout=15)
+                    issue_check.raise_for_status()
+                    if issue_check.json().get("state") == "closed":
+                        st.session_state["xsmn_resolved_error_fingerprint"] = live_issue.get("fingerprint")
+                        st.session_state.pop("xsmn_admin_issue", None)
+                        live_issue = None
+                        st.success("Admin đã xử lý và đóng báo cáo. Khung cảnh báo được gỡ.")
+                except Exception:
+                    pass
+            if live_issue:
                 st.warning(f"Báo cáo Admin #{live_issue['number']} đang được xử lý.")
                 st.markdown(f"[Mở báo cáo Admin]({live_issue['url']})")
             else:
