@@ -566,13 +566,20 @@ try:
                     api = "https://api.github.com"
                     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
                     path = "data/xsmn_5y_canonical.csv"
-                    meta_url = f"{api}/repos/{repo}/contents/{path}"
+                    manifest_path = "data/xsmn_5y_canonical.json"
                     try:
                         with st.spinner("Đang xác minh và ghi kết quả vào kho dữ liệu chuẩn..."):
+                            ref_url = f"{api}/repos/{repo}/git/ref/heads/main"
+                            ref_resp = requests.get(ref_url, headers=headers, timeout=30)
+                            ref_resp.raise_for_status()
+                            base_commit = ref_resp.json()["object"]["sha"]
+                            commit_resp = requests.get(f"{api}/repos/{repo}/git/commits/{base_commit}", headers=headers, timeout=30)
+                            commit_resp.raise_for_status()
+                            base_tree = commit_resp.json()["tree"]["sha"]
+                            meta_url = f"{api}/repos/{repo}/contents/{path}"
                             meta_resp = requests.get(meta_url, headers=headers, timeout=30)
                             meta_resp.raise_for_status()
-                            file_meta = meta_resp.json()
-                            raw_resp = requests.get(f"https://raw.githubusercontent.com/{repo}/main/{path}", timeout=60)
+                            raw_resp = requests.get(f"https://raw.githubusercontent.com/{repo}/{base_commit}/{path}", timeout=60)
                             raw_resp.raise_for_status()
                             from io import StringIO
                             canonical_df = pd.read_csv(StringIO(raw_resp.text), dtype={"number": str, "last2": str})
@@ -580,7 +587,6 @@ try:
                             if not set(required).issubset(canonical_df.columns):
                                 raise ValueError("Cấu trúc kho dữ liệu chuẩn không đúng; đã hủy ghi.")
                             new_rows = []
-                            prize_order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
                             for station, group in live_station.groupby("province", sort=False):
                                 matches = canonical_df.loc[canonical_df["province"].astype(str).map(normalize_station_name) == normalize_station_name(station), "province"].drop_duplicates().tolist()
                                 if len(matches) != 1:
@@ -590,21 +596,13 @@ try:
                                     for prize_index, (_, row) in enumerate(prize_rows.iterrows(), start=1):
                                         number = str(row["number"])
                                         prize = str(row["prize"])
-                                        new_rows.append({
-                                            "date": live_date.isoformat(), "province": canonical_station, "prize": prize,
-                                            "prize_order": prize_index, "number": number, "number_length": len(number),
-                                            "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]),
-                                            "source": "live_sxmn_com_vn_validated"
-                                        })
+                                        new_rows.append({"date": live_date.isoformat(), "province": canonical_station, "prize": prize, "prize_order": prize_index, "number": number, "number_length": len(number), "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]), "source": "live_sxmn_com_vn_validated"})
                             new_df = pd.DataFrame(new_rows, columns=required)
                             keys = ["date", "province", "prize", "prize_order"]
                             if new_df.duplicated(keys).any():
                                 raise ValueError("Dữ liệu mới có khóa giải trùng; từ chối ghi.")
-                            selected_canonical_stations = set(new_df["province"].astype(str))
-                            existing = canonical_df[
-                                (canonical_df["date"].astype(str) == live_date.isoformat())
-                                & canonical_df["province"].astype(str).isin(selected_canonical_stations)
-                            ]
+                            selected_stations = set(new_df["province"].astype(str))
+                            existing = canonical_df[(canonical_df["date"].astype(str) == live_date.isoformat()) & canonical_df["province"].astype(str).isin(selected_stations)]
                             overlap = existing.merge(new_df, on=keys, how="inner", suffixes=("_old", "_new"))
                             if len(existing):
                                 if len(existing) != len(new_df) or len(overlap) != len(new_df) or not (overlap["number_old"].astype(str) == overlap["number_new"].astype(str)).all():
@@ -614,39 +612,35 @@ try:
                                 merged = pd.concat([canonical_df[required], new_df], ignore_index=True)
                                 merged["date"] = pd.to_datetime(merged["date"], errors="raise").dt.strftime("%Y-%m-%d")
                                 merged = merged.sort_values(keys, kind="stable")
-                                csv_bytes = merged.to_csv(index=False).encode("utf-8-sig")
-                                payload = {"message": f"Record verified live XSMN draw {live_date.isoformat()}", "content": base64.b64encode(csv_bytes).decode("ascii"), "sha": file_meta["sha"], "branch": "main"}
-                                put = requests.put(meta_url, headers=headers, json=payload, timeout=90)
-                                if put.status_code == 409:
-                                    raise RuntimeError("Kho dữ liệu vừa được cập nhật ở nơi khác; tải lại ứng dụng rồi thử lại để tránh ghi đè.")
-                                put.raise_for_status()
-                                # Cập nhật manifest sau khi CSV đã được commit thành công.
-                                manifest_path = "data/xsmn_5y_canonical.json"
+                                csv_text = merged.to_csv(index=False)
                                 manifest_url = f"{api}/repos/{repo}/contents/{manifest_path}"
-                                manifest_get = requests.get(manifest_url, headers=headers, timeout=30)
-                                manifest_get.raise_for_status()
-                                manifest_meta = manifest_get.json()
-                                manifest_raw = requests.get(f"https://raw.githubusercontent.com/{repo}/main/{manifest_path}", timeout=30)
+                                manifest_meta_resp = requests.get(manifest_url, headers=headers, timeout=30)
+                                manifest_meta_resp.raise_for_status()
+                                manifest_raw = requests.get(f"https://raw.githubusercontent.com/{repo}/{base_commit}/{manifest_path}", timeout=30)
                                 manifest_raw.raise_for_status()
                                 manifest_data = json.loads(manifest_raw.text)
-                                manifest_data.update({
-                                    "status": "PASS",
-                                    "updated_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
-                                    "window_end": max(str(manifest_data.get("window_end", "")), live_date.isoformat()),
-                                    "rows": int(len(merged)),
-                                    "last_draw_import": live_date.isoformat(),
-                                    "last_draw_rows": int(len(new_df)),
-                                    "last_draw_source": "live_sxmn_com_vn_validated",
-                                    "last_draw_verification": "Prize structure validated at 18 rows per selected station; source is SXMN live page."
-                                })
-                                manifest_payload = {
-                                    "message": f"Update XSMN canonical manifest for {live_date.isoformat()}",
-                                    "content": base64.b64encode(json.dumps(manifest_data, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii"),
-                                    "sha": manifest_meta["sha"], "branch": "main"
-                                }
-                                manifest_put = requests.put(manifest_url, headers=headers, json=manifest_payload, timeout=30)
-                                manifest_put.raise_for_status()
-                                st.success(f"Đã ghi {len(new_df)} kết quả của {new_df['province'].nunique()} đài vào kho lịch sử 5 năm và cập nhật manifest.")
+                                manifest_data.update({"status": "PASS", "updated_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(), "window_end": max(str(manifest_data.get("window_end", "")), live_date.isoformat()), "rows": int(len(merged)), "last_draw_import": live_date.isoformat(), "last_draw_rows": int(len(new_df)), "last_draw_source": "live_sxmn_com_vn_validated", "last_draw_verification": "Prize structure validated at 18 rows per selected station; source is SXMN live page."})
+                                manifest_text = json.dumps(manifest_data, ensure_ascii=False, indent=2) + "\n"
+                                def create_blob(content):
+                                    response = requests.post(f"{api}/repos/{repo}/git/blobs", headers=headers, json={"content": content, "encoding": "utf-8"}, timeout=60)
+                                    response.raise_for_status()
+                                    return response.json()["sha"]
+                                csv_blob = create_blob(csv_text)
+                                manifest_blob = create_blob(manifest_text)
+                                tree_resp = requests.post(f"{api}/repos/{repo}/git/trees", headers=headers, json={"base_tree": base_tree, "tree": [{"path": path, "mode": "100644", "type": "blob", "sha": csv_blob}, {"path": manifest_path, "mode": "100644", "type": "blob", "sha": manifest_blob}]}, timeout=60)
+                                tree_resp.raise_for_status()
+                                commit_create = requests.post(f"{api}/repos/{repo}/git/commits", headers=headers, json={"message": f"Record verified live XSMN draw {live_date.isoformat()}", "tree": tree_resp.json()["sha"], "parents": [base_commit]}, timeout=60)
+                                commit_create.raise_for_status()
+                                new_commit = commit_create.json()["sha"]
+                                latest_ref = requests.get(ref_url, headers=headers, timeout=30)
+                                latest_ref.raise_for_status()
+                                if latest_ref.json()["object"]["sha"] != base_commit:
+                                    raise RuntimeError("Kho dữ liệu vừa thay đổi; chưa công bố tệp nào. Tải lại rồi thử lại.")
+                                publish = requests.patch(ref_url, headers=headers, json={"sha": new_commit, "force": False}, timeout=30)
+                                if publish.status_code == 422:
+                                    raise RuntimeError("GitHub từ chối cập nhật nhánh do có thay đổi đồng thời; chưa công bố dữ liệu.")
+                                publish.raise_for_status()
+                                st.success(f"Đã ghi đồng thời {len(new_df)} kết quả của {new_df['province'].nunique()} đài và manifest trong cùng một commit.")
                                 st.info("Bản dữ liệu chuẩn sẽ được ứng dụng tải lại sau khi GitHub hoàn tất triển khai.")
                     except Exception as exc:
                         st.error(f"Không ghi được dữ liệu lịch sử: {exc}")
