@@ -41,6 +41,25 @@ class XSMNIssuerParserTests(unittest.TestCase):
                 self.assertEqual(len(frame), 18)
                 self.assertEqual(set(frame["date"].astype(str)), {expected_date})
 
+
+    def test_tp_hcm_official_2026_11_09_exact_results(self):
+        actual = [
+            ("Giải Tám", "43"), ("Giải Bảy", "087"),
+            ("Giải Sáu", "2503 - 0433 - 7932"), ("Giải Năm", "2140"),
+            ("Giải Tư", "48948 - 06412 - 45676 - 88736 - 42886 - 44309 - 87724"),
+            ("Giải Ba", "21731 - 40052"), ("Giải Nhì", "08652"),
+            ("Giải Nhất", "25520"), ("Giải Đặc Biệt", "921440"),
+        ]
+        body = ["Thứ Hai, ngày 9-11-2026"]
+        for label, numbers in actual:
+            body.append(f"{label} | {numbers}")
+        html = "<html><body>" + "".join(f"<p>{line}</p>" for line in body) + "</body></html>"
+        frame = parse_issuer_html(html, "TP.HCM")
+        self.assertEqual(len(frame), 18)
+        jackpot = frame.loc[frame["prize"] == "ĐB", "number"].tolist()
+        self.assertEqual(jackpot, ["921440"])
+        self.assertEqual(set(frame.loc[frame["prize"] == "G1", "number"]), {"25520"})
+
     def test_rejects_missing_prize(self):
         html = html_fixture("TP.HCM", "Thứ Hai, ngày 9-11-2026").replace("<p>Giải Tư</p><p>12345 - 22345 - 32345 - 42345 - 52345 - 62345 - 72345</p>", "")
         with self.assertRaisesRegex(ValueError, "chưa cung cấp đủ"):
