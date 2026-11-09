@@ -18,4 +18,7 @@ for station, group in frame.groupby("province"):
     assert len(group) == 18, f"{station}: expected 18 rows, got {len(group)}"
     assert counts == EXPECTED, f"{station}: unexpected prize structure {counts}"
     print(f"PASS station={station} rows={len(group)} prize_counts={counts}")
+for station, group in frame.groupby("province"):
+    special = group.loc[group["prize"] == "ĐB", "number"].astype(str).tolist()
+    print(f"TOP_PRIZE station={station} numbers={special}")
 print(f"PASS live_source rows={len(frame)} date={dates[0]}")
