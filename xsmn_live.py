@@ -1,8 +1,7 @@
-"""Fetch and parse latest XSMN results into native app data."""
+"""Fetch and parse latest XSMN results with fail-closed date identification."""
 from __future__ import annotations
 
 from datetime import datetime
-from io import StringIO
 import re
 
 import pandas as pd
@@ -11,6 +10,79 @@ from bs4 import BeautifulSoup
 
 SOURCE_URL = "https://sxmn.com.vn/"
 PRIZE_LABELS = {"G8", "G7", "G6", "G5", "G4", "G3", "G2", "G1", "ĐB", "DB"}
+DATE_RE = re.compile(r"(?<!\d)(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?!\d)")
+EXPECTED = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
+
+
+def _table_draw_date(table) -> str:
+    """Read draw date only from headings immediately preceding this table; never use today's date."""
+    candidates = []
+    for heading in table.find_all_previous(["h1", "h2", "h3", "h4"], limit=4):
+        text = heading.get_text(" ", strip=True)
+        match = DATE_RE.search(text)
+        if match:
+            candidates.append(datetime.strptime("/".join(match.groups()), "%d/%m/%Y").date().isoformat())
+            break
+    if not candidates:
+        # Some source revisions put the draw date in the table's own caption.
+        caption = table.find("caption")
+        if caption:
+            match = DATE_RE.search(caption.get_text(" ", strip=True))
+            if match:
+                candidates.append(datetime.strptime("/".join(match.groups()), "%d/%m/%Y").date().isoformat())
+    if not candidates:
+        raise ValueError("Không nhận diện được ngày quay từ tiêu đề/caption của chính bảng kết quả; từ chối dùng ngày máy chủ.")
+    return candidates[0]
+
+
+def validate_live_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Validate date, station schedule, prize structure, and number width before display or sync."""
+    if frame.empty:
+        raise ValueError("Bảng kết quả trực tuyến đang trống.")
+    required = {"date", "province", "prize", "number"}
+    if not required.issubset(frame.columns):
+        raise ValueError("Thiếu cột bắt buộc trong dữ liệu trực tuyến.")
+    out = frame.copy()
+    parsed_dates = pd.to_datetime(out["date"], errors="coerce")
+    if parsed_dates.isna().any() or parsed_dates.dt.normalize().nunique() != 1:
+        raise ValueError("Ngày quay không hợp lệ hoặc bảng chứa nhiều ngày.")
+    draw_date = parsed_dates.dt.date.iloc[0]
+    schedule = {
+        0: {"TP.HCM", "Đồng Tháp", "Cà Mau"},
+        1: {"Bến Tre", "Vũng Tàu", "Bạc Liêu"},
+        2: {"Đồng Nai", "Cần Thơ", "Sóc Trăng"},
+        3: {"Tây Ninh", "An Giang", "Bình Thuận"},
+        4: {"Vĩnh Long", "Bình Dương", "Trà Vinh"},
+        5: {"TP.HCM", "Long An", "Bình Phước", "Hậu Giang"},
+        6: {"Tiền Giang", "Kiên Giang", "Đà Lạt"},
+    }
+    import unicodedata
+    def norm(value):
+        value = str(value).strip().casefold().replace("đ", "d")
+        value = unicodedata.normalize("NFKD", value)
+        return re.sub(r"[^a-z0-9]+", "", "".join(c for c in value if not unicodedata.combining(c)))
+    expected_stations = {norm(x) for x in schedule[draw_date.weekday()]}
+    actual_stations = {norm(x) for x in out["province"].dropna().unique()}
+    if not actual_stations or not actual_stations.issubset(expected_stations):
+        raise ValueError(f"Tên đài không khớp lịch mở thưởng ngày {draw_date.strftime('%d/%m/%Y')}: {', '.join(map(str, out['province'].dropna().unique()))}.")
+    out["prize"] = out["prize"].astype(str).str.strip().str.upper().replace({"DB": "ĐB"})
+    if not set(out["prize"]).issubset(set(EXPECTED)):
+        raise ValueError("Có nhãn giải không hợp lệ.")
+    digit_width = {"ĐB": 6, "G1": 5, "G2": 5, "G3": 5, "G4": 5, "G5": 4, "G6": 4, "G7": 3, "G8": 2}
+    normalized_numbers = []
+    for _, row in out.iterrows():
+        value = str(row["number"]).strip()
+        if not value.isdigit() or len(value) != digit_width[row["prize"]]:
+            raise ValueError(f"Sai độ dài hoặc ký tự số tại {row['province']} {row['prize']}: {value!r}.")
+        normalized_numbers.append(value)
+    out["number"] = normalized_numbers
+    for station, group in out.groupby("province"):
+        counts = group["prize"].value_counts().to_dict()
+        if counts != EXPECTED or len(group) != 18:
+            raise ValueError(f"Đài {station}: cơ cấu giải không đủ/không đúng 18 kết quả.")
+    if out.duplicated(["date", "province", "prize", "number"]).any():
+        raise ValueError("Dữ liệu có kết quả trùng lặp.")
+    return out
 
 
 def fetch_live_xsmn() -> tuple[pd.DataFrame, str]:
@@ -22,7 +94,6 @@ def fetch_live_xsmn() -> tuple[pd.DataFrame, str]:
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     tables = soup.find_all("table")
-    parsed = None
     for table in tables:
         rows = []
         for tr in table.find_all("tr"):
@@ -32,42 +103,31 @@ def fetch_live_xsmn() -> tuple[pd.DataFrame, str]:
         if not rows:
             continue
         labels = {row[0].strip().upper() for row in rows if row}
-        if {"G8", "G7", "G6", "G5", "G4", "G3", "G2", "G1"} <= labels and ({"ĐB", "DB"} & labels):
-            parsed = rows
-            break
-    if not parsed:
-        raise ValueError("Không tìm thấy bảng giải XSMN trên nguồn dữ liệu.")
-
-    first_prize_row = next(
-        (i for i, row in enumerate(parsed) if row and row[0].strip().upper() == "G8"),
-        None,
-    )
-    if first_prize_row is None or first_prize_row == 0:
-        raise ValueError("Không xác định được hàng tiêu đề tỉnh trong bảng kết quả.")
-    header_index = first_prize_row - 1
-    headers = parsed[header_index]
-    provinces = [str(name).strip() for name in headers[1:] if str(name).strip()]
-    if not provinces:
-        raise ValueError("Bảng kết quả chưa có tên tỉnh.")
-
-    records = []
-    for row in parsed[header_index + 1:]:
-        if not row:
+        if not ({"G8", "G7", "G6", "G5", "G4", "G3", "G2", "G1"} <= labels and ({"ĐB", "DB"} & labels)):
             continue
-        prize = row[0].strip().upper()
-        if prize not in PRIZE_LABELS:
+        first_prize_row = next((i for i, row in enumerate(rows) if row and row[0].strip().upper() == "G8"), None)
+        if first_prize_row is None or first_prize_row == 0:
             continue
-        for idx, province in enumerate(provinces, start=1):
-            if idx >= len(row):
+        headers = rows[first_prize_row - 1]
+        provinces = [str(name).strip() for name in headers[1:] if str(name).strip()]
+        if not provinces:
+            continue
+        draw_date = _table_draw_date(table)
+        records = []
+        for row in rows[first_prize_row:]:
+            if not row:
                 continue
-            numbers = re.findall(r"(?<!\d)\d{2,6}(?!\d)", row[idx])
-            for number in numbers:
-                records.append({"province": province, "prize": "ĐB" if prize == "DB" else prize, "number": number})
-
-    if not records:
-        raise ValueError("Bảng có cấu trúc nhưng chưa có kết quả số.")
-    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", soup.get_text(" ", strip=True))
-    draw_date = datetime.strptime(date_match.group(1), "%d/%m/%Y").date().isoformat() if date_match else datetime.now().date().isoformat()
-    frame = pd.DataFrame(records)
-    frame.insert(0, "date", draw_date)
-    return frame, response.url
+            prize = row[0].strip().upper()
+            if prize not in PRIZE_LABELS:
+                continue
+            for idx, province in enumerate(provinces, start=1):
+                if idx >= len(row):
+                    raise ValueError(f"Bảng kết quả thiếu cột của đài {province}.")
+                cell_text = row[idx].strip()
+                numbers = re.findall(r"(?<!\d)\d{2,6}(?!\d)", cell_text)
+                if not numbers:
+                    raise ValueError(f"Đài {province} giải {prize} chưa có số; kết quả có thể chưa quay xong.")
+                records.extend({"date": draw_date, "province": province, "prize": "ĐB" if prize == "DB" else prize, "number": number} for number in numbers)
+        frame = validate_live_frame(pd.DataFrame(records))
+        return frame, response.url
+    raise ValueError("Không tìm thấy bảng giải XSMN có đủ nhãn giải và ngày quay nhận diện được.")
