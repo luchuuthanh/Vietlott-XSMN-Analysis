@@ -381,7 +381,9 @@ try:
     weekday_names = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
     station_display_names = {normalize_station_key(name): name for names in schedule.values() for name in names}
     def display_station_name(value):
-        return station_display_names.get(normalize_station_key(value), str(value))
+        # Hỗ trợ cả tên một đài lẫn chuỗi nhiều đài trong dòng mô tả kết quả.
+        parts = [part.strip() for part in str(value).split(",")]
+        return ", ".join(station_display_names.get(normalize_station_key(part), part) for part in parts)
     today_index = (date.today().weekday())
     default_day = weekday_names[today_index]
     st.markdown(
@@ -740,7 +742,7 @@ try:
             </div>
             """, unsafe_allow_html=True)
             for station, station_rows in live_result.groupby("province", sort=False):
-                st.markdown(f'<div class="station-heading">{html.escape(str(station))}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="station-heading">{html.escape(display_station_name(station))}</div>', unsafe_allow_html=True)
                 for prize, rows in station_rows.groupby("prize", sort=False):
                     prize_label = str(prize).upper()
                     values = [html.escape(str(v)) for v in rows["number"].tolist()]
