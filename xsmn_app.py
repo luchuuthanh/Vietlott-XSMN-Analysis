@@ -708,49 +708,9 @@ try:
                 else:
                     st.info("Tự động kiểm tra đủ 18 kết quả mỗi đài; dữ liệu thiếu, trùng hoặc xung đột sẽ bị từ chối.")
             except Exception as exc:
-                import hashlib
-                import os
                 live_error = f"{type(exc).__name__}: {exc}"
-                live_fingerprint = hashlib.sha256(live_error.encode("utf-8")).hexdigest()[:12]
-                st.error(f"Chưa lấy được kết quả trực tuyến: {live_error}")
-                live_issue = st.session_state.get("xsmn_admin_issue")
-                if live_issue:
-                    try:
-                        token_for_issue = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
-                        issue_headers = {"Authorization": f"Bearer {token_for_issue}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
-                        issue_check = requests.get(f"https://api.github.com/repos/luchuuthanh/Vietlott-XSMN-Analysis/issues/{live_issue['number']}", headers=issue_headers, timeout=15)
-                        issue_check.raise_for_status()
-                        if issue_check.json().get("state") == "closed":
-                            st.session_state["xsmn_resolved_error_fingerprint"] = live_issue.get("fingerprint")
-                            st.session_state.pop("xsmn_admin_issue", None)
-                            live_issue = None
-                            st.success("Admin đã xử lý và đóng báo cáo. Khung cảnh báo được gỡ.")
-                    except Exception:
-                        pass
-                if live_issue:
-                    st.warning(f"Báo cáo Admin #{live_issue['number']} đang được xử lý.")
-                    st.markdown(f"[Mở báo cáo Admin]({live_issue['url']})")
-                else:
-                    with st.container(border=True):
-                        st.markdown("### ⚠️ Không tải được kết quả trực tuyến")
-                        st.write(live_error)
-                        st.caption("Nhấn BÁO ADMIN để gửi lỗi kỹ thuật lên hộp tiếp nhận.")
-                        if st.button("🚨 BÁO ADMIN", key=f"report_xsmn_live_{live_fingerprint}"):
-                            token = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
-                            if not token:
-                                st.error("Thiếu GITHUB_TOKEN nên chưa gửi được báo cáo.")
-                            else:
-                                api = "https://api.github.com"
-                                headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
-                                body = "\\n".join(["## Báo cáo lỗi tải kết quả XSMN", f"- Thời điểm Việt Nam: {datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).isoformat()}", f"- Lỗi: {live_error}", f"- Fingerprint: {live_fingerprint}", "Admin vui lòng kiểm tra nguồn trực tuyến và xác minh lại trước khi đóng báo cáo."])
-                                try:
-                                    response = requests.post(f"{api}/repos/luchuuthanh/Vietlott-XSMN-Analysis/issues", headers=headers, json={"title": f"[XSMN AUTO] Không tải được kết quả · {live_fingerprint}", "body": body}, timeout=30)
-                                    response.raise_for_status()
-                                    created = response.json()
-                                    st.session_state["xsmn_admin_issue"] = {"number": created["number"], "url": created["html_url"], "fingerprint": live_fingerprint}
-                                    st.rerun()
-                                except Exception as report_exc:
-                                    st.error(f"Gửi báo cáo Admin thất bại: {type(report_exc).__name__}: {report_exc}")
+                st.error(f"Kết quả trực tuyến chưa qua xác minh: {live_error}")
+                st.warning("Hệ thống đã từ chối hiển thị/ghi dữ liệu chưa xác minh. Mày vui lòng kiểm tra thủ công khi phát hiện sai lệch; không tạo nút báo Admin tại mục này.")
                 st.info("Phần lịch sử vẫn hoạt động ở tab Lịch sử kết quả.")
 
         _render_xsmn_live_section()
