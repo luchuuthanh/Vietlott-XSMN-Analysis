@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "date": "2026-11-09",
+  "province": "TP.HCM",
+  "expected_rows": 18,
+  "actual_rows": 18,
+  "source": "https://www.xskthcm.com/xskt",
+  "verification": "Official issuer result cross-checked against independent result pages",
+  "note": "Scoped correction overlay; canonical archive remains unchanged."
+}
