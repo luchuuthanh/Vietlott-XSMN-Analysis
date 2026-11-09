@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from xsmn_live import validate_live_frame
+from xsmn_live import validate_live_frame, normalize_station_key
 
 
 def make_frame(day="2026-11-09", station="TP.HCM"):
@@ -17,6 +17,12 @@ def make_frame(day="2026-11-09", station="TP.HCM"):
 
 
 class XSMNLiveValidationTests(unittest.TestCase):
+    def test_station_aliases_are_normalized_consistently(self):
+        hcm = ["TP.HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh", "Hồ Chí Minh", "HCM"]
+        dalat = ["Đà Lạt", "Da Lat", "Lâm Đồng"]
+        self.assertEqual({normalize_station_key(x) for x in hcm}, {"tphcm"})
+        self.assertEqual({normalize_station_key(x) for x in dalat}, {"dalat"})
+
     def test_accepts_valid_monday_draw(self):
         self.assertEqual(len(validate_live_frame(make_frame())), 18)
 
