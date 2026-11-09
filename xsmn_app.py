@@ -11,7 +11,7 @@ from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
-from xsmn_live import fetch_live_xsmn
+from xsmn_live import fetch_live_xsmn, normalize_station_key
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -395,13 +395,7 @@ try:
     )
     scheduled = schedule[weekday]
     def normalize_station_name(value):
-        import unicodedata
-        value = str(value).strip().casefold().replace("đ", "d")
-        value = unicodedata.normalize("NFKD", value)
-        value = "".join(ch for ch in value if not unicodedata.combining(ch))
-        value = re.sub(r"[^a-z0-9]+", " ", value).strip()
-        value = re.sub(r"^(tinh|thanh pho|tp)\\s+", "", value)
-        return value
+        return normalize_station_key(value)
 
     def resolve_station(label):
         aliases = {
