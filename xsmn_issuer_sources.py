@@ -120,6 +120,43 @@ def parse_issuer_html(html: str, station: str) -> pd.DataFrame:
     return frame
 
 
+
+def parse_issuer_html_partial(html: str, station: str) -> pd.DataFrame:
+    """Parse only numbers already published by the issuer; incomplete prizes remain absent."""
+    lines = _clean_lines(html)
+    draw_date, date_index = _date_from_lines(lines, station)
+    section = lines[date_index: date_index + 90]
+    records = []
+    for prize, labels in PRIZES:
+        for i, line in enumerate(section):
+            low = line.casefold()
+            if not any(label in low for label in labels):
+                continue
+            numbers = NUM_RE.findall(line)
+            if not numbers and i + 1 < len(section):
+                numbers = NUM_RE.findall(section[i + 1])
+            if numbers:
+                if len(numbers) > COUNT[prize] or any(len(n) != WIDTH[prize] for n in numbers):
+                    raise ValueError(f"{station}: dữ liệu tạm {prize} sai số lượng hoặc độ dài.")
+                records.extend({"date": draw_date, "province": station, "prize": prize, "number": n} for n in numbers)
+            break
+    from xsmn_live import validate_partial_live_frame
+    return validate_partial_live_frame(pd.DataFrame(records, columns=["date", "province", "prize", "number"]))
+
+
+def fetch_issuer_xsmn_partial(station: str) -> tuple[pd.DataFrame, str, str]:
+    key = normalize_station_key(station)
+    if key not in ISSUER_SOURCES:
+        raise KeyError(f"{station} không thuộc nhóm 5 nguồn nhà đài chính.")
+    official_name, url, source_id = ISSUER_SOURCES[key]
+    response = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; XSMNAnalysisLab/1.0)"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    return parse_issuer_html_partial(response.text, official_name), response.url, source_id
+
 def fetch_issuer_xsmn(station: str) -> tuple[pd.DataFrame, str, str]:
     key = normalize_station_key(station)
     if key not in ISSUER_SOURCES:
