@@ -5,6 +5,9 @@ on:
   push:
     paths:
       - "xsmn_live.py"
+      - "xsmn_issuer_sources.py"
+      - "tests/test_xsmn_live.py"
+      - "tests/test_xsmn_issuer_sources.py"
       - "xsmn_algorithms.py"
       - "xsmn_app.py"
       - "tests/test_xsmn_algorithms.py"
@@ -21,6 +24,6 @@ jobs:
       - name: Install analysis dependencies
         run: python -m pip install pandas numpy streamlit requests beautifulsoup4
       - name: Compile XSMN modules
-        run: python -m py_compile xsmn_live.py xsmn_algorithms.py xsmn_app.py
+        run: python -m py_compile xsmn_live.py xsmn_issuer_sources.py xsmn_algorithms.py xsmn_app.py
       - name: Run XSMN algorithm tests
         run: python -m unittest discover -s tests -p 'test_xsmn_*.py' -v
