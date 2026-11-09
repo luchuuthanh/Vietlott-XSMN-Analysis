@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "xsmn_live.py"\n      - "xsmn_algorithms.py"
+      - "xsmn_live.py"
+      - "xsmn_algorithms.py"
       - "xsmn_app.py"
       - "tests/test_xsmn_algorithms.py"
       - ".github/workflows/xsmn-algorithms-tests.yml"
