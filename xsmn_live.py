@@ -179,7 +179,7 @@ def fetch_live_xsmn_partial() -> tuple[pd.DataFrame, str]:
             for idx, province in enumerate(provinces, start=1):
                 if idx >= len(row):
                     continue
-                numbers = re.findall(r"(?<!\\d)\\d{2,6}(?!\\d)", row[idx].strip())
+                numbers = re.findall(r"(?<!\d)\d{2,6}(?!\d)", row[idx].strip())
                 canonical_prize = "ĐB" if prize == "DB" else prize
                 width = {"ĐB": 6, "G1": 5, "G2": 5, "G3": 5, "G4": 5, "G5": 4, "G6": 4, "G7": 3, "G8": 2}[canonical_prize]
                 for number in numbers:
