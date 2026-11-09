@@ -379,6 +379,9 @@ try:
         "Chủ nhật": ["Tiền Giang", "Kiên Giang", "Đà Lạt"],
     }
     weekday_names = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+    station_display_names = {normalize_station_key(name): name for names in schedule.values() for name in names}
+    def display_station_name(value):
+        return station_display_names.get(normalize_station_key(value), str(value))
     today_index = (date.today().weekday())
     default_day = weekday_names[today_index]
     st.markdown(
@@ -448,7 +451,7 @@ try:
         st.info("Hãy tích chọn ít nhất một đài để xem dữ liệu.")
         st.stop()
     provinces = selected_stations
-    province = ", ".join(selected_stations)
+    province = ", ".join(display_station_name(name) for name in selected_stations)
     data = raw[raw["province"].astype(str).isin(selected_stations)].copy()
     dates = sorted(data["date"].dropna().unique())
     if not dates:
@@ -537,7 +540,7 @@ try:
                         raise ValueError(f"Đài {station}: chưa đủ cơ cấu 18 kết quả hoặc số giải không khớp; chưa ghi dữ liệu.")
                 st.markdown(f"**{live_date.strftime('%d/%m/%Y')} · Kết quả theo từng đài**")
                 for station, station_rows in live_station.groupby("province", sort=False):
-                    st.markdown(f'<div class="station-heading">{html.escape(str(station))}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="station-heading">{html.escape(display_station_name(station))}</div>', unsafe_allow_html=True)
                     for prize, rows in station_rows.groupby("prize", sort=False):
                         prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
                         values = "".join(
@@ -732,7 +735,7 @@ try:
             <div class="draw-heading">
               <div><div class="draw-eyebrow">KẾT QUẢ MỞ THƯỞNG</div>
               <div class="draw-date">{date_label}</div>
-              <div class="draw-location">{html.escape(str(province))} · Miền Nam</div></div>
+              <div class="draw-location">{html.escape(display_station_name(province))} · Miền Nam</div></div>
               <div class="draw-count"><strong>{len(live_result)}</strong><span>con số</span></div>
             </div>
             """, unsafe_allow_html=True)
