@@ -11,8 +11,8 @@ from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
-from xsmn_live import fetch_live_xsmn, normalize_station_key
-from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, compare_issuer_with_secondary
+from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_station_key
+from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -542,76 +542,145 @@ try:
         key="xsmn_main_navigation",
     )
     if selected_nav == "🔴 Trực tuyến":
-        # Fragment tự chạy lại mỗi 60 giây khi người dùng đang ở tab Trực tuyến.
-        # TTL cache 60 giây khi kết hợp fragment giúp lấy dữ liệu mới mà không cần bấm nút.
-        @st.fragment(run_every=60)
+        # Chỉ tự kiểm tra mỗi 5 phút trong khung quay XSMN 16:20–17:35 (giờ Việt Nam).
+        @st.fragment(run_every=300)
         def _render_xsmn_live_section():
             st.subheader("Kết quả XSMN trực tuyến")
-            st.caption("Dữ liệu được lấy tự động từ nguồn kết quả SXMN và dựng lại bằng giao diện riêng của XSMN Analysis Lab.")
+            st.caption("Kết quả được hiển thị ngay khi nguồn công bố; chỉ dữ liệu đã xác nhận mới được ghi vào lịch sử.")
             refresh_clicked = st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn")
-            @st.cache_data(ttl=60, show_spinner=False)
-            def _load_live_xsmn():
-                return fetch_live_xsmn()
-            try:
-                if refresh_clicked:
-                    st.cache_data.clear()
-                with st.spinner("Đang lấy nguồn nhà đài và đối chiếu nguồn phụ..."):
-                    secondary_frame, secondary_url = fetch_live_xsmn() if refresh_clicked else _load_live_xsmn()
-                    live_parts = []
+            now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+            in_auto_window = time(16, 20) <= now_vn.time().replace(tzinfo=None) <= time(17, 35)
+            should_fetch = refresh_clicked or in_auto_window
+            if not should_fetch:
+                st.info("Tự kiểm tra 5 phút sẽ hoạt động từ 16:20 đến 17:35. Có thể bấm “Cập nhật kết quả” để kiểm tra thủ công.")
+                live_frame = pd.DataFrame(columns=["date", "province", "prize", "number"])
+                live_source = "Chưa lấy dữ liệu"
+                source_errors = []
+            else:
+                @st.cache_data(ttl=300, show_spinner=False)
+                def _load_secondary_partial():
+                    return fetch_live_xsmn_partial()
+                try:
+                    if refresh_clicked:
+                        st.cache_data.clear()
+                    secondary_frame, secondary_url = _load_secondary_partial()
+                    partial_parts = []
                     source_labels = []
+                    source_errors = []
+                    for selected_station in selected_stations:
+                        station_key = normalize_station_key(selected_station)
+                        try:
+                            if station_key in ISSUER_SOURCES:
+                                issuer_part, issuer_url, issuer_id = fetch_issuer_xsmn_partial(selected_station)
+                                if not issuer_part.empty:
+                                    partial_parts.append(issuer_part.assign(source_id=issuer_id))
+                                source_labels.append(f"{selected_station}: nguồn nhà đài")
+                            else:
+                                issuer_url = secondary_url
+                                issuer_id = "live_sxmn_com_vn_temporary"
+                                selected_part = secondary_frame[
+                                    secondary_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
+                                ].copy()
+                                if not selected_part.empty:
+                                    partial_parts.append(selected_part.assign(source_id=issuer_id))
+                                source_labels.append(f"{selected_station}: nguồn kết quả trực tuyến")
+                        except Exception as station_exc:
+                            source_errors.append(f"{selected_station}: {type(station_exc).__name__}: {station_exc}")
+                    live_frame = pd.concat(partial_parts, ignore_index=True) if partial_parts else pd.DataFrame(columns=["date", "province", "prize", "number", "source_id"])
+                    live_source = " | ".join(source_labels) if source_labels else "Chưa nhận được dữ liệu từ nguồn"
+                except Exception as fetch_exc:
+                    live_frame = pd.DataFrame(columns=["date", "province", "prize", "number", "source_id"])
+                    live_source = "Chưa lấy được nguồn kết quả"
+                    source_errors = [f"{type(fetch_exc).__name__}: {fetch_exc}"]
+
+            order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
+            expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
+            prize_labels = {"ĐB": "ĐẶC BIỆT", **{f"G{i}": f"GIẢI G{i}" for i in range(1, 9)}}
+            if not live_frame.empty:
+                live_frame["prize"] = live_frame["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
+                live_frame["number"] = live_frame.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
+                live_frame["_order"] = live_frame["prize"].map(order).fillna(99)
+                live_frame = live_frame.sort_values(["province", "_order"])
+                dates_found = pd.to_datetime(live_frame["date"], errors="coerce").dropna().dt.date.unique()
+                live_date = dates_found[0] if len(dates_found) == 1 else None
+            else:
+                live_date = None
+
+            all_complete = bool(selected_stations) and not live_frame.empty
+            for station in selected_stations:
+                station_rows = live_frame[live_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(station)] if not live_frame.empty else live_frame
+                counts = station_rows["prize"].value_counts().to_dict() if not station_rows.empty else {}
+                if len(station_rows) != 18 or any(counts.get(p, 0) != n for p, n in expected.items()):
+                    all_complete = False
+
+            heading_date = live_date.strftime("%d/%m/%Y") if live_date else "Đang chờ ngày quay"
+            st.markdown(f"**{heading_date} · Kết quả theo từng đài**")
+            spinner = '<span class="live-wait-spinner" aria-label="Đang chờ kết quả"></span>'
+            for station in selected_stations:
+                station_rows = live_frame[live_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(station)] if not live_frame.empty else live_frame
+                st.markdown(f'<div class="station-heading">{html.escape(display_station_name(station))}</div>', unsafe_allow_html=True)
+                for prize in ["ĐB", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"]:
+                    values = station_rows.loc[station_rows["prize"] == prize, "number"].astype(str).tolist() if not station_rows.empty else []
+                    slots = []
+                    for idx in range(expected[prize]):
+                        if idx < len(values):
+                            slots.append(f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(values[idx])}</span>')
+                        else:
+                            slots.append(spinner)
+                    st.markdown(
+                        f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
+                        f'<div class="prize-name">{prize_labels[prize]}</div><div class="prize-numbers">{"".join(slots)}</div></div>',
+                        unsafe_allow_html=True,
+                    )
+            st.markdown("""<style>
+            .live-wait-spinner{display:inline-block;width:17px;height:17px;border:2px solid rgba(140,170,180,.28);border-top-color:#35d0ae;border-radius:50%;animation:liveSpin .8s linear infinite;vertical-align:middle;margin:3px 8px}
+            @keyframes liveSpin{to{transform:rotate(360deg)}}
+            .prize-numbers{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}
+            </style>""", unsafe_allow_html=True)
+            st.caption(f"Nguồn hiển thị: {live_source} · Tự kiểm tra mỗi 5 phút trong khung 16:20–17:35.")
+            for source_error in source_errors:
+                st.caption(f"Nguồn chưa đọc được: {source_error}")
+
+            if not all_complete:
+                st.info("Đang cập nhật kết quả. Các số đang hiển thị là tạm thời; lịch sử 5 năm chưa thay đổi vì chưa đủ 18 kết quả hoặc chưa xác nhận nguồn.")
+                return
+
+            # Chỉ đến đây khi đã đủ 18 kết quả mỗi đài; tải lại nguồn đầy đủ và xác nhận chéo trước khi ghi.
+            try:
+                with st.spinner("Đã đủ 18 vị trí. Đang xác nhận nguồn trước khi ghi lịch sử..."):
+                    secondary_verified, secondary_url_verified = fetch_live_xsmn()
+                    verified_parts = []
+                    verified_labels = []
                     for selected_station in selected_stations:
                         station_key = normalize_station_key(selected_station)
                         if station_key in ISSUER_SOURCES:
-                            issuer_frame, issuer_url, issuer_id = fetch_issuer_xsmn(selected_station)
-                            compare_issuer_with_secondary(issuer_frame, secondary_frame, selected_station)
-                            live_parts.append(issuer_frame)
-                            source_labels.append(f"{selected_station}: nhà đài ({issuer_url}) + đối chiếu khớp")
+                            issuer_verified, issuer_url, issuer_id = fetch_issuer_xsmn(selected_station)
+                            compare_issuer_with_secondary(issuer_verified, secondary_verified, selected_station)
+                            verified_parts.append(issuer_verified.assign(source_id=issuer_id))
+                            verified_labels.append(f"{selected_station}: nhà đài + nguồn đối chiếu khớp")
                         else:
-                            secondary_station = secondary_frame[
-                                secondary_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
+                            secondary_station = secondary_verified[
+                                secondary_verified["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
                             ].copy()
                             if secondary_station.empty:
-                                raise ValueError(f"{selected_station}: nguồn hiện tại chưa có kết quả; không có dữ liệu thay thế.")
-                            live_parts.append(secondary_station)
-                            source_labels.append(f"{selected_station}: nguồn hiện tại ({secondary_url})")
-                    live_frame = pd.concat(live_parts, ignore_index=True)
-                    live_source = " | ".join(source_labels)
-                live_station = live_frame[live_frame["province"].astype(str).map(normalize_station_name).isin({normalize_station_name(p) for p in selected_stations})].copy()
-                if live_station.empty:
-                    raise ValueError("Nguồn trực tuyến chưa có kết quả cho các đài đã chọn.")
-                live_station["source_id"] = live_station["province"].map(
-                    lambda name: ISSUER_SOURCES[normalize_station_key(name)][2]
-                    if normalize_station_key(name) in ISSUER_SOURCES else "live_sxmn_com_vn_validated"
-                )
-                live_station["prize"] = live_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
-                order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
-                expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
-                live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
-                live_station["_order"] = live_station["prize"].map(order).fillna(99)
-                live_station = live_station.sort_values(["province", "_order"])
-                live_date = pd.to_datetime(live_station["date"].iloc[0]).date()
-                if live_station["date"].nunique() != 1:
-                    raise ValueError("Nguồn trực tuyến trả về nhiều ngày mở thưởng; từ chối ghi nhận.")
-                # Ghi nhận chỉ khi đủ toàn bộ 18 kết quả của từng đài đã chọn.
-                for station, group in live_station.groupby("province"):
-                    counts = group["prize"].value_counts().to_dict()
-                    if counts != expected or len(group) != 18:
-                        raise ValueError(f"Đài {station}: chưa đủ cơ cấu 18 kết quả hoặc số giải không khớp; chưa ghi dữ liệu.")
-                st.markdown(f"**{live_date.strftime('%d/%m/%Y')} · Kết quả theo từng đài**")
-                for station, station_rows in live_station.groupby("province", sort=False):
-                    st.markdown(f'<div class="station-heading">{html.escape(display_station_name(station))}</div>', unsafe_allow_html=True)
-                    for prize, rows in station_rows.groupby("prize", sort=False):
-                        prize_label = "ĐẶC BIỆT" if prize == "ĐB" else f"GIẢI {prize}"
-                        values = "".join(
-                            f'<span class="number-chip {"jackpot-chip" if prize == "ĐB" else ""}">{html.escape(v)}</span>'
-                            for v in rows["number"].tolist()
-                        )
-                        st.markdown(
-                            f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
-                            f'<div class="prize-name">{prize_label}</div><div class="prize-numbers">{values}</div></div>',
-                            unsafe_allow_html=True,
-                        )
-                st.caption(f"Nguồn trực tuyến: {live_source} · Đủ 18 kết quả/đài · Tự làm mới mỗi 60 giây.")
+                                raise ValueError(f"{selected_station}: thiếu dữ liệu nguồn xác nhận.")
+                            verified_parts.append(secondary_station.assign(source_id="live_sxmn_com_vn_validated"))
+                            verified_labels.append(f"{selected_station}: nguồn kết quả đã xác nhận")
+                    live_station = pd.concat(verified_parts, ignore_index=True)
+                    live_station["prize"] = live_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
+                    live_station["number"] = live_station.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
+                    for station, group in live_station.groupby("province"):
+                        counts = group["prize"].value_counts().to_dict()
+                        if len(group) != 18 or counts != expected:
+                            raise ValueError(f"Đài {station}: chưa đủ cơ cấu 18 kết quả.")
+                    if live_station["date"].nunique() != 1:
+                        raise ValueError("Nguồn xác nhận trả về nhiều ngày quay.")
+                    live_date = pd.to_datetime(live_station["date"].iloc[0]).date()
+                    live_source = " | ".join(verified_labels)
+                st.success("Đã xác nhận đủ 18 kết quả và đối chiếu nguồn. Cho phép đồng bộ lịch sử.")
+            except Exception as verify_exc:
+                st.warning(f"Kết quả đã hiển thị nhưng chưa được xác nhận để ghi lịch sử: {type(verify_exc).__name__}: {verify_exc}")
+                return
                 st.divider()
                 st.markdown("**Đồng bộ tự động vào kho lịch sử 5 năm**")
                 import hashlib
