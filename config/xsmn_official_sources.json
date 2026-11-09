@@ -1,12 +1,17 @@
 {
-  "region":"XSMN",
-  "verified_direct_issuer_websites":[
-    {"company":"An Giang","url":"https://xsktangiang.com.vn/","evidence_url":"https://xsktangiang.com.vn/","evidence":"Trang tự nhận là website Công ty TNHH MTV Xổ số Kiến thiết An Giang và công khai thông tin liên hệ công ty.","status":"verified_company_identity","result_parser":"pending"},
-    {"company":"Đồng Tháp","url":"https://xsktdongthap.vn/","evidence_url":"https://xsktdongthap.vn/lien-he","evidence":"Trang liên hệ tự nhận là Công ty TNHH MTV Xổ số kiến thiết Đồng Tháp và công khai địa chỉ, mã số thuế, ban biên tập.","status":"verified_company_identity","result_parser":"pending"},
-    {"company":"Long An","url":"https://www.xosolongan.vn/","evidence_url":"https://www.xosolongan.vn/","evidence":"Trang tự nhận là Công ty TNHH MTV Xổ số kiến thiết Long An và công khai thông tin liên hệ, giấy phép trang thông tin.","status":"verified_company_identity","result_parser":"pending"},
-    {"company":"TP.HCM","url":"https://www.xskthcm.com/","evidence_url":"https://www.xskthcm.com/trang/gioi-thieu/gioi-thieu.html","evidence":"Trang giới thiệu công khai tên pháp lý Công ty TNHH MTV Xổ số Kiến thiết TP.HCM và website.","status":"verified_company_identity","result_parser":"pending"}
+  "region": "XSMN",
+  "primary_issuer_sources": [
+    {"station": "TP.HCM", "url": "https://www.xskthcm.com/xskt", "source_id": "issuer_xskthcm", "active": true, "parser_status": "adapter_pending_production_test"},
+    {"station": "Vĩnh Long", "url": "https://xosovinhlong.com.vn/", "source_id": "issuer_xosovinhlong", "active": true, "parser_status": "adapter_pending_production_test"},
+    {"station": "Sóc Trăng", "url": "https://xsktsoctrang.vn/", "source_id": "issuer_xsktsoctrang", "active": true, "parser_status": "adapter_pending_production_test"},
+    {"station": "An Giang", "url": "https://xsktangiang.com.vn/ket-qua-xo-so", "source_id": "issuer_xsktangiang", "active": true, "parser_status": "adapter_pending_production_test"},
+    {"station": "Tiền Giang", "url": "https://www.xskttg.com.vn/", "source_id": "issuer_xskttg", "active": true, "parser_status": "adapter_pending_production_test"}
   ],
-  "remaining_companies":["Bạc Liêu","Bến Tre","Bình Dương","Bình Phước","Bình Thuận","Cà Mau","Cần Thơ","Đồng Nai","Hậu Giang","Kiên Giang","Lâm Đồng","Sóc Trăng","Tây Ninh","Tiền Giang","Trà Vinh","Vĩnh Long","Bà Rịa - Vũng Tàu"],
-  "discovery_hub":{"name":"Hội đồng Xổ số kiến thiết khu vực miền Nam","url":"https://xsktmiennam.vn/","role":"regional_council_information_portal","not_an_issuing_company_website":true},
-  "policy":"Chỉ xác nhận website là của công ty khi có bằng chứng trực tiếp từ trang công ty hoặc cổng thông tin nhà nước/Hội đồng. Xác minh danh tính website và xác minh parser kết quả là hai bước riêng."
+  "excluded_sources": [
+    {"station_or_region": "Cà Mau", "reason": "Nguồn trực tiếp không đọc/đối chiếu ổn định; loại khỏi danh sách nguồn chính."},
+    {"station_or_region": "Tây Ninh", "reason": "Nguồn trực tiếp không đọc/đối chiếu ổn định; loại khỏi danh sách nguồn chính."},
+    {"station_or_region": "Bình Thuận", "reason": "Nguồn trực tiếp không đọc/đối chiếu ổn định; loại khỏi danh sách nguồn chính."}
+  ],
+  "other_stations_policy": "Các đài còn lại giữ nguyên nguồn dữ liệu và quy trình kiểm tra hiện tại.",
+  "verification_policy": "Nguồn nhà đài là nguồn chính cho đúng đài/ngày quay. Chỉ chấp nhận ngày quay rõ ràng, đủ 18 kết quả, đúng độ dài từng giải và đúng lịch. Khi nguồn phụ có dữ liệu cùng ngày, mọi sai khác đều chặn đồng bộ kho chuẩn. Không ghi đè dữ liệu lịch sử đã có."
 }
