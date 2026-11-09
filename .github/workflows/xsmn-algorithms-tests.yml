@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "xsmn_algorithms.py"
+      - "xsmn_live.py"\n      - "xsmn_algorithms.py"
       - "xsmn_app.py"
       - "tests/test_xsmn_algorithms.py"
       - ".github/workflows/xsmn-algorithms-tests.yml"
@@ -20,6 +20,6 @@ jobs:
       - name: Install analysis dependencies
         run: python -m pip install pandas numpy streamlit
       - name: Compile XSMN modules
-        run: python -m py_compile xsmn_algorithms.py xsmn_app.py
+        run: python -m py_compile xsmn_live.py xsmn_algorithms.py xsmn_app.py
       - name: Run XSMN algorithm tests
-        run: python -m unittest discover -s tests -p 'test_xsmn_algorithms.py' -v
+        run: python -m unittest discover -s tests -v
