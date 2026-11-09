@@ -14,6 +14,27 @@ DATE_RE = re.compile(r"(?<!\d)(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?!\d)")
 EXPECTED = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
 
 
+def normalize_station_key(value: object) -> str:
+    """Normalize official XSMN station aliases to one stable comparison key."""
+    import unicodedata
+    text = str(value).strip().casefold().replace("đ", "d")
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    key = re.sub(r"[^a-z0-9]+", "", text)
+    aliases = {
+        "tphcm": "tphcm",
+        "tphochiminh": "tphcm",
+        "thanhphohcm": "tphcm",
+        "thanhphohochiminh": "tphcm",
+        "hochiminh": "tphcm",
+        "hochiminhcity": "tphcm",
+        "hcm": "tphcm",
+        "dalat": "dalat",
+        "lamdong": "dalat",
+    }
+    return aliases.get(key, key)
+
+
 def _table_draw_date(table) -> str:
     """Read draw date only from headings immediately preceding this table; never use today's date."""
     candidates = []
@@ -56,13 +77,8 @@ def validate_live_frame(frame: pd.DataFrame) -> pd.DataFrame:
         5: {"TP.HCM", "Long An", "Bình Phước", "Hậu Giang"},
         6: {"Tiền Giang", "Kiên Giang", "Đà Lạt"},
     }
-    import unicodedata
-    def norm(value):
-        value = str(value).strip().casefold().replace("đ", "d")
-        value = unicodedata.normalize("NFKD", value)
-        return re.sub(r"[^a-z0-9]+", "", "".join(c for c in value if not unicodedata.combining(c)))
-    expected_stations = {norm(x) for x in schedule[draw_date.weekday()]}
-    actual_stations = {norm(x) for x in out["province"].dropna().unique()}
+    expected_stations = {normalize_station_key(x) for x in schedule[draw_date.weekday()]}
+    actual_stations = {normalize_station_key(x) for x in out["province"].dropna().unique()}
     if not actual_stations or not actual_stations.issubset(expected_stations):
         raise ValueError(f"Tên đài không khớp lịch mở thưởng ngày {draw_date.strftime('%d/%m/%Y')}: {', '.join(map(str, out['province'].dropna().unique()))}.")
     out["prize"] = out["prize"].astype(str).str.strip().str.upper().replace({"DB": "ĐB"})
