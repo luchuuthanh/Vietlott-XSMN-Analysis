@@ -1,7 +1,11 @@
 """Run the production XSMN live parser against the real upstream source."""
 from __future__ import annotations
 
-import sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\nfrom xsmn_live import fetch_live_xsmn, EXPECTED
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from xsmn_live import fetch_live_xsmn, EXPECTED
 
 frame, source_url = fetch_live_xsmn()
 dates = sorted(set(frame["date"].astype(str)))
