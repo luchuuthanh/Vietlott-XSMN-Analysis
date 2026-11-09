@@ -217,7 +217,8 @@ hr { border-color:var(--line); }
  color:#e8f1f4 !important; font-size:1.12rem !important; font-weight:800 !important;
  text-align:center !important; margin:0 !important;
 }
-.st-key-xsmn_weekday [role="radiogroup"] label:has(input:checked) { background:linear-gradient(145deg,#713044,#3b2635) !important;
+.st-key-xsmn_weekday [role="radiogroup"] label:has(input:checked) {
+ background:linear-gradient(145deg,#713044,#3b2635) !important;
  border:2px solid #f04465 !important; box-shadow:0 5px 16px rgba(220,65,85,.2);
 }
 .st-key-xsmn_weekday [role="radiogroup"] label > div:first-child { display:none !important; }
@@ -469,7 +470,8 @@ try:
                     with st.container(key=card_key):
                         check_col, name_col = st.columns([1, 3], gap="small", vertical_alignment="center")
                         with check_col:
-                            checked = st.checkbox(                                " ",
+                            checked = st.checkbox(
+                                " ",
                                 value=True,
                                 key=f"xsmn_station_{weekday}_{label}",
                                 label_visibility="collapsed",
@@ -688,7 +690,8 @@ try:
                             commit_create = requests.post(f"{api}/repos/{repo}/git/commits", headers=headers, json={"message": f"Record verified live XSMN draw {live_date.isoformat()}", "tree": tree_resp.json()["sha"], "parents": [base_commit]}, timeout=60)
                             commit_create.raise_for_status()
                             new_commit = commit_create.json()["sha"]
-                            latest_ref = requests.get(ref_url, headers=headers, timeout=30)                            latest_ref.raise_for_status()
+                            latest_ref = requests.get(ref_url, headers=headers, timeout=30)
+                            latest_ref.raise_for_status()
                             if latest_ref.json()["object"]["sha"] != base_commit:
                                 raise RuntimeError("Kho dữ liệu vừa thay đổi; chưa công bố tệp nào. Ứng dụng sẽ thử lại ở lần làm mới tiếp theo.")
                             publish = requests.patch(publish_ref_url, headers=headers, json={"sha": new_commit, "force": False}, timeout=30)
@@ -907,7 +910,8 @@ try:
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
 
     if selected_nav == "Thuật toán":
-        st.subheader("Xếp hạng thống kê 00–99")        st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
+        st.subheader("Xếp hạng thống kê 00–99")
+        st.caption("Điểm chỉ mô tả dữ liệu quá khứ; không phải xác suất chắc chắn xuất hiện ở kỳ tới.")
         method = st.radio(
             "Phương pháp xếp hạng",
             ["freq_30", "freq_90", "freq_365", "gap"],
