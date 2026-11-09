@@ -76,12 +76,12 @@ def validate_live_frame(frame: pd.DataFrame) -> pd.DataFrame:
             raise ValueError(f"Sai độ dài hoặc ký tự số tại {row['province']} {row['prize']}: {value!r}.")
         normalized_numbers.append(value)
     out["number"] = normalized_numbers
+    if out.duplicated(["date", "province", "prize", "number"]).any():
+        raise ValueError("Dữ liệu có kết quả trùng lặp.")
     for station, group in out.groupby("province"):
         counts = group["prize"].value_counts().to_dict()
         if counts != EXPECTED or len(group) != 18:
             raise ValueError(f"Đài {station}: cơ cấu giải không đủ/không đúng 18 kết quả.")
-    if out.duplicated(["date", "province", "prize", "number"]).any():
-        raise ValueError("Dữ liệu có kết quả trùng lặp.")
     return out
 
 
