@@ -12,6 +12,7 @@ from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
 from xsmn_live import fetch_live_xsmn, normalize_station_key
+from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, compare_issuer_with_secondary
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -521,11 +522,34 @@ try:
             try:
                 if refresh_clicked:
                     st.cache_data.clear()
-                with st.spinner("Đang lấy kết quả XSMN mới nhất..."):
-                    live_frame, live_source = fetch_live_xsmn() if refresh_clicked else _load_live_xsmn()
+                with st.spinner("Đang lấy nguồn nhà đài và đối chiếu nguồn phụ..."):
+                    secondary_frame, secondary_url = fetch_live_xsmn() if refresh_clicked else _load_live_xsmn()
+                    live_parts = []
+                    source_labels = []
+                    for selected_station in selected_stations:
+                        station_key = normalize_station_key(selected_station)
+                        if station_key in ISSUER_SOURCES:
+                            issuer_frame, issuer_url, issuer_id = fetch_issuer_xsmn(selected_station)
+                            compare_issuer_with_secondary(issuer_frame, secondary_frame, selected_station)
+                            live_parts.append(issuer_frame)
+                            source_labels.append(f"{selected_station}: nhà đài ({issuer_url}) + đối chiếu khớp")
+                        else:
+                            secondary_station = secondary_frame[
+                                secondary_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
+                            ].copy()
+                            if secondary_station.empty:
+                                raise ValueError(f"{selected_station}: nguồn hiện tại chưa có kết quả; không có dữ liệu thay thế.")
+                            live_parts.append(secondary_station)
+                            source_labels.append(f"{selected_station}: nguồn hiện tại ({secondary_url})")
+                    live_frame = pd.concat(live_parts, ignore_index=True)
+                    live_source = " | ".join(source_labels)
                 live_station = live_frame[live_frame["province"].astype(str).map(normalize_station_name).isin({normalize_station_name(p) for p in selected_stations})].copy()
                 if live_station.empty:
                     raise ValueError("Nguồn trực tuyến chưa có kết quả cho các đài đã chọn.")
+                live_station["source_id"] = live_station["province"].map(
+                    lambda name: ISSUER_SOURCES[normalize_station_key(name)][2]
+                    if normalize_station_key(name) in ISSUER_SOURCES else "live_sxmn_com_vn_validated"
+                )
                 live_station["prize"] = live_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
                 order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
                 expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
@@ -597,7 +621,7 @@ try:
                                 for prize_index, (_, row) in enumerate(prize_rows.iterrows(), start=1):
                                     number = str(row["number"])
                                     prize = str(row["prize"])
-                                    new_rows.append({"date": live_date.isoformat(), "province": canonical_station, "prize": prize, "prize_order": prize_index, "number": number, "number_length": len(number), "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]), "source": "live_sxmn_com_vn_validated"})
+                                    new_rows.append({"date": live_date.isoformat(), "province": canonical_station, "prize": prize, "prize_order": prize_index, "number": number, "number_length": len(number), "last2": number[-2:].zfill(2), "last2_numeric": int(number[-2:]), "source": str(row.get(\"source_id\", \"live_sxmn_com_vn_validated\"))})
                         new_df = pd.DataFrame(new_rows, columns=required)
                         keys = ["date", "province", "prize", "prize_order"]
                         if new_df.duplicated(keys).any():
@@ -620,7 +644,7 @@ try:
                             manifest_raw = requests.get(f"https://raw.githubusercontent.com/{repo}/{base_commit}/{manifest_path}", timeout=30)
                             manifest_raw.raise_for_status()
                             manifest_data = json.loads(manifest_raw.text)
-                            manifest_data.update({"status": "PASS", "updated_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(), "window_end": max(str(manifest_data.get("window_end", "")), live_date.isoformat()), "rows": int(len(merged)), "last_draw_import": live_date.isoformat(), "last_draw_rows": int(len(new_df)), "last_draw_source": "live_sxmn_com_vn_validated", "last_draw_verification": "Prize structure validated at 18 rows per selected station; source is SXMN live page."})
+                            manifest_data.update({"status": "PASS", "updated_at_vietnam": datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(), "window_end": max(str(manifest_data.get("window_end", "")), live_date.isoformat()), "rows": int(len(merged)), "last_draw_import": live_date.isoformat(), "last_draw_rows": int(len(new_df)), "last_draw_source": "mixed_verified_sources", "last_draw_source_ids": sorted(set(new_df["source"].astype(str))), "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync."})
                             manifest_text = json.dumps(manifest_data, ensure_ascii=False, indent=2) + "\n"
                             def create_blob(content):
                                 response = requests.post(f"{api}/repos/{repo}/git/blobs", headers=headers, json={"content": content, "encoding": "utf-8"}, timeout=60)
