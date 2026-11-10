@@ -572,8 +572,8 @@ try:
         key="xsmn_main_navigation",
     )
     if selected_nav == "🔴 Trực tuyến":
-        # Chỉ tự kiểm tra mỗi 5 phút trong khung quay XSMN 16:20–17:35 (giờ Việt Nam).
-        @st.fragment(run_every=300)
+        # Tự kiểm tra mỗi 30 giây trong khung quay XSMN 16:20–17:35 (giờ Việt Nam).
+        @st.fragment(run_every=30)
         def _render_xsmn_live_section():
             st.subheader("Kết quả XSMN trực tuyến")
             st.caption("Kết quả được hiển thị ngay khi nguồn công bố; chỉ dữ liệu đã xác nhận mới được ghi vào lịch sử.")
@@ -582,12 +582,12 @@ try:
             in_auto_window = time(16, 20) <= now_vn.time().replace(tzinfo=None) <= time(17, 35)
             should_fetch = refresh_clicked or in_auto_window
             if not should_fetch:
-                st.info("Tự kiểm tra 5 phút sẽ hoạt động từ 16:20 đến 17:35. Có thể bấm “Cập nhật kết quả” để kiểm tra thủ công.")
+                st.info("Tự kiểm tra mỗi 30 giây sẽ hoạt động từ 16:20 đến 17:35. Có thể bấm “Cập nhật kết quả” để kiểm tra thủ công.")
                 live_frame = pd.DataFrame(columns=["date", "province", "prize", "number"])
                 live_source = "Chưa lấy dữ liệu"
                 source_errors = []
             else:
-                @st.cache_data(ttl=300, show_spinner=False)
+                @st.cache_data(ttl=30, show_spinner=False)
                 def _load_secondary_partial():
                     return fetch_live_xsmn_partial()
                 try:
@@ -667,7 +667,7 @@ try:
             @keyframes liveSpin{to{transform:rotate(360deg)}}
             .prize-numbers{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}
             </style>""", unsafe_allow_html=True)
-            st.caption(f"Nguồn hiển thị: {live_source} · Tự kiểm tra mỗi 5 phút trong khung 16:20–17:35.")
+            st.caption(f"Nguồn hiển thị: {live_source} · Tự kiểm tra mỗi 30 giây trong khung 16:20–17:35.")
             for source_error in source_errors:
                 st.caption(f"Nguồn chưa đọc được: {source_error}")
 
