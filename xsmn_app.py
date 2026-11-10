@@ -32,6 +32,33 @@ def format_prize_number(prize, number):
     return value[-digits:].zfill(digits)
 
 
+
+def safe_period_slider(label, count, default=30, key=None):
+    """Avoid Streamlit's invalid slider range when only one period is available."""
+    maximum = max(1, int(count))
+    if maximum == 1:
+        st.caption(f"{label}: hiện chỉ có 1 kỳ dữ liệu; đang dùng kỳ duy nhất.")
+        return 1
+    return st.slider(label, 1, maximum, min(int(default), maximum), key=key)
+
+
+def canonicalize_xsmn_station_names(frame):
+    """Merge historical aliases of Ho Chi Minh City so old draws are not lost."""
+    if "province" not in frame.columns:
+        return frame
+    aliases = {
+        normalize_station_key(name)
+        for name in (
+            "TP.HCM", "TP HCM", "TP Hồ Chí Minh", "Thành phố Hồ Chí Minh",
+            "Hồ Chí Minh", "Ho Chi Minh", "Ho Chi Minh City", "HCM",
+            "TP. Hồ Chí Minh", "Thanh pho Ho Chi Minh",
+        )
+    }
+    result = frame.copy()
+    mask = result["province"].astype(str).map(normalize_station_key).isin(aliases)
+    result.loc[mask, "province"] = "TP.HCM"
+    return result
+
 def suffix_statistics(frame, provinces, digits, periods, prize_scope):
     """Count unique last-N-digit results per draw for selected stations/prize scope."""
     if isinstance(provinces, str):
@@ -495,7 +522,7 @@ try:
         st.stop()
     # Giữ nguyên bộ lọc số kỳ; chỉ ẩn thanh điều khiển khỏi giao diện.
     with st.container(key="hidden-xsmn-lookback"):
-        recent_n = st.slider("Số ngày/kỳ gần nhất", 1, len(dates), min(90, len(dates)))
+        recent_n = safe_period_slider("Số ngày/kỳ gần nhất", len(dates), 90, "xsmn_recent_periods")
     chosen_dates = set(dates[-recent_n:])
     subset = data[data["date"].isin(chosen_dates)].copy()
     draws = subset.groupby("date")["last2"].apply(list).tolist()
@@ -883,10 +910,7 @@ try:
     if selected_nav == "Thống kê cặp số":
         # 3) Thống kê cặp số: giữ thuật toán hiện có và bộ chọn kỳ độc lập.
         st.markdown("### Thống kê cặp số")
-        pair_periods = st.slider(
-            "Số kỳ dùng để thống kê cặp số", 1, max(1, len(history)),
-            min(30, max(1, len(history))), key="loto_pair_periods"
-        )
+        pair_periods = safe_period_slider("Số kỳ dùng để thống kê cặp số", len(history), 30, "loto_pair_periods")
         selected_history = history[-pair_periods:]
         pair_rows = pair_frequency(selected_history, top=100)
         st.caption(f"Thống kê các cặp cùng xuất hiện trong {pair_periods} kỳ gần nhất.")
@@ -895,10 +919,7 @@ try:
     if selected_nav == "Thống kê ba số":
         # Thống kê ba số: bộ lọc và số kỳ riêng, không phụ thuộc phần hai số.
         st.markdown("### Thống kê ba số")
-        three_periods = st.slider(
-            "Số kỳ thống kê ba số", 1, max(1, len(dates)),
-            min(30, max(1, len(dates))), key="stats_three_periods"
-        )
+        three_periods = safe_period_slider("Số kỳ thống kê ba số", len(dates), 30, "stats_three_periods")
         three_scope = st.radio(
             "Chọn giải", ["G7", "Tất cả giải"],
             horizontal=True, key="stats_three_scope"
@@ -919,10 +940,7 @@ try:
     if selected_nav == "Thống kê hai số":
         # 1) Thống kê hai số: độc lập chọn số kỳ và phạm vi giải.
         st.markdown("### Thống kê hai số")
-        two_periods = st.slider(
-            "Số kỳ thống kê tần suất", 1, max(1, len(dates)),
-            min(30, max(1, len(dates))), key="stats_two_periods"
-        )
+        two_periods = safe_period_slider("Số kỳ thống kê tần suất", len(dates), 30, "stats_two_periods")
         two_scope = st.radio(
             "Chọn giải",
             ["G8", "ĐB", "Tất cả giải"],
@@ -938,10 +956,7 @@ try:
         st.dataframe(two_display.head(20), use_container_width=True, hide_index=True)
 
         st.markdown("### Số lâu chưa xuất hiện")
-        gap_periods = st.slider(
-            "Số kỳ xét số lâu chưa xuất hiện", 1, max(1, len(dates)),
-            min(30, max(1, len(dates))), key="stats_two_gap_periods"
-        )
+        gap_periods = safe_period_slider("Số kỳ xét số lâu chưa xuất hiện", len(dates), 30, "stats_two_gap_periods")
         _, two_gaps, gap_used = suffix_statistics(
             raw, selected_stations, 2, gap_periods, two_scope
         )
