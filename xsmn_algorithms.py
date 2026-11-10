@@ -40,8 +40,15 @@ def frequency_matrix(history, window: int | None = None) -> np.ndarray:
     selected = history[-window:] if window else history
     counts = np.zeros(100, dtype=float)
     for _, nums in selected:
-        for n in nums:
-            counts[n] += 1
+        for value in nums:
+            # Canonical history may contain digit strings (e.g. "08") as well as ints.
+            # NumPy arrays require integer indices; normalize defensively at this boundary.
+            try:
+                n = int(value)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= n < 100:
+                counts[n] += 1
     return counts
 
 
@@ -49,8 +56,13 @@ def gap_vector(history) -> np.ndarray:
     gaps = np.full(100, len(history), dtype=float)
     last = {}
     for i, (_, nums) in enumerate(history):
-        for n in nums:
-            last[n] = i
+        for value in nums:
+            try:
+                n = int(value)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= n < 100:
+                last[n] = i
     for n, i in last.items():
         gaps[n] = len(history) - 1 - i
     return gaps
@@ -111,7 +123,12 @@ def _rank_scores(history, method: str) -> np.ndarray:
         for _, nums in history:
             scores *= decay
             for value in nums:
-                scores[value] += 1.0
+                try:
+                    number = int(value)
+                except (TypeError, ValueError):
+                    continue
+                if 0 <= number < 100:
+                    scores[number] += 1.0
         return scores
     if method == "blend":
         f30 = frequency_matrix(history, 30)
