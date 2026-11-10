@@ -78,7 +78,7 @@ def render_group_check(frame, stations):
         st.warning("Đài chưa có đủ ít nhất 2 kỳ dữ liệu để kiểm tra.")
         return
 
-    history = [(item["date"], item["all"]) for item in draws]
+    history = [(item["date"], {int(value) for value in item["all"]}) for item in draws]
     transitions = []
     for idx in range(len(draws) - 1):
         selected = rank_numbers(history[:idx + 1], method, top_k=3)["Số"].tolist()
