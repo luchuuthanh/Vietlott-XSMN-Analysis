@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 import html
 import re
+import traceback
 import requests
 import streamlit as st
 import pandas as pd
@@ -1053,4 +1054,6 @@ try:
                                    f"xsmn_backtest_{province}.csv", "text/csv")
 except Exception as exc:
     st.error(f"Không thể phân tích dữ liệu XSMN: {exc}")
+    with st.expander("Chi tiết kỹ thuật để truy lỗi", expanded=True):
+        st.code(traceback.format_exc())
     st.info("CSV cần có các cột: date, province, prize, number.")
