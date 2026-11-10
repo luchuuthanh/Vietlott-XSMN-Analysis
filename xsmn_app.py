@@ -13,6 +13,7 @@ from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
 from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_station_key
 from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
+from xsmn_group_check import render_group_check
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -543,7 +544,7 @@ try:
     live_window_start = time(16, 20)
     live_window_end = time(17, 35)
     live_window_open = live_window_start <= vn_now < live_window_end
-    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán"]
+    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Kiểm tra 3 số"]
     if live_window_open:
         nav_options.insert(0, "🔴 Trực tuyến")
     st.markdown("""
@@ -989,6 +990,9 @@ try:
         if not archive_status.empty:
             st.dataframe(archive_status, use_container_width=True, hide_index=True)
         st.caption("Bảng này cho biết tình trạng tải từng quý; cần đối chiếu số kỳ theo lịch quay và nguồn chính thức trước khi xác nhận dữ liệu đầy đủ.")
+
+    if selected_nav == "Kiểm tra 3 số":
+        render_group_check(raw, selected_stations)
 
     if selected_nav == "Thuật toán":
         st.subheader("Xếp hạng thống kê 00–99")
