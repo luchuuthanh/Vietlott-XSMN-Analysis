@@ -4,7 +4,6 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from xsmn_algorithms import rank_numbers
 
 
 METHOD_LABELS = {
@@ -78,10 +77,35 @@ def render_group_check(frame, stations):
         st.warning("Đài chưa có đủ ít nhất 2 kỳ dữ liệu để kiểm tra.")
         return
 
-    history = [(item["date"], {int(value) for value in item["all"]}) for item in draws]
+    # Local integer-only ranking keeps this new feature isolated from NumPy index types.
+    history = [
+        {int(value) for value in item["all"] if str(value).strip().isdigit()}
+        for item in draws
+    ]
+
+    def pick_three(prior_draws, selected_method):
+        scores = [0] * 100
+        if selected_method == "gap":
+            last_seen = [-1] * 100
+            for draw_index, numbers in enumerate(prior_draws):
+                for number in numbers:
+                    last_seen[int(number)] = draw_index
+            for number in range(100):
+                scores[number] = (
+                    len(prior_draws) if last_seen[number] < 0
+                    else len(prior_draws) - 1 - last_seen[number]
+                )
+        else:
+            window = {"freq_30": 30, "freq_90": 90, "freq_365": 365}[selected_method]
+            for numbers in prior_draws[-window:]:
+                for number in numbers:
+                    scores[int(number)] += 1
+        ranked = sorted(range(100), key=lambda number: (-scores[number], number))[:3]
+        return [f"{number:02d}" for number in ranked]
+
     transitions = []
     for idx in range(len(draws) - 1):
-        selected = rank_numbers(history[:idx + 1], method, top_k=3)["Số"].tolist()
+        selected = pick_three(history[:idx + 1], method)
         selected_set = set(selected)
         target = draws[idx + 1]
         hits_g7 = sorted(selected_set & target["g7"])
