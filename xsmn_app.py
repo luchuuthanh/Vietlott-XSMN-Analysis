@@ -429,6 +429,7 @@ if raw.empty:
 try:
     if "last2" not in raw.columns:
         raw["last2"] = raw["number"].astype(str).str[-2:].astype(int)
+    raw = canonicalize_xsmn_station_names(raw)
     available_provinces = sorted(raw["province"].dropna().astype(str).unique().tolist())
     schedule = {
         "Thứ 2": ["TP.HCM", "Đồng Tháp", "Cà Mau"],
