@@ -1,14 +1,10 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-09T16:41:29.554926+07:00",
+  "updated_at_vietnam": "2026-11-10T08:55:25.244549+07:00",
   "window_start": "2021-11-05",
   "window_end": "2026-11-09",
   "rows": 103590,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Only published after all gates pass.",
-  "last_draw_import": "2026-11-09",
-  "last_draw_rows": 54,
-  "last_draw_source": "live_sxmn_com_vn_validated",
-  "last_draw_verification": "Prize structure validated at 18 rows per selected station; source is SXMN live page."
+  "note": "Only published after all gates pass."
 }
