@@ -15,13 +15,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: xsmn-daily-verified-import
+  group: xsmn-daily-verified-import-recovery-v2
   cancel-in-progress: false
 
 jobs:
   daily-import:
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 15
     env:
       TZ: Asia/Ho_Chi_Minh
       PYTHONUNBUFFERED: "1"
@@ -44,7 +44,7 @@ jobs:
             deadline=$(date -d '17:35:00' +%s)
           else
             # Manual/push recovery runs may catch up a late-published draw after the normal window.
-            deadline=$(date -d '23:59:59' +%s)
+            deadline=$(date -d '+12 minutes' +%s)
           fi
           attempt=0
           while (( $(date +%s) < deadline )); do
@@ -55,17 +55,17 @@ jobs:
             rm -f xsmn_daily_verified.csv
             if (
               set -e
-              curl --fail --silent --show-error --location --retry 2 --max-time 40 \
+              curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \
                 https://api.383.im/lottery/region/mn.json \
                 -o xsmn_383_probe/region_sample.json
-              python scripts/validate_383_xsmn_supplement.py
-              python scripts/publish_xsmn_daily_verified.py --prepare
+              timeout 60s python scripts/validate_383_xsmn_supplement.py
+              timeout 60s python scripts/publish_xsmn_daily_verified.py --prepare
               TODAY=$(date +%F)
-              python scripts/verify_xsmn_supplement_sources_v2.py \
+              timeout 120s python scripts/verify_xsmn_supplement_sources_v2.py \
                 --csv xsmn_daily_verified.csv \
                 --out xsmn_independent_audit/today_comparison.csv \
                 --start "$TODAY" --end "$TODAY"
-              python scripts/publish_xsmn_daily_verified.py --publish
+              timeout 60s python scripts/publish_xsmn_daily_verified.py --publish
             ); then
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -85,7 +85,7 @@ jobs:
               exit 1
             fi
             remaining=$((deadline - now))
-            sleep_for=180
+            sleep_for=60
             if (( remaining < sleep_for )); then sleep_for=$remaining; fi
             echo "Daily-only attempt failed; retrying in ${sleep_for}s. The five-year archive audit is not run here."
             sleep "$sleep_for"
