@@ -379,7 +379,7 @@ with st.sidebar:
                                 else:
                                     st.error(f"GitHub từ chối chạy lại ({dispatch_response.status_code}): {dispatch_response.text[:500]}")
                             except Exception as dispatch_error:
-                                st.error(fKhông thể gửi lệnh chạy lại: {type(dispatch_error).__name__}: {dispatch_error}")
+                                st.error(f"Không thể gửi lệnh chạy lại: {type(dispatch_error).__name__}: {dispatch_error}")
                 else:
                     st.caption("Đã qua hạn chót 17:30. Không cho phép ghi bổ sung sau giờ khóa lịch sử.")
             elif entered_admin_password:
