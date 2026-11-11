@@ -339,6 +339,51 @@ with st.sidebar:
                 key="xsmn_csv_upload",
             )
         st.caption("Kho lịch sử công khai: SQLite theo quý. Cửa sổ mục tiêu từ 04/11/2021.")
+
+    # Khu vực quản trị được ẩn hoàn toàn nếu chưa cấu hình mật khẩu Admin.
+    import os
+    import hmac
+    admin_password = st.secrets.get("XSMN_ADMIN_PASSWORD", os.environ.get("XSMN_ADMIN_PASSWORD", ""))
+    if admin_password:
+        with st.expander("🔐 Quản trị hệ thống", expanded=False):
+            entered_admin_password = st.text_input(
+                "Mật khẩu Admin", type="password", key="xsmn_admin_password_input"
+            )
+            admin_authenticated = bool(
+                entered_admin_password
+                and hmac.compare_digest(str(entered_admin_password), str(admin_password))
+            )
+            if admin_authenticated:
+                admin_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+                admin_deadline = admin_now.replace(hour=17, minute=30, second=0, microsecond=0)
+                if admin_now < admin_deadline:
+                    st.caption("Chỉ chạy lại xác minh và đồng bộ kết quả hôm nay; vẫn bắt buộc đủ 18 kết quả và đối chiếu nguồn.")
+                    if st.button("🛠️ ADMIN – TỰ CẬP NHẬT LỊCH SỬ", key="admin_retry_xsmn_daily", type="primary"):
+                        github_token = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
+                        if not github_token:
+                            st.error("Thiếu GITHUB_TOKEN. Chưa thể yêu cầu chạy lại quy trình.")
+                        else:
+                            dispatch_url = "https://api.github.com/repos/luchuuthanh/Vietlott-XSMN-Analysis/actions/workflows/xsmn-daily-verified-import.yml/dispatches"
+                            dispatch_headers = {
+                                "Authorization": f"Bearer {github_token}",
+                                "Accept": "application/vnd.github+json",
+                                "X-GitHub-Api-Version": "2022-11-28",
+                            }
+                            try:
+                                dispatch_response = requests.post(
+                                    dispatch_url, headers=dispatch_headers,
+                                    json={"ref": "main"}, timeout=20
+                                )
+                                if dispatch_response.status_code == 204:
+                                    st.success("Đã gửi lệnh Admin. GitHub Actions sẽ tự xác minh và chỉ ghi lịch sử nếu tất cả bước đều PASS.")
+                                else:
+                                    st.error(f"GitHub từ chối chạy lại ({dispatch_response.status_code}): {dispatch_response.text[:500]}")
+                            except Exception as dispatch_error:
+                                st.error(fKhông thể gửi lệnh chạy lại: {type(dispatch_error).__name__}: {dispatch_error}")
+                else:
+                    st.caption("Đã qua hạn chót 17:30. Không cho phép ghi bổ sung sau giờ khóa lịch sử.")
+            elif entered_admin_password:
+                st.error("Mật khẩu Admin không đúng.")
 source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
 upload = st.session_state.get("xsmn_csv_upload") if source == "Tải CSV riêng" else None
 
@@ -540,10 +585,10 @@ try:
         c3.metric("Số kết quả", len(data))
         c4.metric("Số tỉnh trong kho", raw["province"].nunique())
     # Chỉ hiển thị mục Trực tuyến và nút cập nhật trong khung giờ
-    # 16:20 đến trước 17:35 theo giờ Việt Nam.
+    # 16:20 đến trước 17:30 theo giờ Việt Nam.
     vn_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).time()
     live_window_start = time(16, 20)
-    live_window_end = time(17, 35)
+    live_window_end = time(17, 30)
     live_window_open = live_window_start <= vn_now < live_window_end
     nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Kiểm tra 3 số"]
     if live_window_open:
@@ -572,17 +617,17 @@ try:
         key="xsmn_main_navigation",
     )
     if selected_nav == "🔴 Trực tuyến":
-        # Tự kiểm tra mỗi 30 giây trong khung quay XSMN 16:20–17:35 (giờ Việt Nam).
+        # Tự kiểm tra mỗi 30 giây trong khung quay XSMN 16:20–17:30 (giờ Việt Nam).
         @st.fragment(run_every=30)
         def _render_xsmn_live_section():
             st.subheader("Kết quả XSMN trực tuyến")
             st.caption("Kết quả được hiển thị ngay khi nguồn công bố; chỉ dữ liệu đã xác nhận mới được ghi vào lịch sử.")
             refresh_clicked = st.button("↻ Cập nhật kết quả", key="refresh_live_xsmn")
             now_vn = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-            in_auto_window = time(16, 20) <= now_vn.time().replace(tzinfo=None) <= time(17, 35)
+            in_auto_window = time(16, 20) <= now_vn.time().replace(tzinfo=None) < time(17, 30)
             should_fetch = refresh_clicked or in_auto_window
             if not should_fetch:
-                st.info("Tự kiểm tra mỗi 30 giây sẽ hoạt động từ 16:20 đến 17:35. Có thể bấm “Cập nhật kết quả” để kiểm tra thủ công.")
+                st.info("Tự kiểm tra mỗi 30 giây sẽ hoạt động từ 16:20 đến 17:30. Có thể bấm “Cập nhật kết quả” để kiểm tra thủ công.")
                 live_frame = pd.DataFrame(columns=["date", "province", "prize", "number"])
                 live_source = "Chưa lấy dữ liệu"
                 source_errors = []
