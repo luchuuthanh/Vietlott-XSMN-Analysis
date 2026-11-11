@@ -2,6 +2,12 @@ name: XSMN daily verified import (independent of archive audit)
 
 on:
   workflow_dispatch:
+    inputs:
+      admin_recovery:
+        description: "Admin-authorized recovery after the 17:30 cutoff"
+        required: false
+        default: "false"
+        type: boolean
   push:
     paths:
       - ".github/workflows/xsmn-daily-verified-import.yml"
@@ -42,10 +48,16 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          deadline=$(date -d '17:30:00' +%s)
-          if (( $(date +%s) >= deadline )); then
-            echo "::error::The 17:30 Vietnam-time history deadline has passed. No late write is allowed."
-            exit 1
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.admin_recovery }}" == "true" ]]; then
+            # Explicit Admin recovery exception: still validate and cross-check; bounded 12-minute run.
+            deadline=$(date -d '+12 minutes' +%s)
+            echo "Admin-authorized recovery run after the regular 17:30 cutoff."
+          else
+            deadline=$(date -d '17:30:00' +%s)
+            if (( $(date +%s) >= deadline )); then
+              echo "::error::The regular 17:30 Vietnam-time history deadline has passed. Only an explicit Admin recovery dispatch may run late."
+              exit 1
+            fi
           fi
           attempt=0
           while (( $(date +%s) < deadline )); do
