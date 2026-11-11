@@ -89,10 +89,10 @@ def publish():
         action="appended"
     merged["date"]=pd.to_datetime(merged.date,errors="raise").dt.strftime("%Y-%m-%d")
     merged=merged.sort_values(keys,kind="stable")
-    tmp=CANONICAL.with_suffix(".csv.tmp")
-    tmp.parent.mkdir(parents=True,exist_ok=True)
-    tmp.to_csv(tmp,index=False,encoding="utf-8-sig")
-    tmp.replace(CANONICAL)
+    tmp_path=CANONICAL.with_suffix(".csv.tmp")
+    tmp_path.parent.mkdir(parents=True,exist_ok=True)
+    merged.to_csv(tmp_path,index=False,encoding="utf-8-sig")
+    tmp_path.replace(CANONICAL)
     manifest.update({
       "status":"PASS","updated_at_vietnam":pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").isoformat(),
       "window_end":today,"rows":int(len(merged)),"last_draw_import":today,
