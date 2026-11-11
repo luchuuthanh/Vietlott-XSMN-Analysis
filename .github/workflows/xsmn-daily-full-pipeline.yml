@@ -12,7 +12,7 @@ on:
       - "scripts/verify_xsmn_supplement_sources_v2.py"
       - "scripts/audit_xsmn_archive.py"
   schedule:
-    - cron: "45 8 * * *" # 15:45 Asia/Ho_Chi_Minh: start early to absorb GitHub schedule delays
+    - cron: "0 8 * * 0" # Weekly full archive audit; daily draw import runs in xsmn-daily-verified-import.yml
 
 permissions:
   contents: write
