@@ -8,7 +8,7 @@ from pathlib import Path
 
 SOURCE = Path("xsmn_383_probe/region_sample.json")
 OUT = Path("xsmn_383_supplement")
-START = date(2026, 7, 1)
+DAILY_ONLY = os.environ.get("XSMN_DAILY_ONLY") == "1"\nSTART = date.today() if DAILY_ONLY else date(2026, 7, 1)
 PROVINCES = {
     "an-giang":"An Giang", "bac-lieu":"Bac Lieu", "ben-tre":"Ben Tre",
     "binh-duong":"Binh Duong", "binh-phuoc":"Binh Phuoc", "binh-thuan":"Binh Thuan",
@@ -107,7 +107,7 @@ def main():
     # Explicitly documented corrections supported by the project owner's screenshots.
     # Match by full row identity and old value; fail closed if the expected source value is absent
     # or appears more than once. Original values are retained in correction_audit.json.
-    corrections = [
+    corrections = [] if DAILY_ONLY else [
         {"date":"2026-08-29","province":"Long An","prize":"G2","old":"76719","new":"79719",
          "evidence":"User-supplied screenshot of VOH result text, 2026-11-06."},
         {"date":"2026-10-23","province":"Vinh Long","prize":"G4","old":"87992","new":"87962",
