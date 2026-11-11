@@ -2,15 +2,6 @@ name: Daily XSMN full pipeline
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "xsmn_app.py"
-      - "xsmn_live.py"
-      - "scripts/validate_383_xsmn_supplement.py"
-      - "scripts/normalize_xsmn_five_year.py"
-      - "scripts/apply_xsmn_reviewed_corrections.py"
-      - "scripts/verify_xsmn_supplement_sources_v2.py"
-      - "scripts/audit_xsmn_archive.py"
   schedule:
     - cron: "0 8 * * 0" # Weekly full archive audit; daily draw import runs in xsmn-daily-verified-import.yml
 
