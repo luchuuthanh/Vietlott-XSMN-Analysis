@@ -8,6 +8,8 @@ on:
       - "xsmn_issuer_sources.py"
       - "xsmn_app.py"
       - "scripts/check_xsmn_live_source.py"
+      - "scripts/publish_xsmn_daily_verified.py"
+      - "scripts/validate_383_xsmn_supplement.py"
       - ".github/workflows/xsmn-live-source-check.yml"
 
 jobs:
@@ -22,6 +24,6 @@ jobs:
       - name: Install live parser dependencies
         run: python -m pip install pandas requests beautifulsoup4
       - name: Compile parser and integration check
-        run: python -m py_compile xsmn_live.py xsmn_issuer_sources.py xsmn_app.py scripts/check_xsmn_live_source.py
+        run: python -m py_compile xsmn_live.py xsmn_issuer_sources.py xsmn_app.py scripts/check_xsmn_live_source.py scripts/publish_xsmn_daily_verified.py scripts/validate_383_xsmn_supplement.py
       - name: Fetch and validate actual live source
         run: python scripts/check_xsmn_live_source.py
