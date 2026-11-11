@@ -40,7 +40,12 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          deadline=$(date -d '17:35:00' +%s)
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            deadline=$(date -d '17:35:00' +%s)
+          else
+            # Manual/push recovery runs may catch up a late-published draw after the normal window.
+            deadline=$(date -d '23:59:59' +%s)
+          fi
           attempt=0
           while (( $(date +%s) < deadline )); do
             attempt=$((attempt + 1))
