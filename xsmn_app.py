@@ -357,8 +357,10 @@ with st.sidebar:
                 admin_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
                 admin_deadline = admin_now.replace(hour=17, minute=30, second=0, microsecond=0)
                 if admin_now < admin_deadline:
-                    st.caption("Chỉ chạy lại xác minh và đồng bộ kết quả hôm nay; vẫn bắt buộc đủ 18 kết quả và đối chiếu nguồn.")
-                    if st.button("🛠️ ADMIN – TỰ CẬP NHẬT LỊCH SỬ", key="admin_retry_xsmn_daily", type="primary"):
+                    st.caption("Chạy lại xác minh và đồng bộ trong khung giờ thường lệ; vẫn bắt buộc đủ 18 kết quả và đối chiếu nguồn.")
+                else:
+                    st.warning("Đã qua hạn chót 17:30. Nút này là ngoại lệ khôi phục do Admin chủ động; dữ liệu vẫn phải qua đủ xác minh và đối chiếu.")
+                if st.button("🛠️ ADMIN – TỰ CẬP NHẬT LỊCH SỬ", key="admin_retry_xsmn_daily", type="primary"):
                         github_token = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
                         if not github_token:
                             st.error("Thiếu GITHUB_TOKEN. Chưa thể yêu cầu chạy lại quy trình.")
@@ -372,7 +374,7 @@ with st.sidebar:
                             try:
                                 dispatch_response = requests.post(
                                     dispatch_url, headers=dispatch_headers,
-                                    json={"ref": "main"}, timeout=20
+                                    json={"ref": "main", "inputs": {"admin_recovery": "true"}}, timeout=20
                                 )
                                 if dispatch_response.status_code == 204:
                                     st.success("Đã gửi lệnh Admin. GitHub Actions sẽ tự xác minh và chỉ ghi lịch sử nếu tất cả bước đều PASS.")
@@ -380,8 +382,6 @@ with st.sidebar:
                                     st.error(f"GitHub từ chối chạy lại ({dispatch_response.status_code}): {dispatch_response.text[:500]}")
                             except Exception as dispatch_error:
                                 st.error(f"Không thể gửi lệnh chạy lại: {type(dispatch_error).__name__}: {dispatch_error}")
-                else:
-                    st.caption("Đã qua hạn chót 17:30. Không cho phép ghi bổ sung sau giờ khóa lịch sử.")
             elif entered_admin_password:
                 st.error("Mật khẩu Admin không đúng.")
 source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
