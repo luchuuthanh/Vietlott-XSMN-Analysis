@@ -712,7 +712,7 @@ try:
             @keyframes liveSpin{to{transform:rotate(360deg)}}
             .prize-numbers{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}
             </style>""", unsafe_allow_html=True)
-            st.caption(f"Nguồn hiển thị: {live_source} · Tự kiểm tra mỗi 30 giây trong khung 16:20–17:35.")
+            st.caption(f"Nguồn hiển thị: {live_source} · Tự kiểm tra mỗi 30 giây trong khung 16:20–17:30.")
             for source_error in source_errors:
                 st.caption(f"Nguồn chưa đọc được: {source_error}")
 
