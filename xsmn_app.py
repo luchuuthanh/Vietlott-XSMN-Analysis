@@ -340,30 +340,34 @@ with st.sidebar:
             )
         st.caption("Kho lịch sử công khai: SQLite theo quý. Cửa sổ mục tiêu từ 04/11/2021.")
 
-    # Khu vực quản trị được ẩn hoàn toàn nếu chưa cấu hình mật khẩu Admin.
+    # Khu vực quản trị chỉ mở qua ?admin=1; luôn hiện trạng thái cấu hình để tránh Admin tưởng rằng nút bị mất.
     import os
     import hmac
     admin_password = st.secrets.get("XSMN_ADMIN_PASSWORD", os.environ.get("XSMN_ADMIN_PASSWORD", ""))
-    if admin_password and st.query_params.get("admin") == "1":
-        with st.expander("🔐 Quản trị hệ thống", expanded=False):
-            entered_admin_password = st.text_input(
-                "Mật khẩu Admin", type="password", key="xsmn_admin_password_input"
-            )
-            admin_authenticated = bool(
-                entered_admin_password
-                and hmac.compare_digest(str(entered_admin_password), str(admin_password))
-            )
-            if admin_authenticated:
-                admin_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-                admin_deadline = admin_now.replace(hour=17, minute=30, second=0, microsecond=0)
-                if admin_now < admin_deadline:
-                    st.caption("Chạy lại xác minh và đồng bộ trong khung giờ thường lệ; vẫn bắt buộc đủ 18 kết quả và đối chiếu nguồn.")
-                else:
-                    st.warning("Đã qua hạn chót 17:30. Nút này là ngoại lệ khôi phục do Admin chủ động; dữ liệu vẫn phải qua đủ xác minh và đối chiếu.")
-                if st.button("🛠️ ADMIN – TỰ CẬP NHẬT LỊCH SỬ", key="admin_retry_xsmn_daily", type="primary"):
+    if st.query_params.get("admin") == "1":
+        with st.expander("🔐 QUẢN TRỊ HỆ THỐNG", expanded=True):
+            if not admin_password:
+                st.error("Chưa cấu hình XSMN_ADMIN_PASSWORD trong Streamlit Secrets. Hãy thêm mật khẩu Admin tại phần App settings → Secrets rồi khởi động lại ứng dụng.")
+                st.info("Sau khi cấu hình mật khẩu, tải lại trang này để đăng nhập và sử dụng nút tự cập nhật.")
+            else:
+                entered_admin_password = st.text_input(
+                    "Mật khẩu Admin", type="password", key="xsmn_admin_password_input"
+                )
+                admin_authenticated = bool(
+                    entered_admin_password
+                    and hmac.compare_digest(str(entered_admin_password), str(admin_password))
+                )
+                if admin_authenticated:
+                    admin_now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+                    admin_deadline = admin_now.replace(hour=17, minute=30, second=0, microsecond=0)
+                    if admin_now < admin_deadline:
+                        st.caption("Chạy lại xác minh và đồng bộ trong khung giờ thường lệ; vẫn bắt buộc đủ 18 kết quả và đối chiếu nguồn.")
+                    else:
+                        st.warning("Đã qua hạn chót 17:30. Nút này là ngoại lệ khôi phục do Admin chủ động; dữ liệu vẫn phải qua đủ xác minh và đối chiếu.")
+                    if st.button("🛠️ ADMIN – TỰ CẬP NHẬT LỊCH SỬ", key="admin_retry_xsmn_daily", type="primary"):
                         github_token = st.secrets.get("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", ""))
                         if not github_token:
-                            st.error("Thiếu GITHUB_TOKEN. Chưa thể yêu cầu chạy lại quy trình.")
+                            st.error("Thiếu GITHUB_TOKEN. Cần cấu hình token có quyền Actions: write trong Streamlit Secrets.")
                         else:
                             dispatch_url = "https://api.github.com/repos/luchuuthanh/Vietlott-XSMN-Analysis/actions/workflows/xsmn-daily-verified-import.yml/dispatches"
                             dispatch_headers = {
@@ -382,8 +386,8 @@ with st.sidebar:
                                     st.error(f"GitHub từ chối chạy lại ({dispatch_response.status_code}): {dispatch_response.text[:500]}")
                             except Exception as dispatch_error:
                                 st.error(f"Không thể gửi lệnh chạy lại: {type(dispatch_error).__name__}: {dispatch_error}")
-            elif entered_admin_password:
-                st.error("Mật khẩu Admin không đúng.")
+                elif entered_admin_password:
+                    st.error("Mật khẩu Admin không đúng.")
 source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
 upload = st.session_state.get("xsmn_csv_upload") if source == "Tải CSV riêng" else None
 
