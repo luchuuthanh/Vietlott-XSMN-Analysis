@@ -1,17 +1,17 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-10T16:35:23.063200+07:00",
+  "updated_at_vietnam": "2026-11-11T21:00:34.409390+07:00",
   "window_start": "2021-11-05",
-  "window_end": "2026-11-10",
-  "rows": 103644,
+  "window_end": "2026-11-11",
+  "rows": 103698,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Only published after all gates pass.",
-  "last_draw_import": "2026-11-10",
+  "note": "Daily draw appended independently of the scheduled five-year archive audit.",
+  "last_draw_import": "2026-11-11",
   "last_draw_rows": 54,
-  "last_draw_source": "mixed_verified_sources",
+  "last_draw_source": "383_supplement_independent_crosscheck",
   "last_draw_source_ids": [
     "live_sxmn_com_vn_validated"
   ],
-  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync."
+  "last_draw_verification": "Today's 18-result structure per station validated; XoSoTin independent daily-page comparison PASS."
 }
