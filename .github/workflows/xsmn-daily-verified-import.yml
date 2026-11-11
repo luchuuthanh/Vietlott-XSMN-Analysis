@@ -1,0 +1,95 @@
+name: XSMN daily verified import (independent of archive audit)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 9 * * *" # 16:20 Asia/Ho_Chi_Minh
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xsmn-daily-verified-import
+  cancel-in-progress: false
+
+jobs:
+  daily-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      TZ: Asia/Ho_Chi_Minh
+      PYTHONUNBUFFERED: "1"
+      XSMN_REQUIRE_TODAY: "1"
+      XSMN_DAILY_ONLY: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install daily validation dependencies
+        run: python -m pip install --upgrade pandas requests beautifulsoup4
+      - name: Retry only today's draw validation and independent comparison until 17:35
+        shell: bash
+        run: |
+          set -uo pipefail
+          deadline=$(date -d '17:35:00' +%s)
+          attempt=0
+          while (( $(date +%s) < deadline )); do
+            attempt=$((attempt + 1))
+            echo "===== DAILY DRAW ATTEMPT ${attempt} at $(date -Is) ====="
+            rm -rf xsmn_383_probe xsmn_383_supplement xsmn_independent_audit
+            mkdir -p xsmn_383_probe xsmn_independent_audit
+            rm -f xsmn_daily_verified.csv
+            if (
+              set -e
+              curl --fail --silent --show-error --location --retry 2 --max-time 40 \
+                https://api.383.im/lottery/region/mn.json \
+                -o xsmn_383_probe/region_sample.json
+              python scripts/validate_383_xsmn_supplement.py
+              python scripts/publish_xsmn_daily_verified.py --prepare
+              TODAY=$(date +%F)
+              python scripts/verify_xsmn_supplement_sources_v2.py \
+                --csv xsmn_daily_verified.csv \
+                --out xsmn_independent_audit/today_comparison.csv \
+                --start "$TODAY" --end "$TODAY"
+              python scripts/publish_xsmn_daily_verified.py --publish
+            ); then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json
+              if git diff --cached --quiet; then
+                echo "Today's verified draw already exists exactly; no duplicate commit."
+              else
+                git commit -m "Append independently verified daily XSMN draw"
+                git push
+              fi
+              echo "Daily XSMN import PASS at $(date -Is)."
+              exit 0
+            fi
+            now=$(date +%s)
+            if (( now >= deadline )); then
+              echo "::error::Today's draw did not pass daily validation and independent comparison by 17:35. Canonical history was not changed."
+              exit 1
+            fi
+            remaining=$((deadline - now))
+            sleep_for=180
+            if (( remaining < sleep_for )); then sleep_for=$remaining; fi
+            echo "Daily-only attempt failed; retrying in ${sleep_for}s. The five-year archive audit is not run here."
+            sleep "$sleep_for"
+          done
+          echo "::error::Daily import deadline reached; canonical history unchanged."
+          exit 1
+      - name: Preserve daily validation and comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xsmn-daily-verified-import
+          path: |
+            xsmn_383_probe/
+            xsmn_383_supplement/
+            xsmn_daily_verified.csv
+            xsmn_independent_audit/
+          if-no-files-found: warn
+          retention-days: 90
