@@ -8,7 +8,8 @@ from pathlib import Path
 
 SOURCE = Path("xsmn_383_probe/region_sample.json")
 OUT = Path("xsmn_383_supplement")
-DAILY_ONLY = os.environ.get("XSMN_DAILY_ONLY") == "1"\nSTART = date.today() if DAILY_ONLY else date(2026, 7, 1)
+DAILY_ONLY = os.environ.get("XSMN_DAILY_ONLY") == "1"
+START = date.today() if DAILY_ONLY else date(2026, 7, 1)
 PROVINCES = {
     "an-giang":"An Giang", "bac-lieu":"Bac Lieu", "ben-tre":"Ben Tre",
     "binh-duong":"Binh Duong", "binh-phuoc":"Binh Phuoc", "binh-thuan":"Binh Thuan",
@@ -173,7 +174,8 @@ def main():
       "missing_draw_dates":len(missing_dates),"unexpected_draw_dates":len(extra_dates),
       "missing_station_days":len(missing),"unexpected_station_days":len(extra),
       "duplicate_rows":sum(e["type"]=="duplicate_row" for e in errors),
-      "error_count":len(errors),"errors":errors,\n      "status":"PASS" if not errors else "FAIL",
+      "error_count":len(errors),"errors":errors,
+      "status":"PASS" if not errors else "FAIL",
       "corrections_applied":applied,
       "merge_status":"NOT_MERGED; keep as a separate supplement; documented corrections applied with audit trail"
     }
