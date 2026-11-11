@@ -32,7 +32,7 @@ def prepare():
     if report.get("status") not in ("PASS",) or report.get("window_start") != day or report.get("window_end") != day:
         raise SystemExit(f"383 feed is not validated for today {day}: {report.get('status')} {report.get('window_end')}")
     df=pd.read_csv(SUPPLEMENT,dtype={"number":str})
-    if df.empty or set(df.columns) < {"date","province","prize","prize_order","number"}:
+    if df.empty or not {"date","province","prize","prize_order","number"}.issubset(df.columns):
         raise SystemExit("Daily supplement is empty or has an invalid schema.")
     df["date"]=pd.to_datetime(df["date"],errors="raise").dt.strftime("%Y-%m-%d")
     df["province"]=df["province"].astype(str).str.strip()
