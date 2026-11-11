@@ -344,7 +344,7 @@ with st.sidebar:
     import os
     import hmac
     admin_password = st.secrets.get("XSMN_ADMIN_PASSWORD", os.environ.get("XSMN_ADMIN_PASSWORD", ""))
-    if admin_password:
+    if admin_password and st.query_params.get("admin") == "1":
         with st.expander("🔐 Quản trị hệ thống", expanded=False):
             entered_admin_password = st.text_input(
                 "Mật khẩu Admin", type="password", key="xsmn_admin_password_input"
