@@ -116,9 +116,10 @@ Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Ma
 - Workflow: .github/workflows/vietlott-live-evidence.yml.
 - Tự chạy 17:50 giờ Việt Nam vào ngày quay; chờ 18:00 và lấy mẫu luồng công khai đến 18:30.
 - Mega 6/45: thứ Tư, thứ Sáu, Chủ nhật. Power 6/55: thứ Ba, thứ Năm, thứ Bảy.
-- Lấy một khung hình mỗi 5 giây; OCR tiếng Việt/Anh; ghi thời điểm, nội dung OCR và SHA-256 từng khung hình. Lưu contact sheet và các ảnh mẫu/ảnh OCR nghi vấn.
+- Lấy một khung hình mỗi 2 giây; OCR tiếng Việt/Anh; nhận diện token số lớn trong khung hình và chỉ đưa số vào chuỗi quan sát khi nhiều khung hình liên tiếp đồng thuận. Ghi thời điểm, nội dung OCR và SHA-256 từng khung hình.
 - Toàn bộ khung hình lấy mẫu mỗi 5 giây, nhật ký OCR và gói chứng cứ đính kèm GitHub Actions artifact 90 ngày; ảnh chọn lọc và nhật ký phiên được lưu trong data/live_evidence/.
 - Chạy thủ công tại GitHub → Actions → Vietlott live draw evidence. Có thể nhập URL phát công khai nếu trang chính thức không tự lộ luồng.
+- Dashboard hiển thị dãy số phần mềm tự quan sát trực tiếp, thứ tự, thời điểm và mức đồng thuận OCR. Đây là kết quả đọc từ livestream để làm căn cứ nghiên cứu; phải mở ảnh/video chứng cứ kiểm tra từng số, không được coi là kết quả Vietlott xác nhận chính thức nếu chưa đối chiếu.
 - OCR chỉ gợi ý khung hình cần xem. Người kiểm tra phải nhìn rõ nhãn VA trước khi xác nhận mã vali. Không suy đoán mã vali từ kết quả số.
 - Đây là bộ thu thập bằng chứng từ luồng công khai, không truy cập camera nội bộ hoặc biên bản mật của Vietlott. SHA-256 chứng minh tệp ảnh không bị thay đổi sau khi lưu, không tự chứng minh tính xác thực của luồng gốc.
 - Hướng dẫn chi tiết: data/live_evidence/README.md.
