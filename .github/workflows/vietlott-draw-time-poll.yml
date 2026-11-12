@@ -1,12 +1,12 @@
 name: Vietlott draw-time polling and instant archive packaging
 
 on:
-  # Run once immediately when this workflow is changed, so configuration can be
-  # verified without waiting for the next scheduled draw window.
+  # Rebuild immediately when sync or package code changes, then poll for 30 minutes.
   push:
     branches: [main]
     paths:
       - "scripts/sync_vietlott.py"
+      - "scripts/package_power535.py"
   schedule:
     # All times are UTC. Viet Nam is UTC+7.
     # Lotto 5/35: 13:00 VN and 21:00 VN every day.
@@ -96,8 +96,12 @@ jobs:
                 git checkout -- data/vietlott/manifest.json
               fi
 
-              if [ "$before" != "$after" ]; then
-                echo "A target-game history changed. Running full-history backtest and rebuilding all three game packages."
+              if [ "$before" != "$after" ] || [ "${GITHUB_EVENT_NAME:-}" = "push" ]; then
+                if [ "$before" != "$after" ]; then
+                  echo "A target-game history changed. Running full-history backtest and rebuilding all three game packages."
+                else
+                  echo "Sync/package code changed. Rebuilding all three packages from the current validated snapshot."
+                fi
                 python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5
                 python scripts/package_power535.py
                 python scripts/package_power655.py
