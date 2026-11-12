@@ -1,0 +1,89 @@
+name: Vietlott draw-time polling and instant archive packaging
+
+on:
+  schedule:
+    # All times are UTC. Viet Nam is UTC+7.
+    # Lotto 5/35: 13:00 VN and 21:00 VN every day.
+    - cron: "0 6,14 * * *"
+    # Power 6/55 / Mega 6/45 draw window: 18:00 VN every day;
+    # only the game scheduled for that weekday will produce a new record.
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vietlott-draw-time-polling
+  cancel-in-progress: false
+
+jobs:
+  poll-save-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout latest history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package dependencies
+        run: pip install -r requirements.txt
+
+      - name: Poll every 2 minutes for up to 30 minutes; save and package as soon as a new draw appears
+        shell: bash
+        run: |
+          set -u
+          changed_any=0
+          for attempt in $(seq 1 16); do
+            echo "Polling attempt $attempt/16 at $(date -u +%FT%TZ)"
+            before=$(sha256sum data/vietlott/power535.jsonl data/vietlott/power655.jsonl data/vietlott/power645.jsonl | sha256sum | cut -d' ' -f1)
+            if ! python scripts/sync_vietlott.py; then
+              echo "Source not ready or validation failed; retrying in 2 minutes."
+            else
+              after=$(sha256sum data/vietlott/power535.jsonl data/vietlott/power655.jsonl data/vietlott/power645.jsonl | sha256sum | cut -d' ' -f1)
+              if [ "$before" != "$after" ]; then
+                echo "New/updated draw detected. Saving history immediately."
+                git config user.name "github-actions[bot]"
+                git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                git add data/vietlott/power535.jsonl data/vietlott/power655.jsonl data/vietlott/power645.jsonl data/vietlott/manifest.json
+                if ! git diff --cached --quiet; then
+                  git commit -m "Save newly published Vietlott draw results"
+                  git pull --rebase origin main
+                  git push origin HEAD:main
+                fi
+                changed_any=1
+                echo "Running full-history backtest and rebuilding all three game packages."
+                python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5
+                python scripts/package_power535.py
+                python scripts/package_power655.py
+                python scripts/package_mega645.py
+                echo "All three historical packages rebuilt from the latest validated snapshot."
+              else
+                echo "No new target-game records yet."
+              fi
+            fi
+            if [ "$attempt" -lt 16 ]; then sleep 120; fi
+          done
+          echo "Polling window finished. Any new draw was committed and packaged immediately after detection."
+          echo "changed_any=$changed_any" >> "$GITHUB_OUTPUT"
+        id: poll
+
+      - name: Upload refreshed history packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vietlott-three-game-history-packages-${{ github.run_number }}
+          path: |
+            reports/power535_final_package/
+            reports/power655_final_package/
+            reports/mega645_final_package/
+            reports/rolling_backtest/
+          if-no-files-found: warn
+          retention-days: 90
