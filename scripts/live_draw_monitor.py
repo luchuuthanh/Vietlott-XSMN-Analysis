@@ -87,7 +87,7 @@ def youtube_urls_from_html(html: str):
     soup = BeautifulSoup(html, "html.parser")
     for node in soup.find_all(["iframe", "a", "source"]):
         raw = node.get("src") or node.get("href") or ""
-        if "youtube.com" in raw or "youtu.be" in raw:
+        if "youtube.com" in raw or "youtube-nocookie.com" in raw or "youtu.be" in raw:
             urls.add(raw.replace("&amp;", "&"))
     for match in re.findall(r"https?[^\"'\s<>]*(?:youtube\.com|youtu\.be)[^\"'\s<>]*", html):
         urls.add(match.replace("&amp;", "&"))
@@ -108,6 +108,7 @@ def discover_official_candidates(game: str):
         OFFICIAL_LIVE + ("?game=Mega645" if game == "MEGA645" else "?game=Power655"),
         OFFICIAL_HOME,
         OFFICIAL_VIDEO_LIST,
+        "https://www.facebook.com/vietlott.vn/",
     ]
     for page in pages:
         try:
@@ -117,7 +118,7 @@ def discover_official_candidates(game: str):
             notes.append({"page": page, "status": "ok", "youtube_links_found": len(found)})
             # Official website may expose a channel link; /live is checked by yt-dlp below.
             for url in found:
-                if re.search(r"youtube\.com/@[^/?]+/?$", url):
+                if re.search(r"youtube(?:-nocookie)?\.com/(?:@[^/?]+|channel/[^/?]+|user/[^/?]+|c/[^/?]+)/?$", url):
                     candidates.append(url.rstrip("/") + "/live")
         except Exception as exc:
             notes.append({"page": page, "status": "unavailable", "error": str(exc)[:300]})
@@ -223,9 +224,12 @@ def ffmpeg_capture(source, output_dir: Path, duration: int):
     ]
     print("Bắt đầu lấy khung hình từ luồng trực tiếp.", flush=True)
     result = subprocess.run(command, capture_output=True, text=True, timeout=duration + 180)
-    if result.returncode != 0:
+    frames = sorted(output_dir.glob("frame_*.jpg"))
+    if result.returncode != 0 and not frames:
         raise RuntimeError((result.stderr or "ffmpeg capture failed")[-2500:])
-    return sorted(output_dir.glob("frame_*.jpg"))
+    if result.returncode != 0 and frames:
+        print("Luồng kết thúc hoặc gián đoạn sớm; giữ lại các khung hình đã thu được.", flush=True)
+    return frames
 
 
 def ocr_text(image_path: Path):
@@ -367,6 +371,13 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
             "all_sampled_frames_artifact_path": str(temp_dir.relative_to(ROOT)),
             "capture_finished_vn": now_vn().isoformat(),
             "sampled_frame_count": len(frames),
+            "actual_sampled_span_seconds": max(0, (len(frames) - 1) * SAMPLE_SECONDS),
+            "partial_capture": max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60,
+            "capture_note": (
+                "Nguồn phát kết thúc/gián đoạn trước thời lượng dự kiến; vẫn giữ các khung hình đã lấy."
+                if max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60 else
+                "Đã lấy mẫu gần hết thời lượng phiên dự kiến."
+            ),
             "saved_frame_count": len(saved_items),
             "ocr_status_counts": ocr_states,
             "va_code_candidate_count": sum(1 for row in frame_rows if row["va_code_detected_by_ocr"]),
