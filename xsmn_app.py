@@ -15,6 +15,7 @@ from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribu
 from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_station_key
 from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
 from xsmn_group_check import render_group_check
+from xsmn_hit_analysis import analyze_scope, METHOD_LABELS
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -861,7 +862,7 @@ try:
     live_window_start = time(16, 20)
     live_window_end = time(17, 30)
     live_window_open = live_window_start <= vn_now < live_window_end
-    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Kiểm tra 3 số"]
+    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Phân tích trúng theo phương pháp", "Kiểm tra 3 số"]
     if live_window_open:
         nav_options.insert(0, "🔴 Trực tuyến")
     st.markdown("""
@@ -887,6 +888,92 @@ try:
         label_visibility="collapsed",
         key="xsmn_main_navigation",
     )
+    if selected_nav == "Phân tích trúng theo phương pháp":
+        st.subheader("Phân tích số trúng và truy ngược phương pháp lọc")
+        st.caption(
+            "Mỗi kỳ được mô phỏng đúng thời điểm: chỉ dùng lịch sử trước kỳ kết quả, "
+            "sau đó đối chiếu số trúng và chỉ rõ số đó đã nằm trong danh sách lọc của phương pháp nào."
+        )
+        analysis_station = st.selectbox(
+            "Đài phân tích", selected_stations, key="xsmn_hit_analysis_station"
+        )
+        analysis_scope = st.radio(
+            "Phạm vi giải", ["G8", "G7", "ĐB", "Tất cả giải"],
+            horizontal=True, key="xsmn_hit_analysis_scope"
+        )
+        station_dates = raw.loc[
+            raw["province"].astype(str).eq(str(analysis_station)), "date"
+        ].dropna().nunique()
+        max_history = min(365, max(30, int(station_dates) - 2))
+        min_history = st.slider(
+            "Số kỳ lịch sử tối thiểu trước mỗi lần lọc",
+            30, max_history, min(90, max_history),
+            key="xsmn_hit_min_history"
+        )
+        max_test = max(30, min(365, int(station_dates) - min_history))
+        test_periods = st.slider(
+            "Số kỳ gần nhất dùng để kiểm định",
+            30, max_test, min(180, max_test),
+            key="xsmn_hit_test_periods"
+        )
+        top_k = st.slider(
+            "Số lượng số mỗi phương pháp lọc",
+            3, 20, 10, key="xsmn_hit_top_k"
+        )
+        summary_hit, detail_hit, attribution_hit, available_draws = analyze_scope(
+            raw, analysis_station, analysis_scope,
+            top_k=top_k, min_history=min_history, test_periods=test_periods
+        )
+        if detail_hit.empty:
+            st.warning(
+                f"Đài hiện có {available_draws} kỳ phù hợp với phạm vi {analysis_scope}. "
+                f"Cần nhiều hơn {min_history} kỳ lịch sử để kiểm định."
+            )
+        else:
+            st.markdown("#### 1. So sánh hiệu suất từng phương pháp")
+            st.caption(
+                f"{analysis_station} · {analysis_scope} · {len(detail_hit) // 6} kỳ kiểm định · "
+                f"mỗi phương pháp lọc {top_k} số."
+            )
+            st.dataframe(
+                summary_hit.drop(columns=["_method"], errors="ignore"),
+                use_container_width=True, hide_index=True
+            )
+            st.markdown("#### 2. Số thực tế đã trúng nằm trong phương pháp lọc nào?")
+            st.caption(
+                "Đây là truy ngược về danh sách được tạo ở kỳ trước khi có kết quả. "
+                "Thứ hạng cho biết số trúng đứng vị trí bao nhiêu trong từng phương pháp."
+            )
+            st.dataframe(
+                attribution_hit.drop(columns=["_hit_methods"], errors="ignore"),
+                use_container_width=True, hide_index=True
+            )
+            method_hit_counts = []
+            for method, label in METHOD_LABELS.items():
+                count = int(attribution_hit["_hit_methods"].fillna("").map(
+                    lambda value: method in value.split("|") if value else False
+                ).sum())
+                method_hit_counts.append({
+                    "Phương pháp": label,
+                    "Số kết quả thực tế đã được lọc trúng": count
+                })
+            st.markdown("#### 3. Phương pháp nào bắt được nhiều số trúng nhất?")
+            st.dataframe(
+                pd.DataFrame(method_hit_counts).sort_values(
+                    "Số kết quả thực tế đã được lọc trúng", ascending=False
+                ),
+                use_container_width=True, hide_index=True
+            )
+            st.markdown("#### 4. Nhật ký lọc và đối chiếu từng kỳ")
+            st.dataframe(
+                detail_hit.drop(columns=["_method", "_hits", "_expected"], errors="ignore"),
+                use_container_width=True, hide_index=True
+            )
+            st.caption(
+                "Lượt trúng được tính theo số hai chữ số duy nhất trong mỗi kỳ và từng phương pháp. "
+                "Mức ngẫu nhiên là đường chuẩn tham khảo; kết quả lịch sử không bảo đảm dự đoán tương lai."
+            )
+
     if selected_nav == "🔴 Trực tuyến":
         # Tự kiểm tra mỗi 30 giây trong khung quay XSMN 16:20–17:30 (giờ Việt Nam).
         @st.fragment(run_every=30)
