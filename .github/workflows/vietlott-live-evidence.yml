@@ -1,0 +1,86 @@
+name: Vietlott live draw evidence
+
+on:
+  schedule:
+    # 17:50 Vietnam time. The worker waits for 18:00 and captures until 18:30.
+    - cron: "50 10 * * 0,3,5" # Mega 6/45: Wed, Fri, Sun (UTC weekdays)
+    - cron: "50 10 * * 2,4,6" # Power 6/55: Tue, Thu, Sat
+  workflow_dispatch:
+    inputs:
+      game:
+        description: "Game to monitor"
+        required: true
+        type: choice
+        default: AUTO
+        options:
+          - AUTO
+          - MEGA645
+          - POWER655
+      source_url:
+        description: "Optional public official live URL (leave blank for official-site discovery)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vietlott-live-evidence
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Install capture tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg tesseract-ocr tesseract-ocr-vie
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install monitor dependencies
+        run: python -m pip install --upgrade yt-dlp requests beautifulsoup4 Pillow pytesseract
+
+      - name: Capture public live draw
+        id: capture
+        continue-on-error: true
+        env:
+          GITHUB_RUN_URL: https://github.com/\${{ github.repository }}/actions/runs/\${{ github.run_id }}
+        run: |
+          GAME="\${{ inputs.game || 'AUTO' }}"
+          SOURCE_URL="\${{ inputs.source_url }}"
+          python scripts/live_draw_monitor.py --game "$GAME" --source-url "$SOURCE_URL" --wait
+
+      - name: Upload full evidence bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vietlott-live-evidence-\${{ github.run_id }}
+          path: data/live_evidence/
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 6
+
+      - name: Commit evidence index and selected frames
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/live_evidence/
+          if git diff --cached --quiet; then
+            echo "No evidence files to commit."
+            exit 0
+          fi
+          git commit -m "Record Vietlott live evidence \${{ github.run_id }}"
+          git push origin HEAD:main
