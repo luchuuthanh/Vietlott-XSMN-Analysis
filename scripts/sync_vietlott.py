@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data" / "vietlott"
 MANIFEST = DATA_DIR / "manifest.json"
 MEGA645_BACKFILL = DATA_DIR / "mega645_backfill_00001_00197.jsonl"
+POWER535_SUPPLEMENT = DATA_DIR / "power535_verified_supplement.jsonl"
 BASE = "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/"
 
 GAMES = {
@@ -98,8 +99,10 @@ def validate_result(game: str, result) -> str | None:
             if len(nums) != 6 or len(set(nums)) != 6 or any(n < 1 or n > 45 for n in nums):
                 return "Mega 6/45 expects 6 distinct numbers in 1..45"
         elif game == "POWER535":
-            if len(nums) != 6 or len(set(nums[:5])) != 5 or any(n < 1 or n > 35 for n in nums[:5]):
-                return "Power 5/35 expects 5 distinct main numbers in 1..35 plus a special number"
+            if (len(nums) != 6 or len(set(nums[:5])) != 5
+                    or any(n < 1 or n > 35 for n in nums[:5])
+                    or not 1 <= nums[5] <= 12):
+                return "Power 5/35 expects 5 distinct main numbers in 1..35 plus a special number in 1..12"
         elif game == "BINGO18":
             if len(nums) != 3 or any(n < 1 or n > 6 for n in nums):
                 return "Bingo18 expects 3 dice values in 1..6"
@@ -140,6 +143,60 @@ def apply_verified_corrections(game: str, payload: bytes) -> bytes:
     # Keep the archive chronological after correcting the misplaced 00944 row.
     rows.sort(key=lambda row: (str(row.get("date", ""))[:10], str(row.get("id", ""))))
     return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)).encode("utf-8")
+
+def merge_verified_supplements(game: str, payload: bytes, supplement_path: Path | None = None) -> bytes:
+    """Merge manually cross-checked current draws without losing them on later mirror refreshes.
+
+    A matching upstream record supersedes the supplement metadata. A conflicting
+    date or result for the same draw ID fails closed for manual review.
+    """
+    if game != "POWER535":
+        return payload
+    path = supplement_path or POWER535_SUPPLEMENT
+    if not path.exists():
+        return payload
+
+    rows_by_id = {}
+    for line_no, line in enumerate(payload.decode("utf-8-sig").splitlines(), 1):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        draw_id = str(row.get("id", "")).zfill(5)
+        if not draw_id.isdigit():
+            raise RuntimeError(f"{game} upstream line {line_no}: invalid draw ID")
+        row["id"] = draw_id
+        rows_by_id[draw_id] = row
+
+    for line_no, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
+        if not line.strip():
+            continue
+        supplement = json.loads(line)
+        draw_id = str(supplement.get("id", "")).zfill(5)
+        if not draw_id.isdigit():
+            raise RuntimeError(f"{game} supplement line {line_no}: invalid draw ID")
+        supplement["id"] = draw_id
+        result_error = validate_result(game, supplement.get("result"))
+        if result_error:
+            raise RuntimeError(f"{game} supplement draw {draw_id}: {result_error}")
+        try:
+            date.fromisoformat(str(supplement.get("date", ""))[:10])
+        except ValueError as exc:
+            raise RuntimeError(f"{game} supplement draw {draw_id}: invalid date") from exc
+
+        existing = rows_by_id.get(draw_id)
+        if existing is not None:
+            if (str(existing.get("date", ""))[:10] != str(supplement.get("date", ""))[:10]
+                    or existing.get("result") != supplement.get("result")):
+                raise RuntimeError(
+                    f"{game} supplement conflicts with upstream draw {draw_id}; refusing automatic overwrite"
+                )
+            # Keep the upstream row when it independently contains the same draw.
+            continue
+        rows_by_id[draw_id] = supplement
+
+    rows = sorted(rows_by_id.values(), key=lambda row: (str(row.get("date", ""))[:10], int(row["id"])))
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
+
 
 def merge_mega645_backfill(payload: bytes) -> bytes:
     """Preserve the independently recovered first 197 Mega 6/45 draws.
@@ -297,6 +354,7 @@ def main() -> int:
         try:
             payload = fetch(url)
             payload = apply_verified_corrections(game, payload)
+            payload = merge_verified_supplements(game, payload)
             if game == "MEGA645":
                 payload = merge_mega645_backfill(payload)
             summary = audit_payload(game, payload)
