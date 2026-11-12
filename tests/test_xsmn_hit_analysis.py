@@ -35,6 +35,8 @@ class XSMNHitAttributionTests(unittest.TestCase):
         self.assertEqual(len(summary), len(METHODS))
         self.assertIn("Nằm trong phương pháp lọc", attribution.columns)
         self.assertIn("Thứ hạng theo phương pháp", attribution.columns)
+        self.assertIn("Tần suất 30 kỳ trước", attribution.columns)
+        self.assertIn("Số kỳ vắng trước đó", attribution.columns)
         self.assertEqual(len(detail), 20 * len(METHODS))
 
 
