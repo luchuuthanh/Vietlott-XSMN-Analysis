@@ -31,7 +31,7 @@ jobs:
       - name: Install analysis dependencies
         run: python -m pip install --disable-pip-version-check pandas numpy
       - name: Run hit-attribution unit tests
-        run: python -m unittest tests.test_xsmn_hit_analysis -v
+        run: python -m unittest discover -s tests -p 'test_xsmn_hit_analysis.py' -v
       - name: Run full five-year walk-forward backtest
         run: python scripts/run_xsmn_hit_backtest.py
       - name: Upload detailed backtest results
