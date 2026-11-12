@@ -56,17 +56,17 @@ jobs:
         id: capture
         continue-on-error: true
         env:
-          GITHUB_RUN_URL: https://github.com/\${{ github.repository }}/actions/runs/\${{ github.run_id }}
+          GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          GAME="\${{ inputs.game || 'AUTO' }}"
-          SOURCE_URL="\${{ inputs.source_url }}"
+          GAME="${{ inputs.game || 'AUTO' }}"
+          SOURCE_URL="${{ inputs.source_url }}"
           python scripts/live_draw_monitor.py --game "$GAME" --source-url "$SOURCE_URL" --wait
 
       - name: Upload full evidence bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vietlott-live-evidence-\${{ github.run_id }}
+          name: vietlott-live-evidence-${{ github.run_id }}
           path: data/live_evidence/
           if-no-files-found: warn
           retention-days: 90
@@ -82,5 +82,5 @@ jobs:
             echo "No evidence files to commit."
             exit 0
           fi
-          git commit -m "Record Vietlott live evidence \${{ github.run_id }}"
+          git commit -m "Record Vietlott live evidence ${{ github.run_id }}"
           git push origin HEAD:main
