@@ -34,6 +34,13 @@ try:
 except Exception:
     pytesseract = None
 
+try:
+    from live_result_detector import parse_large_numeric_tokens, consensus_events, classify_sequence
+except Exception:
+    parse_large_numeric_tokens = None
+    consensus_events = None
+    classify_sequence = None
+
 TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_ROOT = ROOT / "data" / "live_evidence"
@@ -42,7 +49,7 @@ OFFICIAL_HOME = "https://vietlott.vn/"
 OFFICIAL_LIVE = "https://vietlott.vn/vi/trung-thuong/truc-tiep-quay-so-mo-thuong"
 OFFICIAL_VIDEO_LIST = "https://vietlott.vn/vi/trung-thuong/danh-sach-video-quay-so-mo-thuong-645"
 DRAW_MINUTES = 30
-SAMPLE_SECONDS = 5
+SAMPLE_SECONDS = 2
 USER_AGENT = "Mozilla/5.0 (compatible; VietlottLiveEvidenceMonitor/1.0)"
 
 
@@ -232,14 +239,22 @@ def ffmpeg_capture(source, output_dir: Path, duration: int):
     return frames
 
 
-def ocr_text(image_path: Path):
+def ocr_text(image_path: Path, universe: int):
     if pytesseract is None:
-        return "", "ocr_library_missing"
+        return "", "ocr_library_missing", []
     try:
-        text = pytesseract.image_to_string(Image.open(image_path), lang="vie+eng", config="--psm 6")
-        return " ".join(text.split()), "ok"
+        image = Image.open(image_path).convert("RGB")
+        text = pytesseract.image_to_string(image, lang="vie+eng", config="--psm 6")
+        data = pytesseract.image_to_data(
+            image, lang="eng", config="--psm 11", output_type=pytesseract.Output.DICT
+        )
+        candidates = (
+            parse_large_numeric_tokens(data, image.width, image.height, universe)
+            if parse_large_numeric_tokens else []
+        )
+        return " ".join(text.split()), "ok", candidates
     except Exception as exc:
-        return "", "ocr_error:" + str(exc)[:120]
+        return "", "ocr_error:" + str(exc)[:120], []
 
 
 def is_candidate(text: str):
@@ -338,9 +353,10 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
         saved_items = []
         frame_rows = []
         ocr_states = {}
+        universe = 55 if game == "POWER655" else 45
         for index, frame in enumerate(frames):
             elapsed = index * SAMPLE_SECONDS
-            text, ocr_state = ocr_text(frame)
+            text, ocr_state, numeric_candidates = ocr_text(frame, universe)
             ocr_states[ocr_state] = ocr_states.get(ocr_state, 0) + 1
             candidate, has_va_code = is_candidate(text)
             # Keep a visual baseline every 30 seconds, denser in the first 2 minutes.
@@ -365,8 +381,21 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
                 "ocr_status": ocr_state,
                 "candidate": candidate,
                 "va_code_detected_by_ocr": has_va_code,
+                "numeric_candidates": numeric_candidates,
                 "saved_file": saved_name,
             })
+        live_events = (
+            classify_sequence(consensus_events(frame_rows), game)
+            if consensus_events and classify_sequence else []
+        )
+        live_observations_path = session_dir / "live_observations.json"
+        write_json(live_observations_path, {
+            "session_id": session_id,
+            "game": game,
+            "source_url": source.get("page_url"),
+            "observations": live_events,
+            "warning": "OCR consensus candidates observed on livestream; not yet official Vietlott-confirmed results. Inspect linked evidence frames before relying on them."
+        })
         frames_log = session_dir / "frames_ocr.jsonl"
         frames_log.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in frame_rows), encoding="utf-8")
         sheet_path = make_contact_sheet(saved_items, session_dir / "contact_sheet.jpg")
@@ -382,6 +411,11 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
             "all_sampled_frames_artifact_path": str(temp_dir.relative_to(ROOT)),
             "capture_finished_vn": now_vn().isoformat(),
             "sampled_frame_count": len(frames),
+            "live_observation_count": len(live_events),
+            "live_observations": live_events,
+            "live_observations_file": str(live_observations_path.relative_to(ROOT)),
+            "observed_main_numbers": [item["number"] for item in live_events if item["position"].startswith("main_")],
+            "observed_possible_special": next((item["number"] for item in live_events if item["position"] == "possible_special"), None),
             "actual_sampled_span_seconds": max(0, (len(frames) - 1) * SAMPLE_SECONDS),
             "partial_capture": (
                 "facebook.com" in (source.get("page_url") or "")
