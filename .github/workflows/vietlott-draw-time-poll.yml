@@ -8,12 +8,12 @@ on:
       - "scripts/sync_vietlott.py"
       - "scripts/package_power535.py"
   schedule:
-    # All times are UTC. Viet Nam is UTC+7.
-    # Lotto 5/35: 13:00 VN and 21:00 VN every day.
-    - cron: "0 6,14 * * *"
-    # Power 6/55 / Mega 6/45 draw window: 18:00 VN every day;
-    # only the game scheduled for that weekday will produce a new record.
-    - cron: "0 11 * * *"
+    # All times are UTC. Viet Nam is UTC+7. Start 5 minutes before
+    # the draw to absorb GitHub scheduler delay and catch early publication.
+    # Lotto 5/35: 13:00 and 21:00 VN => 05:55 and 13:55 UTC.
+    - cron: "55 5,13 * * *"
+    # Power 6/55 / Mega 6/45: 18:00 VN => 10:55 UTC.
+    - cron: "55 10 * * *"
   workflow_dispatch:
 
 permissions:
