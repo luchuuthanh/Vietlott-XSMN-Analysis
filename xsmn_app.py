@@ -308,6 +308,89 @@ hr { border-color:var(--line); }
 }
  .st-key-hidden-xsmn-overview { display:none !important; }
 .st-key-hidden-xsmn-validated-data-caption { display:none !important; }
+
+/* Mobile: compact result boards for both history and live results */
+@media (max-width: 600px) {
+  .draw-heading {
+    padding: 10px 12px !important;
+    margin: 5px 0 9px !important;
+    border-radius: 12px !important;
+    gap: 8px !important;
+  }
+  .draw-eyebrow { font-size: .58rem !important; letter-spacing: .1em !important; }
+  .draw-date { font-size: 1.18rem !important; margin-top: 2px !important; }
+  .draw-location { font-size: .68rem !important; margin-top: 2px !important; }
+  .draw-count { min-width: 48px !important; padding-left: 8px !important; }
+  .draw-count strong { font-size: 1.2rem !important; }
+  .draw-count span { font-size: .6rem !important; }
+
+  .station-heading {
+    margin: 10px 0 5px !important;
+    padding: 7px 9px !important;
+    border-radius: 9px !important;
+    border-left-width: 4px !important;
+    font-size: .9rem !important;
+    line-height: 1.2 !important;
+    gap: 5px !important;
+  }
+
+  .prize-row {
+    grid-template-columns: 66px minmax(0, 1fr) !important;
+    gap: 5px !important;
+    padding: 5px 6px !important;
+    margin: 4px 0 !important;
+    border-radius: 9px !important;
+    min-height: 0 !important;
+  }
+  .prize-name {
+    font-size: .68rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+    padding: 3px 5px 3px 0 !important;
+    overflow-wrap: anywhere !important;
+  }
+  .prize-numbers {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+  .number-chip {
+    min-width: 0 !important;
+    min-height: 35px !important;
+    padding: 5px 6px !important;
+    border-radius: 7px !important;
+    font-size: .94rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: .025em !important;
+    flex: 0 1 auto !important;
+  }
+  .prize-jackpot {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  .jackpot-chip {
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 6px 8px !important;
+    font-size: 1.08rem !important;
+    letter-spacing: .04em !important;
+  }
+  .live-wait-spinner {
+    width: 13px !important;
+    height: 13px !important;
+    margin: 2px 4px !important;
+  }
+}
+@media (max-width: 380px) {
+  .prize-row { grid-template-columns: 58px minmax(0, 1fr) !important; gap: 4px !important; }
+  .prize-name { font-size: .62rem !important; }
+  .number-chip { font-size: .86rem !important; padding: 5px 4px !important; }
+  .jackpot-chip { font-size: .98rem !important; }
+}
+
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
