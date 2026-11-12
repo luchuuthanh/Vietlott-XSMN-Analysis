@@ -117,7 +117,7 @@ def discover_official_candidates(game: str):
             notes.append({"page": page, "status": "ok", "youtube_links_found": len(found)})
             # Official website may expose a channel link; /live is checked by yt-dlp below.
             for url in found:
-                if re.search(r"youtube\.com/@[^/?]+/?$, url):
+                if re.search(r"youtube\.com/@[^/?]+/?$", url):
                     candidates.append(url.rstrip("/") + "/live")
         except Exception as exc:
             notes.append({"page": page, "status": "unavailable", "error": str(exc)[:300]})
