@@ -533,6 +533,48 @@ div.prize-row {
   .prize-row .number-chip { font-size: .82rem !important; padding: 4px 4px !important; }
 }
 
+
+/* Reduce prize-label column and label typography for narrow phone screens */
+.prize-row,
+div.prize-row {
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  column-gap: 4px !important;
+  padding: 3px 5px !important;
+  border-radius: 8px !important;
+  margin: 3px 0 !important;
+}
+.prize-row > .prize-name {
+  min-height: 27px !important;
+  padding: 2px 4px 2px 0 !important;
+  font-size: .62rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0 !important;
+  font-weight: 700 !important;
+  border-right-width: 1px !important;
+}
+.prize-row > .prize-numbers {
+  gap: 3px !important;
+}
+.prize-row .number-chip {
+  min-height: 30px !important;
+  padding: 3px 5px !important;
+  font-size: .82rem !important;
+}
+.prize-row .jackpot-chip {
+  min-height: 33px !important;
+  padding: 4px 5px !important;
+  font-size: .94rem !important;
+}
+@media (max-width: 380px) {
+  .prize-row, div.prize-row {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    column-gap: 3px !important;
+    padding: 3px 4px !important;
+  }
+  .prize-row > .prize-name { font-size: .57rem !important; }
+  .prize-row .number-chip { font-size: .77rem !important; padding: 3px 4px !important; }
+}
+
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
