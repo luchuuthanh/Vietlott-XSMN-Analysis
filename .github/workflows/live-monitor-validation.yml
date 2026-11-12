@@ -1,6 +1,14 @@
 name: Live evidence monitor validation
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/live_draw_monitor.py"
+      - "pages/8_Live_Evidence_Monitor.py"
+      - "tests/test_live_draw_monitor.py"
+      - ".github/workflows/vietlott-live-evidence.yml"
+      - ".github/workflows/live-monitor-validation.yml"
   pull_request:
     paths:
       - "scripts/live_draw_monitor.py"
