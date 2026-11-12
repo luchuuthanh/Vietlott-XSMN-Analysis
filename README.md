@@ -107,3 +107,18 @@ Tạo ứng dụng mới từ repository này, chọn branch `main`, đặt **Ma
 - So sánh số lần trùng trong top-K với mức kỳ vọng ngẫu nhiên, xuất chi tiết từng ngày ra CSV.
 - Kiểm thử tự động: `tests/test_xsmn_algorithms.py`, workflow `.github/workflows/xsmn-algorithms-tests.yml`.
 - Điểm xếp hạng và kết quả backtest là thống kê quá khứ, không chứng minh khả năng dự đoán hoặc tăng xác suất trúng.
+
+
+## Vietlott: giám sát trực tiếp và lưu bằng chứng vali bóng
+
+- Trang Streamlit: pages/8_Live_Evidence_Monitor.py (tự xuất hiện trong menu ứng dụng Vietlott).
+- Worker: scripts/live_draw_monitor.py.
+- Workflow: .github/workflows/vietlott-live-evidence.yml.
+- Tự chạy 17:50 giờ Việt Nam vào ngày quay; chờ 18:00 và lấy mẫu luồng công khai đến 18:30.
+- Mega 6/45: thứ Tư, thứ Sáu, Chủ nhật. Power 6/55: thứ Ba, thứ Năm, thứ Bảy.
+- Lấy một khung hình mỗi 5 giây; OCR tiếng Việt/Anh; ghi thời điểm, nội dung OCR và SHA-256 từng khung hình. Lưu contact sheet và các ảnh mẫu/ảnh OCR nghi vấn.
+- Toàn bộ gói chứng cứ đính kèm GitHub Actions artifact 90 ngày; ảnh chọn lọc và nhật ký phiên được lưu trong data/live_evidence/.
+- Chạy thủ công tại GitHub → Actions → Vietlott live draw evidence. Có thể nhập URL phát công khai nếu trang chính thức không tự lộ luồng.
+- OCR chỉ gợi ý khung hình cần xem. Người kiểm tra phải nhìn rõ nhãn VA trước khi xác nhận mã vali. Không suy đoán mã vali từ kết quả số.
+- Đây là bộ thu thập bằng chứng từ luồng công khai, không truy cập camera nội bộ hoặc biên bản mật của Vietlott. SHA-256 chứng minh tệp ảnh không bị thay đổi sau khi lưu, không tự chứng minh tính xác thực của luồng gốc.
+- Hướng dẫn chi tiết: data/live_evidence/README.md.
