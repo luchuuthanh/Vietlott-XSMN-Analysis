@@ -401,7 +401,7 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
     finally:
         # Keep all raw sampled frames for the Actions artifact on success.
         # Remove partial frames after a failed capture.
-        if temp_dir.exists() and report.get("status") != "captured":
+        if temp_dir.exists() and report.get("status") not in ("captured", "partial_capture"):
             shutil.rmtree(temp_dir, ignore_errors=True)
     write_json(session_dir / "session.json", report)
     append_jsonl(INDEX_PATH, report)
