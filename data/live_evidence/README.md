@@ -27,6 +27,7 @@ The dashboard is pages/8_Live_Evidence_Monitor.py.
 - The worker does not infer a suitcase code from lottery results.
 - OCR output is only a clue. A human must visually confirm a readable VA label before the suitcase code is marked as identified.
 - SHA-256 proves that a saved image file has not changed after capture; it does not independently authenticate the broadcast source or certify the draw.
+- The official Facebook fanpage is checked as a fallback; Vietlott has said that Facebook live may cover only the first few minutes, so such a session is marked partial_capture when it ends early.
 - If the official page blocks automated access, no live URL is exposed, or the stream cannot be confirmed as live, the session is recorded as capture_failed; no synthetic evidence is created.
 - The full evidence bundle, including every sampled frame, is attached to the GitHub Actions run as an artifact for 90 days. Only selected frames and the session index are committed to data/live_evidence/.
 
