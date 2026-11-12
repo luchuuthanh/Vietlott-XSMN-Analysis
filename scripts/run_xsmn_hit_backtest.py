@@ -1,5 +1,9 @@
 from pathlib import Path
+import sys
 import pandas as pd
+
+# The runner lives in /scripts while the analysis module is at repository root.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from xsmn_hit_analysis import analyze_scope, SCOPES, METHOD_LABELS
 
