@@ -289,7 +289,8 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
     session_id = f"{draw_date}_{game.lower()}"
     session_dir = EVIDENCE_ROOT / "sessions" / game / draw_date
     session_dir.mkdir(parents=True, exist_ok=True)
-    temp_dir = session_dir / "_raw_frames"
+    # Full 5-second samples are retained in the Actions artifact, not committed to Git.
+    temp_dir = ROOT / "artifacts" / "live_evidence" / game / draw_date / "all_sampled_frames"
     if temp_dir.exists():
         shutil.rmtree(temp_dir)
     temp_dir.mkdir(parents=True)
@@ -363,6 +364,7 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
         sheet_path = make_contact_sheet(saved_items, session_dir / "contact_sheet.jpg")
         report.update({
             "status": "captured",
+            "all_sampled_frames_artifact_path": str(temp_dir.relative_to(ROOT)),
             "capture_finished_vn": now_vn().isoformat(),
             "sampled_frame_count": len(frames),
             "saved_frame_count": len(saved_items),
@@ -386,7 +388,9 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
             "error": str(exc)[:4000],
         })
     finally:
-        if temp_dir.exists():
+        # Keep all raw sampled frames for the Actions artifact on success.
+        # Remove partial frames after a failed capture.
+        if temp_dir.exists() and report.get("status") != "captured":
             shutil.rmtree(temp_dir, ignore_errors=True)
     write_json(session_dir / "session.json", report)
     append_jsonl(INDEX_PATH, report)
