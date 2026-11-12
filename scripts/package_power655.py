@@ -88,7 +88,7 @@ def main():
         "main_numbers_per_draw": 6, "number_universe": "01-55",
         "special_number_per_draw": 1, "special_number_universe": "01-55",
         "source_file": package_file,
-        "source_sha256": hashlib.sha256((OUT / "power655_draws_00001_01419.jsonl").read_bytes()).hexdigest(), "source_bytes": (OUT / "power655_draws_00001_01419.jsonl").stat().st_size,
+        "source_sha256": hashlib.sha256((OUT / package_file).read_bytes()).hexdigest(), "source_bytes": (OUT / package_file).stat().st_size,
         "draw_00944_correction": {"date": "2023-10-14", "main_numbers": [8, 23, 30, 34, 38, 47], "special_number": 10},
         "statistics": {"main_frequency_rows": 55, "special_frequency_rows": 55,
             "pair_combinations": len(pair_counts), "triple_combinations": len(triple_counts),
