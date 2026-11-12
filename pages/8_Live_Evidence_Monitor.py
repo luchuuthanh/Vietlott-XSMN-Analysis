@@ -79,6 +79,11 @@ st.write("**Bắt đầu ghi:**", selected.get("capture_started_vn", "—"))
 st.write("**Kết thúc ghi:**", selected.get("capture_finished_vn", "—"))
 if selected.get("error"):
     st.error(selected["error"])
+if selected.get("capture_note"):
+    if selected.get("status") == "partial_capture":
+        st.warning(selected["capture_note"])
+    else:
+        st.success(selected["capture_note"])
 if selected.get("actions_run_url"):
     st.markdown(f"[Mở nhật ký GitHub Actions của phiên này]({selected['actions_run_url']})")
 
