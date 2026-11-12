@@ -89,7 +89,7 @@ def youtube_urls_from_html(html: str):
         raw = node.get("src") or node.get("href") or ""
         if "youtube.com" in raw or "youtu.be" in raw:
             urls.add(raw.replace("&amp;", "&"))
-    for match in re.findall(r"https?[^\"'\\s<>]*(?:youtube\\.com|youtu\\.be)[^\"'\\s<>]*", html):
+    for match in re.findall(r"https?[^\"'\s<>]*(?:youtube\.com|youtu\.be)[^\"'\s<>]*", html):
         urls.add(match.replace("&amp;", "&"))
     return sorted(urls)
 
@@ -117,7 +117,7 @@ def discover_official_candidates(game: str):
             notes.append({"page": page, "status": "ok", "youtube_links_found": len(found)})
             # Official website may expose a channel link; /live is checked by yt-dlp below.
             for url in found:
-                if re.search(r"youtube\\.com/@[^/?]+/?$", url):
+                if re.search(r"youtube\.com/@[^/?]+/?$, url):
                     candidates.append(url.rstrip("/") + "/live")
         except Exception as exc:
             notes.append({"page": page, "status": "unavailable", "error": str(exc)[:300]})
@@ -242,7 +242,7 @@ def is_candidate(text: str):
     normalized = text.upper().replace(" ", "")
     has_vali_code = bool(re.search(r"VA[-_:]?[1-4]", normalized))
     keywords = any(word in normalized for word in ("NIÊMPHONG", "NIEMPHONG", "VALI", "BÓNG", "BONG", "CHỌN", "CHON"))
-    has_serial = bool(re.search(r"\\b\\d{5,8}\\b", text))
+    has_serial = bool(re.search(r"\b\d{5,8}\b", text))
     return has_vali_code or keywords or has_serial, has_vali_code
 
 
@@ -260,7 +260,7 @@ def make_contact_sheet(items, output_path: Path):
         x = (index % columns) * thumb_w
         y = (index // columns) * (thumb_h + label_h)
         sheet.paste(image, (x, y))
-        label = f"{item['elapsed_seconds']}s | {item['ocr_text'][:34]}"
+        label = f"{item['elapsed_seconds']}s | {item['ocr_text'][:34].encode('ascii', 'replace').decode()}"
         draw.text((x + 4, y + thumb_h + 3), label, fill="black")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output_path, quality=82, optimize=True)
