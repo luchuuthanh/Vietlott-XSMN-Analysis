@@ -1,0 +1,27 @@
+name: Live evidence monitor validation
+
+on:
+  pull_request:
+    paths:
+      - "scripts/live_draw_monitor.py"
+      - "pages/8_Live_Evidence_Monitor.py"
+      - "tests/test_live_draw_monitor.py"
+      - ".github/workflows/vietlott-live-evidence.yml"
+      - ".github/workflows/live-monitor-validation.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: python -m pip install requests beautifulsoup4 Pillow pytesseract yt-dlp
+      - name: Compile worker and dashboard
+        run: |
+          python -m py_compile scripts/live_draw_monitor.py pages/8_Live_Evidence_Monitor.py
+      - name: Run monitor unit tests
+        run: python -m unittest discover -s tests -p "test_live_draw_monitor.py" -v
