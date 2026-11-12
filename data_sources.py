@@ -6,7 +6,7 @@ import streamlit as st
 
 RAW = "https://raw.githubusercontent.com/luchuuthanh/Vietlott-XSMN-Analysis/main/data/vietlott/{file}"
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_vietlott(game):
     game_key = str(game).upper()
     key = {"POWER655": "power655.jsonl", "MEGA645": "power645.jsonl",
