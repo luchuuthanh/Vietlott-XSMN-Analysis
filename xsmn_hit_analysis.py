@@ -99,8 +99,9 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
         prior = history[:idx]
         method_picks = {}
         method_ranks = {}
+        feature_scores = {method: _score_vector(prior, method) for method in METHODS}
         for method in METHODS:
-            scores = _score_vector(prior, method)
+            scores = feature_scores[method]
             ordered = sorted(range(100), key=lambda n: (-scores[n], n))
             picks = ordered[:int(top_k)]
             method_picks[method] = set(picks)
@@ -131,6 +132,12 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
                     for m in picked_by
                 ) if picked_by else "—",
                 "Số phương pháp cùng chọn": len(picked_by),
+                "Tần suất 30 kỳ trước": int(feature_scores["freq_30"][number]),
+                "Tần suất 90 kỳ trước": int(feature_scores["freq_90"][number]),
+                "Tần suất 365 kỳ trước": int(feature_scores["freq_365"][number]),
+                "Số kỳ vắng trước đó": int(feature_scores["gap"][number]),
+                "Điểm EWMA trước đó": round(float(feature_scores["ewma"][number]), 4),
+                "Điểm kết hợp trước đó": round(float(feature_scores["blend"][number]), 4),
                 "_hit_methods": "|".join(picked_by),
             })
 
