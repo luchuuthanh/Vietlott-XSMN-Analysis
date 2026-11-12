@@ -974,8 +974,9 @@ try:
                         else:
                             slots.append(spinner)
                     st.markdown(
-                        f'<div class="prize-row {"prize-jackpot" if prize == "ĐB" else ""}>'
-                        f'<div class="prize-name">{prize_labels[prize]}</div><div class="prize-numbers">{"".join(slots)}</div></div>',
+                        f'<div style="display:flex;flex-direction:row;align-items:center;gap:5px;width:100%;box-sizing:border-box;padding:4px 6px;margin:3px 0;border:1px solid rgba(148,190,199,.18);border-radius:9px;background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96));">'
+                        f'<div style="flex:0 0 66px;width:66px;max-width:66px;box-sizing:border-box;text-align:center;overflow-wrap:anywhere;padding:3px 4px 3px 0;border-right:1px solid rgba(148,190,199,.22);color:{"#f2c66d" if prize == "ĐB" else "#75dfc5"};font-size:11px;line-height:1.1;font-weight:800;">{prize_labels[prize]}</div>'
+                        f'<div style="display:flex;flex:1 1 0;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;">{"".join(slots)}</div></div>',
                         unsafe_allow_html=True,
                     )
             st.markdown("""<style>
@@ -1217,9 +1218,9 @@ try:
                     is_jackpot = prize_label in {"ĐB", "DB", "GĐB"}
                     chips = "".join(f'<span class="number-chip {"jackpot-chip" if is_jackpot else ""}">{v}</span>' for v in values)
                     st.markdown(
-                        f'<div class="prize-row {"prize-jackpot" if is_jackpot else ""}>'
-                        f'<div class="prize-name">{"ĐẶC BIỆT" if is_jackpot else "GIẢI " + html.escape(prize_label)}</div>'
-                        f'<div class="prize-numbers">{chips}</div></div>',
+                        f'<div style="display:flex;flex-direction:row;align-items:center;gap:5px;width:100%;box-sizing:border-box;padding:4px 6px;margin:3px 0;border:1px solid rgba(148,190,199,.18);border-radius:9px;background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96));">'
+                        f'<div style="flex:0 0 66px;width:66px;max-width:66px;box-sizing:border-box;text-align:center;overflow-wrap:anywhere;padding:3px 4px 3px 0;border-right:1px solid rgba(148,190,199,.22);color:{"#f2c66d" if is_jackpot else "#75dfc5"};font-size:11px;line-height:1.1;font-weight:800;">{"ĐẶC BIỆT" if is_jackpot else "GIẢI " + html.escape(prize_label)}</div>'
+                        f'<div style="display:flex;flex:1 1 0;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;">{chips}</div></div>',
                         unsafe_allow_html=True,
                     )
             st.caption(f"Ngày mới nhất hiện có trong kho các đài đã chọn: {pd.to_datetime(latest_date).strftime('%d/%m/%Y')}.")
