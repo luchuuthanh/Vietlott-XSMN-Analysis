@@ -327,6 +327,10 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
             "is_live_confirmed_by_extractor": True,
             "discovery_notes": source.get("discovery_notes", []),
         }
+        if "facebook.com" in source["page_url"]:
+            # Vietlott's Facebook live is a short preview, not the full 30-minute broadcast.
+            duration = min(duration, 300)
+            report["facebook_preview_limited_to_seconds"] = duration
         report["capture_duration_seconds"] = duration
         frames = ffmpeg_capture(source, temp_dir, duration)
         if not frames:
@@ -376,11 +380,18 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
             "capture_finished_vn": now_vn().isoformat(),
             "sampled_frame_count": len(frames),
             "actual_sampled_span_seconds": max(0, (len(frames) - 1) * SAMPLE_SECONDS),
-            "partial_capture": max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60,
+            "partial_capture": (
+                "facebook.com" in (source.get("page_url") or "")
+                or max(0, (len(frames) - 1) * SAMPLE_SECONDS) < DRAW_MINUTES * 60 - 60
+            ),
             "capture_note": (
-                "Nguồn phát kết thúc/gián đoạn trước thời lượng dự kiến; vẫn giữ các khung hình đã lấy."
-                if max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60 else
-                "Đã lấy mẫu gần hết thời lượng phiên dự kiến."
+                "Đây là livestream xem trước trên Facebook (tối đa khoảng 5 phút), không phải bản phát đủ 30 phút."
+                if "facebook.com" in (source.get("page_url") or "") else
+                (
+                    "Nguồn phát kết thúc/gián đoạn trước thời lượng dự kiến; vẫn giữ các khung hình đã lấy."
+                    if max(0, (len(frames) - 1) * SAMPLE_SECONDS) < DRAW_MINUTES * 60 - 60
+                    else "Đã lấy mẫu gần hết thời lượng phiên dự kiến."
+                )
             ),
             "saved_frame_count": len(saved_items),
             "ocr_status_counts": ocr_states,
