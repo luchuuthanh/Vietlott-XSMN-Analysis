@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 import streamlit as st
+from data_sources import fetch_vietlott
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_ROOT = ROOT / "data" / "live_evidence"
@@ -35,6 +36,46 @@ st.markdown(
     "- [Danh sách video quay số Mega 6/45](https://vietlott.vn/vi/trung-thuong/danh-sach-video-quay-so-mo-thuong-645)\n"
     "- [Bài giải thích về phát trực tiếp 18:00–18:30 trên website, YouTube và SCTV2](https://tuoitre.vn/nld/vi-sao-vietlott-khong-livestream-toan-bo-cac-phien-quay-so-mo-thuong-tren-mang-xa-hoi-196250714145608742.htm)"
 )
+
+st.markdown("### Kết quả Vietlott công bố — kho đối chiếu")
+st.caption(
+    "Dữ liệu lịch sử được đồng bộ từ kho lưu trữ bên thứ ba có ghi nguồn. "
+    "Đây là nguồn đối chiếu độc lập, không thay thế biên bản/kết quả công bố trực tiếp trên Vietlott."
+)
+game_options = {
+    "Power 6/55": "POWER655",
+    "Mega 6/45": "MEGA645",
+    "Lotto 5/35": "POWER535",
+}
+chosen_game_label = st.selectbox("Chọn loại hình", list(game_options), key="history_game")
+try:
+    history = fetch_vietlott(game_options[chosen_game_label]).sort_values(
+        ["date", "draw_id"], ascending=[False, False]
+    ).head(30).copy()
+    history["Ngày"] = pd.to_datetime(history["date"]).dt.strftime("%d/%m/%Y")
+    history["Kỳ"] = history["draw_id"].astype(str)
+    if game_options[chosen_game_label] == "POWER535":
+        history["5 số chính"] = history[["n1", "n2", "n3", "n4", "n5"]].apply(
+            lambda row: " – ".join(f"{int(n):02d}" for n in row), axis=1
+        )
+        history["Số đặc biệt (01–12)"] = pd.to_numeric(
+            history["special"], errors="coerce"
+        ).map(lambda n: f"{int(n):02d}" if pd.notna(n) else "—")
+        display_columns = ["Ngày", "Kỳ", "5 số chính", "Số đặc biệt (01–12)"]
+    else:
+        history["6 số chính"] = history[["n1", "n2", "n3", "n4", "n5", "n6"]].apply(
+            lambda row: " – ".join(f"{int(n):02d}" for n in row), axis=1
+        )
+        display_columns = ["Ngày", "Kỳ", "6 số chính"]
+        if game_options[chosen_game_label] == "POWER655":
+            history["Số đặc biệt"] = pd.to_numeric(
+                history["special"], errors="coerce"
+            ).map(lambda n: f"{int(n):02d}" if pd.notna(n) else "—")
+            display_columns.append("Số đặc biệt")
+    st.dataframe(history[display_columns], use_container_width=True, hide_index=True)
+    st.caption(f"Đang hiển thị {len(history)} kỳ gần nhất. Dữ liệu được làm mới tối đa mỗi giờ trong ứng dụng.")
+except Exception as exc:
+    st.error(f"Chưa tải được kho kết quả {chosen_game_label}: {exc}")
 
 records = []
 if INDEX.exists():
