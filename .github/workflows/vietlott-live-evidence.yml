@@ -67,7 +67,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vietlott-live-evidence-${{ github.run_id }}
-          path: data/live_evidence/
+          path: |
+            data/live_evidence/
+            artifacts/live_evidence/
           if-no-files-found: warn
           retention-days: 90
           compression-level: 6
