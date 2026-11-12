@@ -11,15 +11,8 @@ on:
       - "app.py"
       - ".github/workflows/vietlott-daily-sync.yml"
   schedule:
-    # Poll after the two daily Lotto 5/35 draws and the evening Mega/Power draws.
-    # 07:15 Vietnam (00:15 UTC): catch the provider's overnight publication.
-    # 13:45 Vietnam (06:45 UTC): after Lotto 5/35 13:00 draw.
-    # 18:45 Vietnam (11:45 UTC): after Mega 6/45 / Power 6/55 18:00 draws.
-    # 19:15 Vietnam (12:15 UTC): catch same-day provider refreshes.
-    # 21:45 Vietnam (14:45 UTC): after Lotto 5/35 21:00 draw.
-    # 23:45 Vietnam (16:45 UTC): end-of-day reconciliation / catch-up.
-    - cron: "15 0,12 * * *"
-    - cron: "45 6,11,14,16 * * *"
+    # Daily full reconciliation fallback at 23:45 Vietnam time (16:45 UTC).
+    - cron: "45 16 * * *"
   workflow_dispatch:
 
 permissions:
