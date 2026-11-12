@@ -20,6 +20,11 @@ on:
       - "data/vietlott/mega645_backfill_00001_00197.jsonl"
       - "data/vietlott/power655.jsonl"
       - "data/vietlott/power645.jsonl"
+      - "data/vietlott/power535.jsonl"
+      - "data/vietlott/power535_verified_supplement.jsonl"
+      - "scripts/sync_vietlott.py"
+      - "tests/test_vietlott_sync.py"
+      - "lotto535_analyzer.py"
       - ".github/workflows/lottery-apps.yml"
   workflow_dispatch:
 
