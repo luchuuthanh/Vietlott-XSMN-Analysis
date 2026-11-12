@@ -97,6 +97,10 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
     for idx in range(start_idx, len(history)):
         target_date, actual = history[idx]
         prior = history[:idx]
+        # N is the draw whose actual result is being evaluated.
+        # N-1 is the immediately preceding draw-cycle at which the
+        # candidate lists are treated as having been produced.
+        filter_date = prior[-1][0]
         method_picks = {}
         method_ranks = {}
         feature_scores = {method: _score_vector(prior, method) for method in METHODS}
@@ -109,7 +113,8 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
             hits = sorted(set(picks) & actual)
             expected = int(top_k) * len(actual) / 100.0
             detail_rows.append({
-                "Ngày kết quả": target_date.strftime("%d/%m/%Y"),
+                "Kỳ lọc N-1": filter_date.strftime("%d/%m/%Y"),
+                "Kỳ kết quả N": target_date.strftime("%d/%m/%Y"),
                 "Phương pháp": METHOD_LABELS[method],
                 "Số đã lọc": " · ".join(f"{n:02d}" for n in picks),
                 "Số trúng": " · ".join(f"{n:02d}" for n in hits) if hits else "—",
@@ -124,8 +129,9 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
         for number in sorted(actual):
             picked_by = [m for m in METHODS if number in method_picks[m]]
             attribution_rows.append({
-                "Ngày kết quả": target_date.strftime("%d/%m/%Y"),
-                "Số thực tế": f"{number:02d}",
+                "Kỳ lọc N-1": filter_date.strftime("%d/%m/%Y"),
+                "Kỳ kết quả N": target_date.strftime("%d/%m/%Y"),
+                "Số thực tế kỳ N": f"{number:02d}",
                 "Nằm trong phương pháp lọc": ", ".join(METHOD_LABELS[m] for m in picked_by) if picked_by else "Không phương pháp nào",
                 "Thứ hạng theo phương pháp": ", ".join(
                     f"{METHOD_LABELS[m]}: #{method_ranks[m][number]}"
