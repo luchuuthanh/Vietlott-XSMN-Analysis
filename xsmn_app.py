@@ -1466,7 +1466,7 @@ try:
                 top_k=top_k2, min_history=30
             )
 
-        def _render_algorithm2_group(title, bundles):
+        def _render_algorithm2_group(title, bundles, is_priority=False):
             st.markdown(f"### {title}")
             if not bundles:
                 st.caption("Chưa có đài đủ dữ liệu trong nhóm này.")
@@ -1479,19 +1479,23 @@ try:
                         chips.append(f'<strong class="algorithm2-number algorithm2-consensus">{escaped}</strong>')
                     else:
                         chips.append(f'<span class="algorithm2-number">{escaped}</span>')
+                display_name = html.escape(display_station_name(station_name))
+                if is_priority:
+                    display_name = f'⭐ <strong>{display_name}</strong> <span class="algorithm2-priority-tag">ƯU TIÊN</span>'
                 st.markdown(
-                    f'<div class="algorithm2-station"><div class="algorithm2-station-name">{html.escape(display_station_name(station_name))}</div><div class="algorithm2-numbers">{"".join(chips)}</div></div>',
+                    f'<div class="algorithm2-station"><div class="algorithm2-station-name">{display_name}</div><div class="algorithm2-numbers">{"".join(chips)}</div></div>',
                     unsafe_allow_html=True,
                 )
 
         st.markdown("""<style>
         .algorithm2-station{display:flex;flex-direction:column;gap:7px;padding:12px;margin:8px 0;border:1px solid rgba(148,190,199,.2);border-radius:13px;background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96))}
         .algorithm2-station-name{color:#75dfc5;font-weight:800;text-align:center}
+        .algorithm2-priority-tag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:#49391f;border:1px solid #f2c66d;color:#ffe5a3;font-size:.72rem;font-weight:900;letter-spacing:.04em}
         .algorithm2-numbers{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
         .algorithm2-number{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:8px 10px;border-radius:9px;background:#1a3943;border:1px solid rgba(89,205,183,.25);color:#f0f8fa;font-size:1.05rem;font-weight:600;font-variant-numeric:tabular-nums}
         .algorithm2-consensus{font-weight:900!important;border:2px solid #f2c66d!important;color:#ffe5a3!important;background:#49391f!important}
         </style>""", unsafe_allow_html=True)
-        _render_algorithm2_group("Nhóm ưu tiên", result2["priority"])
+        _render_algorithm2_group("Nhóm ưu tiên", result2["priority"], is_priority=True)
         _render_algorithm2_group("Nhóm xem xét", result2["review"])
         if not result2["priority"] and not result2["review"]:
             st.info("Chưa đủ 30 kỳ lịch sử phù hợp cho các đài đã chọn.")
