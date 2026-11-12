@@ -1,6 +1,10 @@
 import json
+import tempfile
 import unittest
-from scripts.sync_vietlott import audit_payload, apply_verified_corrections, validate_result
+from pathlib import Path
+from scripts.sync_vietlott import (
+    audit_payload, apply_verified_corrections, merge_verified_supplements, validate_result
+)
 
 class VietlottSyncTests(unittest.TestCase):
     def test_power655(self):
@@ -35,6 +39,35 @@ class VietlottSyncTests(unittest.TestCase):
 
     def test_power535(self):
         self.assertIsNone(validate_result("POWER535", [1, 2, 3, 4, 5, 6]))
+        self.assertIsNotNone(validate_result("POWER535", [1, 2, 3, 4, 5, 13]))
+
+    def test_verified_lotto535_supplement_is_merged_and_sorted(self):
+        upstream = [
+            {"date": "2026-11-11", "id": "01002", "result": [7, 19, 24, 25, 27, 11]}
+        ]
+        supplement = {
+            "date": "2026-11-12", "id": "01003",
+            "result": [4, 8, 10, 17, 33, 11],
+            "data_source": "secondary_cross_check"
+        }
+        payload = ("\\n".join(json.dumps(row) for row in upstream) + "\\n").encode()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            supplement_path = Path(temp_dir) / "supplement.jsonl"
+            supplement_path.write_text(json.dumps(supplement) + "\\n", encoding="utf-8")
+            merged = merge_verified_supplements("POWER535", payload, supplement_path)
+        rows = [json.loads(line) for line in merged.decode().splitlines()]
+        self.assertEqual([row["id"] for row in rows], ["01002", "01003"])
+        self.assertEqual(rows[-1]["result"], [4, 8, 10, 17, 33, 11])
+
+    def test_verified_lotto535_supplement_conflict_fails_closed(self):
+        upstream = [{"date": "2026-11-12", "id": "01003", "result": [1, 2, 3, 4, 5, 6]}]
+        supplement = {"date": "2026-11-12", "id": "01003", "result": [4, 8, 10, 17, 33, 11]}
+        payload = (json.dumps(upstream[0]) + "\\n").encode()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            supplement_path = Path(temp_dir) / "supplement.jsonl"
+            supplement_path.write_text(json.dumps(supplement) + "\\n", encoding="utf-8")
+            with self.assertRaises(RuntimeError):
+                merge_verified_supplements("POWER535", payload, supplement_path)
 
     def test_bingo18(self):
         self.assertIsNone(validate_result("BINGO18", [1, 3, 6]))
