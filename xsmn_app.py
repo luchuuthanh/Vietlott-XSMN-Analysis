@@ -891,8 +891,9 @@ try:
     if selected_nav == "Phân tích trúng theo phương pháp":
         st.subheader("Phân tích số trúng và truy ngược phương pháp lọc")
         st.caption(
-            "Mỗi kỳ được mô phỏng đúng thời điểm: chỉ dùng lịch sử trước kỳ kết quả, "
-            "sau đó đối chiếu số trúng và chỉ rõ số đó đã nằm trong danh sách lọc của phương pháp nào."
+            "Quy ước cố định: N-1 là kỳ chạy lọc và tạo danh sách số; N là kỳ công bố kết quả thực tế. "
+            "Mỗi số trúng ở N được truy ngược về đúng danh sách thuật toán đã tạo tại N-1, "
+            "kèm thứ hạng; tuyệt đối không dùng dữ liệu của N để tạo danh sách N-1."
         )
         analysis_station = st.selectbox(
             "Đài phân tích", selected_stations, key="xsmn_hit_analysis_station"
@@ -941,8 +942,8 @@ try:
             )
             st.markdown("#### 2. Số thực tế đã trúng nằm trong phương pháp lọc nào?")
             st.caption(
-                "Đây là truy ngược về danh sách được tạo ở kỳ trước khi có kết quả. "
-                "Thứ hạng cho biết số trúng đứng vị trí bao nhiêu trong từng phương pháp."
+                "Mỗi dòng ghi rõ ngày lọc N-1 và ngày kết quả N. "
+                "Thứ hạng cho biết số trúng của kỳ N đứng vị trí bao nhiêu trong danh sách đã lọc ở N-1."
             )
             st.dataframe(
                 attribution_hit.drop(columns=["_hit_methods"], errors="ignore"),
@@ -964,7 +965,7 @@ try:
                 ),
                 use_container_width=True, hide_index=True
             )
-            st.markdown("#### 4. Nhật ký lọc và đối chiếu từng kỳ")
+            st.markdown("#### 4. Nhật ký lọc N-1 và đối chiếu kết quả N")
             st.dataframe(
                 detail_hit.drop(columns=["_method", "_hits", "_expected"], errors="ignore"),
                 use_container_width=True, hide_index=True
