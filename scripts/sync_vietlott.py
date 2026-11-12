@@ -195,7 +195,7 @@ def merge_verified_supplements(game: str, payload: bytes, supplement_path: Path 
         rows_by_id[draw_id] = supplement
 
     rows = sorted(rows_by_id.values(), key=lambda row: (str(row.get("date", ""))[:10], int(row["id"])))
-    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\\n" for row in rows)).encode("utf-8")
+    return ("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)).encode("utf-8")
 
 
 def merge_mega645_backfill(payload: bytes) -> bytes:
