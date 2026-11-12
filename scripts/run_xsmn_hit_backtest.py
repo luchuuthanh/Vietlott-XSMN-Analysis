@@ -72,6 +72,38 @@ overall["Tỷ_lệ_trúng_trên_lượt_chọn_pct"] = (
 ).round(4)
 overall.to_csv(OUT / "overall_by_scope_method.csv", index=False, encoding="utf-8-sig")
 
+# Compare station effectiveness across all six methods, per prize scope.
+station_effectiveness = summary_df.groupby(["Đài", "Phạm vi"], as_index=False).agg(
+    Số_phương_pháp=("Phương pháp", "nunique"),
+    Số_kỳ_kiểm_tra=("Số kỳ kiểm tra", "max"),
+    Tổng_lượt_trúng=("Tổng lượt trúng", "sum"),
+    Tổng_kỳ_có_trúng=("Kỳ có ít nhất 1 số trúng", "sum"),
+    Kỳ_vọng_ngẫu_nhiên=("Kỳ vọng ngẫu nhiên", "sum"),
+)
+station_effectiveness["Tổng_lượt_chọn"] = (
+    station_effectiveness["Số_kỳ_kiểm_tra"] * TOP_K * station_effectiveness["Số_phương_pháp"]
+)
+station_effectiveness["Tỷ_lệ_trúng_trên_lượt_chọn_pct"] = (
+    station_effectiveness["Tổng_lượt_trúng"] / station_effectiveness["Tổng_lượt_chọn"] * 100
+).round(4)
+station_effectiveness["So_với_ngẫu_nhiên_lần"] = (
+    station_effectiveness["Tổng_lượt_trúng"] / station_effectiveness["Kỳ_vọng_ngẫu_nhiên"]
+).replace([float("inf")], pd.NA).round(4)
+best_methods = summary_df.sort_values(
+    ["Đài", "Phạm vi", "Tỷ lệ trúng trên lượt chọn (%)"],
+    ascending=[True, True, False]
+).drop_duplicates(["Đài", "Phạm vi"])[["Đài", "Phạm vi", "Phương pháp", "Tỷ lệ trúng trên lượt chọn (%)"]]
+best_methods = best_methods.rename(columns={
+    "Phương pháp": "Phương_pháp_tốt_nhất",
+    "Tỷ lệ trúng trên lượt chọn (%)": "Tỷ_lệ_của_phương_pháp_tốt_nhất_pct"
+})
+station_effectiveness = station_effectiveness.merge(best_methods, on=["Đài", "Phạm vi"], how="left")
+station_effectiveness = station_effectiveness.sort_values(
+    ["Phạm vi", "So_với_ngẫu_nhiên_lần", "Tỷ_lệ_trúng_trên_lượt_chọn_pct"],
+    ascending=[True, False, False]
+)
+station_effectiveness.to_csv(OUT / "station_effectiveness.csv", index=False, encoding="utf-8-sig")
+
 meta = [
     f"source_rows={len(df)}",
     f"stations={len(stations)}",
