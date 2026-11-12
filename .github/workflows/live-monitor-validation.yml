@@ -5,8 +5,10 @@ on:
     branches: [main]
     paths:
       - "scripts/live_draw_monitor.py"
+      - "scripts/live_result_detector.py"
       - "pages/8_Live_Evidence_Monitor.py"
       - "tests/test_live_draw_monitor.py"
+      - "tests/test_live_result_detector.py"
       - ".github/workflows/vietlott-live-evidence.yml"
       - ".github/workflows/live-monitor-validation.yml"
   pull_request:
