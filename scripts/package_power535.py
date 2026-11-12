@@ -10,9 +10,16 @@ SOURCE = ROOT / "data/vietlott/power535.jsonl"
 OUT = ROOT / "reports/power535_final_package"
 
 def write_csv(path, rows):
-    if not rows: path.write_text("", encoding="utf-8"); return
+    if not rows:
+        path.write_text("", encoding="utf-8")
+        return
+    # Backtest rows can contain different prize-tier keys. Build a stable union
+    # of all fields so later rows never fail with "dict contains fields not in fieldnames".
+    fieldnames = list(dict.fromkeys(key for row in rows for key in row))
     with path.open("w", newline="", encoding="utf-8-sig") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
 
 def main():
     draws = load_draws(SOURCE)
