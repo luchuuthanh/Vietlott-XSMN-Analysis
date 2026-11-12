@@ -17,6 +17,8 @@ on:
       - "scripts/backtest_vietlott.py"
       - "scripts/package_mega645.py"
       - "scripts/package_power655.py"
+      - "scripts/package_power535.py"
+      - "tests/test_package_power535.py"
       - "data/vietlott/mega645_backfill_00001_00197.jsonl"
       - "data/vietlott/power655.jsonl"
       - "data/vietlott/power645.jsonl"
@@ -39,7 +41,9 @@ jobs:
       - name: Install app dependencies
         run: pip install -r requirements.txt
       - name: Compile both entrypoints and shared modules
-        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py scripts/package_power655.py
+        run: python -m py_compile app.py xsmn_app.py analytics.py data_loader.py generator.py data_sources.py xsmn_archive.py ticket_checker.py scripts/backtest_vietlott.py scripts/package_mega645.py scripts/package_power655.py scripts/package_power535.py
+      - name: Run Power 5/35 package CSV tests
+        run: python -m unittest discover -s tests -p "test_package_power535.py" -v
       - name: Run shared ticket-checker tests
         run: python -m unittest discover -s tests -p "test_ticket_checker.py" -v
       - name: Run Lotto 5/35 shared-checker tests
@@ -95,6 +99,15 @@ jobs:
           PY
       - name: Run full-history expanding-window backtests for both games
         run: python scripts/backtest_vietlott.py --min-history 200 --tickets-per-draw 5
+      - name: Build finalized Lotto 5/35 package
+        run: python scripts/package_power535.py
+      - name: Upload finalized Lotto 5/35 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: power535-final-package-${{ github.run_number }}
+          path: reports/power535_final_package/
+          if-no-files-found: error
+          retention-days: 90
       - name: Build finalized Power 6/55 package
         run: python scripts/package_power655.py
       - name: Upload finalized Power 6/55 package
