@@ -391,6 +391,81 @@ hr { border-color:var(--line); }
   .jackpot-chip { font-size: .98rem !important; }
 }
 
+
+/* Final compact mobile layout: prize label and numbers stay side-by-side */
+@media screen and (max-width: 900px) {
+  .prize-row,
+  div.prize-row {
+    display: grid !important;
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    column-gap: 6px !important;
+    row-gap: 0 !important;
+    padding: 5px 6px !important;
+    margin: 4px 0 !important;
+    min-height: 0 !important;
+  }
+  .prize-row > .prize-name {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 34px !important;
+    border-right: 1px solid rgba(148,190,199,.22) !important;
+    border-bottom: 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 3px 5px 3px 0 !important;
+    font-size: .68rem !important;
+    line-height: 1.12 !important;
+    overflow-wrap: anywhere !important;
+  }
+  .prize-row > .prize-numbers {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+  .prize-row .number-chip {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 4px 5px !important;
+    font-size: .84rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: .015em !important;
+    border-radius: 7px !important;
+  }
+  .prize-row .jackpot-chip {
+    min-height: 36px !important;
+    padding: 5px 6px !important;
+    font-size: .98rem !important;
+  }
+  .draw-heading {
+    padding: 9px 11px !important;
+    margin: 4px 0 7px !important;
+  }
+  .draw-date { font-size: 1.12rem !important; }
+  .station-heading {
+    margin: 8px 0 4px !important;
+    padding: 6px 8px !important;
+    font-size: .84rem !important;
+  }
+}
+@media screen and (max-width: 380px) {
+  .prize-row,
+  div.prize-row { grid-template-columns: 62px minmax(0, 1fr) !important; column-gap: 4px !important; }
+  .prize-row > .prize-name { font-size: .61rem !important; }
+  .prize-row .number-chip { font-size: .77rem !important; padding: 4px 3px !important; }
+}
+
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
