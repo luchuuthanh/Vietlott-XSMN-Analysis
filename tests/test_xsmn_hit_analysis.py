@@ -33,7 +33,15 @@ class XSMNHitAttributionTests(unittest.TestCase):
         self.assertEqual(total, 60)
         self.assertEqual(set(detail["_method"].unique()), set(METHODS))
         self.assertEqual(len(summary), len(METHODS))
+        self.assertIn("Kỳ lọc N-1", attribution.columns)
+        self.assertIn("Kỳ kết quả N", attribution.columns)
         self.assertIn("Nằm trong phương pháp lọc", attribution.columns)
+        self.assertIn("Kỳ lọc N-1", detail.columns)
+        self.assertIn("Kỳ kết quả N", detail.columns)
+        self.assertEqual(
+            attribution.iloc[0]["Kỳ lọc N-1"],
+            (pd.Timestamp("2026-02-09")).strftime("%d/%m/%Y")
+        )
         self.assertIn("Thứ hạng theo phương pháp", attribution.columns)
         self.assertIn("Tần suất 30 kỳ trước", attribution.columns)
         self.assertIn("Số kỳ vắng trước đó", attribution.columns)
