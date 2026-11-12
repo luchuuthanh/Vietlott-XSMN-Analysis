@@ -112,6 +112,7 @@ def analyze_scope(frame, station, scope, top_k=10, min_history=30, test_periods=
                 "Phương pháp": METHOD_LABELS[method],
                 "Số đã lọc": " · ".join(f"{n:02d}" for n in picks),
                 "Số trúng": " · ".join(f"{n:02d}" for n in hits) if hits else "—",
+                "Số lọc nhưng không trúng": " · ".join(f"{n:02d}" for n in sorted(set(picks) - actual)) or "—",
                 "Lượt trúng": len(hits),
                 "Số kỳ lịch sử": len(prior),
                 "Kỳ vọng ngẫu nhiên": expected,
