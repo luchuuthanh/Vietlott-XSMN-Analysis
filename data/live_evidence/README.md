@@ -16,6 +16,7 @@ During the 30-minute session it samples one frame every five seconds, computes S
 - session metadata (session.json);
 - per-frame OCR and hashes (frames_ocr.jsonl);
 - a contact sheet of saved sample/candidate frames;
+- all sampled frames (one every five seconds) in the GitHub Actions artifact, separate from the Git repository;
 - individual frames selected as baseline samples or OCR candidates.
 
 The dashboard is pages/8_Live_Evidence_Monitor.py.
@@ -27,7 +28,7 @@ The dashboard is pages/8_Live_Evidence_Monitor.py.
 - OCR output is only a clue. A human must visually confirm a readable VA label before the suitcase code is marked as identified.
 - SHA-256 proves that a saved image file has not changed after capture; it does not independently authenticate the broadcast source or certify the draw.
 - If the official page blocks automated access, no live URL is exposed, or the stream cannot be confirmed as live, the session is recorded as capture_failed; no synthetic evidence is created.
-- The full evidence bundle is attached to the GitHub Actions run as an artifact for 90 days. Selected frames and the session index are committed to data/live_evidence/.
+- The full evidence bundle, including every sampled frame, is attached to the GitHub Actions run as an artifact for 90 days. Only selected frames and the session index are committed to data/live_evidence/.
 
 ## Run manually
 
