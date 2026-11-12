@@ -921,6 +921,55 @@ try:
             "Số lượng số mỗi phương pháp lọc",
             3, 20, 10, key="xsmn_hit_top_k"
         )
+
+        # Cross-station comparison: identical scope, history length, test window and top-K.
+        station_rows = []
+        for station_name in selected_stations:
+            st_summary, _, _, st_total = analyze_scope(
+                raw, station_name, analysis_scope,
+                top_k=top_k, min_history=min_history, test_periods=test_periods
+            )
+            if st_summary.empty:
+                continue
+            total_hits = int(st_summary["Tổng lượt trúng"].sum())
+            tested_draws = int(st_summary["Số kỳ kiểm tra"].max())
+            method_count = len(st_summary)
+            expected_hits = float(st_summary["Kỳ vọng ngẫu nhiên"].sum())
+            total_selections = tested_draws * top_k * method_count
+            best_row = st_summary.sort_values(
+                "Tỷ lệ trúng trên lượt chọn (%)", ascending=False
+            ).iloc[0]
+            station_rows.append({
+                "Đài": station_name,
+                "Số kỳ kiểm định": tested_draws,
+                "Tổng lượt trúng (6 thuật toán)": total_hits,
+                "Tỷ lệ trúng trên lượt chọn (%)": round(
+                    100 * total_hits / total_selections, 3
+                ) if total_selections else 0,
+                "Kỳ vọng ngẫu nhiên": round(expected_hits, 2),
+                "Hiệu quả so với ngẫu nhiên (lần)": round(
+                    total_hits / expected_hits, 3
+                ) if expected_hits else None,
+                "Thuật toán tốt nhất": best_row["Phương pháp"],
+                "Tỷ lệ thuật toán tốt nhất (%)": best_row["Tỷ lệ trúng trên lượt chọn (%)"],
+                "_sort": total_hits / expected_hits if expected_hits else 0,
+            })
+        st.markdown("#### 1. Xếp hạng hiệu quả theo từng đài")
+        st.caption(
+            f"So sánh cùng phạm vi {analysis_scope}, cùng {min_history} kỳ lịch sử tối thiểu, "
+            f"{test_periods} kỳ kiểm định và top {top_k} số mỗi thuật toán. "
+            "Tỷ lệ tổng hợp tính trên tất cả 6 thuật toán; các lượt trúng giữa thuật toán có thể trùng số."
+        )
+        if station_rows:
+            station_table = pd.DataFrame(station_rows).sort_values(
+                ["_sort", "Tỷ lệ trúng trên lượt chọn (%)"], ascending=False
+            ).drop(columns=["_sort"])
+            station_table.insert(0, "Xếp hạng", range(1, len(station_table) + 1))
+            st.dataframe(station_table, use_container_width=True, hide_index=True)
+        else:
+            st.info("Chưa đủ dữ liệu lịch sử để so sánh các đài trong phạm vi này.")
+
+        st.markdown("#### 2. Phân tích chi tiết một đài")
         summary_hit, detail_hit, attribution_hit, available_draws = analyze_scope(
             raw, analysis_station, analysis_scope,
             top_k=top_k, min_history=min_history, test_periods=test_periods
@@ -931,7 +980,7 @@ try:
                 f"Cần nhiều hơn {min_history} kỳ lịch sử để kiểm định."
             )
         else:
-            st.markdown("#### 1. So sánh hiệu suất từng phương pháp")
+            st.markdown("#### 3. So sánh hiệu suất từng phương pháp")
             st.caption(
                 f"{analysis_station} · {analysis_scope} · {len(detail_hit) // 6} kỳ kiểm định · "
                 f"mỗi phương pháp lọc {top_k} số."
@@ -940,7 +989,7 @@ try:
                 summary_hit.drop(columns=["_method"], errors="ignore"),
                 use_container_width=True, hide_index=True
             )
-            st.markdown("#### 2. Số thực tế đã trúng nằm trong phương pháp lọc nào?")
+            st.markdown("#### 4. Số thực tế đã trúng nằm trong phương pháp lọc nào?")
             st.caption(
                 "Mỗi dòng ghi rõ ngày lọc N-1 và ngày kết quả N. "
                 "Thứ hạng cho biết số trúng của kỳ N đứng vị trí bao nhiêu trong danh sách đã lọc ở N-1."
@@ -958,14 +1007,14 @@ try:
                     "Phương pháp": label,
                     "Số kết quả thực tế đã được lọc trúng": count
                 })
-            st.markdown("#### 3. Phương pháp nào bắt được nhiều số trúng nhất?")
+            st.markdown("#### 5. Phương pháp nào bắt được nhiều số trúng nhất?")
             st.dataframe(
                 pd.DataFrame(method_hit_counts).sort_values(
                     "Số kết quả thực tế đã được lọc trúng", ascending=False
                 ),
                 use_container_width=True, hide_index=True
             )
-            st.markdown("#### 4. Nhật ký lọc N-1 và đối chiếu kết quả N")
+            st.markdown("#### 6. Nhật ký lọc N-1 và đối chiếu kết quả N")
             st.dataframe(
                 detail_hit.drop(columns=["_method", "_hits", "_expected"], errors="ignore"),
                 use_container_width=True, hide_index=True
