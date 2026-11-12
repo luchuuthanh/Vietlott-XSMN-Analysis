@@ -367,7 +367,11 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
         frames_log.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in frame_rows), encoding="utf-8")
         sheet_path = make_contact_sheet(saved_items, session_dir / "contact_sheet.jpg")
         report.update({
-            "status": "captured",
+            "status": (
+                "partial_capture"
+                if max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60
+                else "captured"
+            ),
             "all_sampled_frames_artifact_path": str(temp_dir.relative_to(ROOT)),
             "capture_finished_vn": now_vn().isoformat(),
             "sampled_frame_count": len(frames),
