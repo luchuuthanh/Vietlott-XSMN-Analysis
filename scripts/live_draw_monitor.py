@@ -373,7 +373,10 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
         report.update({
             "status": (
                 "partial_capture"
-                if max(0, (len(frames) - 1) * SAMPLE_SECONDS) < duration - 60
+                if (
+                    "facebook.com" in (source.get("page_url") or "")
+                    or max(0, (len(frames) - 1) * SAMPLE_SECONDS) < DRAW_MINUTES * 60 - 60
+                )
                 else "captured"
             ),
             "all_sampled_frames_artifact_path": str(temp_dir.relative_to(ROOT)),
