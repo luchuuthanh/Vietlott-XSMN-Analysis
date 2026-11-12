@@ -12,9 +12,10 @@ This feature monitors public live broadcasts for Mega 6/45 and Power 6/55.
 
 The worker attempts to discover a currently-live stream from Vietlott's official live page, homepage embeds, and official-site-linked YouTube pages. It rejects a candidate unless the extractor confirms that it is live. A manual public source URL can be supplied when running the workflow manually.
 
-During the 30-minute session it samples one frame every five seconds, computes SHA-256 for every sampled frame, runs Vietnamese/English OCR, and stores:
+During the 30-minute session it samples one frame every two seconds, computes SHA-256 for every sampled frame, runs Vietnamese/English OCR, and stores:
 - session metadata (session.json);
-- per-frame OCR and hashes (frames_ocr.jsonl);
+- per-frame OCR, large-number candidates and hashes (frames_ocr.jsonl);
+- an automatic live number-observation sequence in live_observations.json, requiring repeated OCR agreement across adjacent frames;
 - a contact sheet of saved sample/candidate frames;
 - all sampled frames (one every five seconds) in the GitHub Actions artifact, separate from the Git repository;
 - individual frames selected as baseline samples or OCR candidates.
@@ -25,6 +26,7 @@ The dashboard is pages/8_Live_Evidence_Monitor.py.
 
 - This is a public-stream evidence collector, not access to Vietlott's internal camera archive or official draw minutes.
 - The worker does not infer a suitcase code from lottery results.
+- Large visible number tokens are promoted to a live observation only after repeated OCR agreement across adjacent frames. The sequence is still an OCR observation, not an official result: verify each number against its evidence frame/video before using it as the factual basis.
 - OCR output is only a clue. A human must visually confirm a readable VA label before the suitcase code is marked as identified.
 - SHA-256 proves that a saved image file has not changed after capture; it does not independently authenticate the broadcast source or certify the draw.
 - The official Facebook fanpage is checked as a fallback; Vietlott has said that Facebook live may cover only the first few minutes, so such a session is marked partial_capture when it ends early.
