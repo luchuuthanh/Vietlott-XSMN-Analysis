@@ -10,7 +10,7 @@ from lotto535_analyzer import generate_tickets as generate_power535_tickets
 
 st.set_page_config(page_title="Vietlott Analysis Lab", page_icon="🎯", layout="wide")
 st.title("🎯 VIETLOTT ANALYSIS LAB")
-st.caption("Phân tích Power 6/55 và Mega 6/45. Với Power 6/55, 6 số chính và số đặc biệt được thống kê riêng; số đặc biệt không tham gia tần suất 6 số chính.")
+st.caption("Phân tích Power 6/55, Mega 6/45 và Lotto 5/35. Với Power 6/55, 6 số chính và số đặc biệt được thống kê riêng; số đặc biệt không tham gia tần suất 6 số chính.")
 
 with st.sidebar:
     st.header("Nguồn dữ liệu")
