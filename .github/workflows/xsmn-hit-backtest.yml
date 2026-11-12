@@ -1,0 +1,43 @@
+name: XSMN hit attribution backtest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "xsmn_hit_analysis.py"
+      - "scripts/run_xsmn_hit_backtest.py"
+      - "tests/test_xsmn_hit_analysis.py"
+      - ".github/workflows/xsmn-hit-backtest.yml"
+      - "data/xsmn_5y_canonical.csv"
+      - "data/xsmn_5y_canonical.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xsmn-hit-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install analysis dependencies
+        run: python -m pip install --disable-pip-version-check pandas numpy
+      - name: Run hit-attribution unit tests
+        run: python -m unittest tests.test_xsmn_hit_analysis -v
+      - name: Run full five-year walk-forward backtest
+        run: python scripts/run_xsmn_hit_backtest.py
+      - name: Upload detailed backtest results
+        uses: actions/upload-artifact@v4
+        with:
+          name: xsmn-hit-backtest-results
+          path: backtest_results/
+          if-no-files-found: error
+          retention-days: 30
