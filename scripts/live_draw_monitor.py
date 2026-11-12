@@ -267,11 +267,17 @@ def make_contact_sheet(items, output_path: Path):
     return output_path
 
 
-def load_expected_draw_id(game: str):
+def load_expected_draw_id(game: str, draw_date: str):
+    """Only estimate the next ID when the local result snapshot is fresh."""
     manifest = ROOT / "data" / "vietlott" / "manifest.json"
     try:
         data = json.loads(manifest.read_text(encoding="utf-8"))
-        latest = int(data["games"][game]["latest_draw_id"])
+        game_data = data["games"][game]
+        latest_date = datetime.strptime(game_data["latest_date"], "%Y-%m-%d").date()
+        target_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
+        if (target_date - latest_date).days > 4 or target_date < latest_date:
+            return None
+        latest = int(game_data["latest_draw_id"])
         return f"{latest + 1:05d}"
     except Exception:
         return None
@@ -296,7 +302,7 @@ def capture(game: str, explicit_url: str | None, duration_override: int | None =
         "game": game,
         "game_label": game_label(game),
         "draw_date": draw_date,
-        "expected_draw_id": load_expected_draw_id(game),
+        "expected_draw_id": load_expected_draw_id(game, draw_date),
         "scheduled_start_vn": draw_start.isoformat(),
         "scheduled_end_vn": draw_end.isoformat(),
         "capture_started_vn": started.isoformat(),
