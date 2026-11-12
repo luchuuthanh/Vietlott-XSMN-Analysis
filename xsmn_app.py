@@ -16,6 +16,7 @@ from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_statio
 from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
 from xsmn_group_check import render_group_check
 from xsmn_hit_analysis import analyze_scope, METHOD_LABELS
+from xsmn_algorithm2 import build_algorithm2
 
 st.set_page_config(page_title="XSMN Analysis Lab", page_icon="🍀", layout="wide")
 
@@ -862,7 +863,7 @@ try:
     live_window_start = time(16, 20)
     live_window_end = time(17, 30)
     live_window_open = live_window_start <= vn_now < live_window_end
-    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Phân tích trúng theo phương pháp", "Kiểm tra 3 số"]
+    nav_options = ["Lịch sử kết quả", "Thống kê hai số", "Thống kê ba số", "Thống kê cặp số", "Thuật toán", "Thuật toán 2", "Phân tích trúng theo phương pháp", "Kiểm tra 3 số"]
     if live_window_open:
         nav_options.insert(0, "🔴 Trực tuyến")
     st.markdown("""
@@ -1448,6 +1449,52 @@ try:
 
     if selected_nav == "Kiểm tra 3 số":
         render_group_check(raw, selected_stations)
+
+    if selected_nav == "Thuật toán 2":
+        st.subheader("Thuật toán 2")
+        scope2 = st.radio(
+            "Chọn giải", ["G8", "G7", "ĐB"],
+            horizontal=True, key="algorithm2_prize_scope"
+        )
+        top_k2 = st.slider(
+            "Số lượng số trong mỗi bộ", 3, 20, 10,
+            key="algorithm2_top_k"
+        )
+        with st.spinner("Đang tính toán bộ số theo từng đài..."):
+            result2 = build_algorithm2(
+                raw, selected_stations, scope2,
+                top_k=top_k2, min_history=30
+            )
+
+        def _render_algorithm2_group(title, bundles):
+            st.markdown(f"### {title}")
+            if not bundles:
+                st.caption("Chưa có đài đủ dữ liệu trong nhóm này.")
+                return
+            for station_name, numbers in bundles.items():
+                chips = []
+                for number in numbers:
+                    escaped = html.escape(number)
+                    if number in result2["bold_numbers"]:
+                        chips.append(f'<strong class="algorithm2-number algorithm2-consensus">{escaped}</strong>')
+                    else:
+                        chips.append(f'<span class="algorithm2-number">{escaped}</span>')
+                st.markdown(
+                    f'<div class="algorithm2-station"><div class="algorithm2-station-name">{html.escape(display_station_name(station_name))}</div><div class="algorithm2-numbers">{"".join(chips)}</div></div>',
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown("""<style>
+        .algorithm2-station{display:flex;flex-direction:column;gap:7px;padding:12px;margin:8px 0;border:1px solid rgba(148,190,199,.2);border-radius:13px;background:linear-gradient(110deg,rgba(19,43,53,.96),rgba(14,31,40,.96))}
+        .algorithm2-station-name{color:#75dfc5;font-weight:800;text-align:center}
+        .algorithm2-numbers{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+        .algorithm2-number{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:8px 10px;border-radius:9px;background:#1a3943;border:1px solid rgba(89,205,183,.25);color:#f0f8fa;font-size:1.05rem;font-weight:600;font-variant-numeric:tabular-nums}
+        .algorithm2-consensus{font-weight:900!important;border:2px solid #f2c66d!important;color:#ffe5a3!important;background:#49391f!important}
+        </style>""", unsafe_allow_html=True)
+        _render_algorithm2_group("Nhóm ưu tiên", result2["priority"])
+        _render_algorithm2_group("Nhóm xem xét", result2["review"])
+        if not result2["priority"] and not result2["review"]:
+            st.info("Chưa đủ 30 kỳ lịch sử phù hợp cho các đài đã chọn.")
 
     if selected_nav == "Thuật toán":
         st.subheader("Xếp hạng thống kê 00–99")
