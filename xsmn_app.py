@@ -1466,6 +1466,18 @@ try:
                 top_k=top_k2, min_history=30
             )
 
+        # Danh sách ưu tiên đối chiếu từ bảng thống kê Top 10 ngẫu nhiên
+        # (tạm cố định theo ảnh người dùng cung cấp; sẽ được thay bằng dữ liệu tự động sau).
+        priority_reference = {
+            "G8": {"Trà Vinh", "Vĩnh Long", "Bình Thuận", "Long An"},
+            "G7": {"Bình Phước", "Hậu Giang", "An Giang", "Long An"},
+            "ĐB": {"Cần Thơ", "Bến Tre", "Cà Mau", "An Giang"},
+        }
+        priority_keys = {
+            normalize_station_key(name)
+            for name in priority_reference.get(scope2, set())
+        }
+
         def _render_algorithm2_group(title, bundles, is_priority=False):
             st.markdown(f"### {title}")
             if not bundles:
@@ -1480,8 +1492,9 @@ try:
                     else:
                         chips.append(f'<span class="algorithm2-number">{escaped}</span>')
                 display_name = html.escape(display_station_name(station_name))
-                if is_priority:
-                    display_name = f'⭐ <strong>{display_name}</strong> <span class="algorithm2-priority-tag">ƯU TIÊN</span>'
+                is_reference_priority = normalize_station_key(station_name) in priority_keys
+                if is_reference_priority:
+                    display_name = f'⭐ <strong>{display_name}</strong> <span class="algorithm2-priority-tag">ƯU TIÊN ĐỐI CHIẾU</span>'
                 st.markdown(
                     f'<div class="algorithm2-station"><div class="algorithm2-station-name">{display_name}</div><div class="algorithm2-numbers">{"".join(chips)}</div></div>',
                     unsafe_allow_html=True,
