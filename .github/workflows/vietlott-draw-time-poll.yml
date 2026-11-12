@@ -1,6 +1,12 @@
 name: Vietlott draw-time polling and instant archive packaging
 
 on:
+  # Run once immediately when this workflow is changed, so configuration can be
+  # verified without waiting for the next scheduled draw window.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/vietlott-draw-time-poll.yml"
   schedule:
     # All times are UTC. Viet Nam is UTC+7.
     # Lotto 5/35: 13:00 VN and 21:00 VN every day.
