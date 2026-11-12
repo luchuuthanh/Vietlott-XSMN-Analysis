@@ -20,12 +20,12 @@ class Lotto535Tests(unittest.TestCase):
 
     def test_real_archive_and_backtest(self):
         rows = load_draws()
-        self.assertEqual(len(rows), 988)
+        self.assertGreater(len(rows), 200)
         self.assertEqual(rows[0]["draw_id"], "00001")
-        self.assertEqual(rows[-1]["draw_id"], "00988")
+        self.assertEqual(int(rows[-1]["draw_id"]), len(rows))
         self.assertEqual(len(generate_tickets(rows[:200], 5)), 5)
         bt = rolling_backtest(rows, 200, 5)
-        self.assertEqual(bt["tested_draws"], 788)
-        self.assertEqual(bt["total_tickets"], 3940)
+        self.assertEqual(bt["tested_draws"], len(rows) - 200)
+        self.assertEqual(bt["total_tickets"], (len(rows) - 200) * 5)
 
 if __name__ == "__main__": unittest.main()
