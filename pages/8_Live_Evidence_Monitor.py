@@ -111,6 +111,46 @@ options = [
 ]
 choice = st.selectbox("Chọn phiên", options)
 selected = records[options.index(choice)]
+
+st.markdown("### Đối chiếu livestream với kết quả lưu trữ")
+session_game = selected.get("game")
+session_game_label = selected.get("game_label", "")
+game_key = session_game if session_game in {"POWER655", "MEGA645", "POWER535"} else (
+    "POWER655" if "Power" in session_game_label else "MEGA645" if "Mega" in session_game_label else None
+)
+if game_key:
+    try:
+        archive = fetch_vietlott(game_key)
+        draw_rows = archive[
+            pd.to_datetime(archive["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+            == str(selected.get("draw_date", ""))[:10]
+        ]
+        if draw_rows.empty:
+            st.info("Kho kết quả chưa có bản ghi cùng ngày với phiên livestream này. Chưa thể đối chiếu.")
+        else:
+            published = draw_rows.iloc[-1]
+            published_main = [int(published[f"n{i}"]) for i in range(1, 7)]
+            observed_main = [int(n) for n in (selected.get("observed_main_numbers") or [])]
+            if len(observed_main) == 6:
+                if sorted(observed_main) == sorted(published_main):
+                    st.success("6 số OCR từ livestream trùng với 6 số trong kho kết quả lưu trữ.")
+                else:
+                    st.error("Có sai lệch giữa số OCR từ livestream và kho kết quả. Giữ cả hai nguồn để kiểm tra ảnh gốc; không tự sửa số.")
+                st.write("**Livestream OCR:**", " – ".join(f"{n:02d}" for n in observed_main))
+                st.write("**Kho kết quả:**", " – ".join(f"{n:02d}" for n in published_main))
+            else:
+                st.warning(f"Phiên livestream mới nhận diện được {len(observed_main)}/6 số chính; chưa đủ điều kiện đối chiếu tự động.")
+            if game_key == "POWER655":
+                special = pd.to_numeric(published.get("special"), errors="coerce")
+                if pd.notna(special):
+                    observed_special = selected.get("observed_possible_special")
+                    st.write("**Số đặc biệt trong kho:**", f"{int(special):02d}")
+                    if observed_special is not None:
+                        st.write("**Số đặc biệt OCR:**", f"{int(observed_special):02d}")
+    except Exception as exc:
+        st.warning(f"Không tải được dữ liệu đối chiếu: {exc}")
+else:
+    st.caption("Phiên này chưa gắn với một trong ba loại hình đang lưu trữ.")
 a, b, c = st.columns(3)
 a.metric("Trạng thái", selected.get("status", "—"))
 b.metric("Số khung hình", selected.get("sampled_frame_count", 0))
