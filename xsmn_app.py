@@ -466,6 +466,73 @@ hr { border-color:var(--line); }
   .prize-row .number-chip { font-size: .77rem !important; padding: 4px 3px !important; }
 }
 
+
+/* Compact prize rows: do not depend on viewport media queries (Streamlit mobile iframe may report desktop width). */
+.prize-row,
+div.prize-row {
+  display: grid !important;
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+  grid-template-rows: minmax(38px, auto) !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+  row-gap: 0 !important;
+  padding: 5px 8px !important;
+  margin: 4px 0 !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+.prize-row > .prize-name {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 32px !important;
+  border-right: 1px solid rgba(148,190,199,.24) !important;
+  border-bottom: 0 !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 3px 7px 3px 0 !important;
+  font-size: .78rem !important;
+  line-height: 1.12 !important;
+  overflow-wrap: anywhere !important;
+}
+.prize-row > .prize-numbers {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+.prize-row .number-chip {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  min-height: 34px !important;
+  padding: 4px 6px !important;
+  font-size: .9rem !important;
+  line-height: 1.08 !important;
+  letter-spacing: .02em !important;
+  border-radius: 7px !important;
+}
+.prize-row .jackpot-chip {
+  min-height: 38px !important;
+  padding: 5px 7px !important;
+  font-size: 1rem !important;
+}
+@media (max-width: 420px) {
+  .prize-row, div.prize-row {
+    grid-template-columns: 68px minmax(0, 1fr) !important;
+    column-gap: 5px !important;
+    padding: 4px 5px !important;
+  }
+  .prize-row > .prize-name { font-size: .68rem !important; }
+  .prize-row .number-chip { font-size: .82rem !important; padding: 4px 4px !important; }
+}
+
 </style>
 <div class="hero-xsmn">
  <div class="hero-kicker">XSMN • ANALYTICS LAB</div>
