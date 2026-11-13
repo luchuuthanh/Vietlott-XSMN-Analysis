@@ -1056,6 +1056,10 @@ try:
                     secondary_url = ""
                     source_errors.append(f"Nguồn SXMN chung chưa đọc được: {type(secondary_exc).__name__}: {secondary_exc}")
 
+                # Prize structure is required by the live fallback logic below.
+                # Define it before iterating stations to avoid UnboundLocalError.
+                expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
+
                 for selected_station in selected_stations:
                     station_key = normalize_station_key(selected_station)
                     if station_key in ISSUER_SOURCES:
@@ -1142,7 +1146,6 @@ try:
                 live_source = " | ".join(source_labels) if source_labels else "Chưa nhận được dữ liệu từ nguồn"
 
             order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
-            expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
             prize_labels = {"ĐB": "ĐẶC BIỆT", **{f"G{i}": f"GIẢI G{i}" for i in range(1, 9)}}
             if not live_frame.empty:
                 parsed_live_dates = pd.to_datetime(live_frame["date"], errors="coerce").dt.date
