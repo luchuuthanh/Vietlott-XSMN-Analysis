@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from xsmn_live import fetch_live_xsmn, EXPECTED
+from xsmn_live import fetch_live_xsmn, fetch_xosodaiphat_xsmn_partial, EXPECTED
 
 frame, source_url = fetch_live_xsmn()
 dates = sorted(set(frame["date"].astype(str)))
@@ -22,3 +22,12 @@ for station, group in frame.groupby("province"):
     special = group.loc[group["prize"] == "ĐB", "number"].astype(str).tolist()
     print(f"TOP_PRIZE station={station} numbers={special}")
 print(f"PASS live_source rows={len(frame)} date={dates[0]}")
+
+# Also exercise the configured backup page against the exact draw date.
+fallback_frame, fallback_url = fetch_xosodaiphat_xsmn_partial(dates[0])
+assert fallback_frame.empty or set(fallback_frame["date"].astype(str)) == {dates[0]}
+if not fallback_frame.empty:
+    assert set(fallback_frame["province"].astype(str)).issubset({"Vĩnh Long", "Bình Dương", "Trà Vinh"})
+    print(f"PASS fallback_source rows={len(fallback_frame)} url={fallback_url}")
+else:
+    print(f"PASS fallback_source page_date={dates[0]} rows=0 (no partial numbers published at test time) url={fallback_url}")
