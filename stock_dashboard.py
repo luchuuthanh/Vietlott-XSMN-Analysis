@@ -376,15 +376,47 @@ def render_stock_dashboard():
                 fig.add_trace(go.Scatter(x=chart["date"], y=chart["RSI14"], name="RSI14"), row=3, col=1)
                 fig.add_hline(y=70, line_dash="dot", row=3, col=1)
                 fig.add_hline(y=30, line_dash="dot", row=3, col=1)
+                # Mobile-friendly interaction: pan/zoom without accidental selection overlays.
+                # Unified hover exposes all indicator values for the same trading session.
                 fig.update_layout(
-                    title=f"{selected} · {timeframe}", height=820, template="plotly_dark", xaxis_rangeslider_visible=False,
-                    margin=dict(l=10, r=10, t=35, b=10), legend=dict(orientation="h", y=1.02),
-                    hovermode="x unified"
+                    title=f"{selected} · {timeframe}", height=820, template="plotly_dark",
+                    margin=dict(l=10, r=10, t=48, b=12),
+                    legend=dict(orientation="h", y=1.02, x=0),
+                    hovermode="x", dragmode="pan", uirevision=f"stocklab-{selected}-{timeframe}",
+                    hoverlabel=dict(namelength=-1),
                 )
-                fig.update_yaxes(title_text="Giá", row=1, col=1)
-                fig.update_yaxes(title_text="KL", row=2, col=1)
-                fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_xaxes(rangeslider_visible=False, showspikes=True, spikemode="across",
+                                 spikesnap="cursor", showline=True)
+                fig.update_yaxes(title_text="Giá", row=1, col=1, automargin=True)
+                fig.update_yaxes(title_text="KL", row=2, col=1, automargin=True)
+                fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1, automargin=True)
+                st.plotly_chart(
+                    fig, use_container_width=True,
+                    config={"responsive": True, "scrollZoom": True, "displayModeBar": True,
+                            "doubleClick": "reset", "modeBarButtonsToRemove": ["select2d", "lasso2d"]},
+                    key=f"stocklab_chart_{selected}_{timeframe}",
+                )
+
+                # Reliable touch-friendly alternative to hover: choose a trading
+                # session and read its complete OHLCV + indicator values below.
+                chart_dates = chart["date"].dt.strftime("%d/%m/%Y").tolist()
+                unique_dates = list(dict.fromkeys(reversed(chart_dates)))
+                chosen_date = st.selectbox(
+                    "Chọn phiên để xem chi tiết (dùng được trên điện thoại)",
+                    unique_dates, index=0, key=f"stocklab_detail_date_{selected}",
+                )
+                detail = chart.loc[chart["date"].dt.strftime("%d/%m/%Y") == chosen_date].iloc[-1]
+                d1, d2, d3, d4 = st.columns(4)
+                d1.metric("Mở cửa", f"{detail['open']:,.2f}")
+                d2.metric("Cao nhất", f"{detail['high']:,.2f}")
+                d3.metric("Thấp nhất", f"{detail['low']:,.2f}")
+                d4.metric("Đóng cửa", f"{detail['close']:,.2f}")
+                e1, e2, e3, e4 = st.columns(4)
+                e1.metric("EMA20", f"{detail['EMA20']:,.2f}" if pd.notna(detail["EMA20"]) else "—")
+                e2.metric("EMA50", f"{detail['EMA50']:,.2f}" if pd.notna(detail["EMA50"]) else "—")
+                e3.metric("EMA100", f"{detail['EMA100']:,.2f}" if pd.notna(detail["EMA100"]) else "—")
+                e4.metric("RSI14", f"{detail['RSI14']:.2f}" if pd.notna(detail["RSI14"]) else "—")
+                st.caption(f"Khối lượng phiên {chosen_date}: {detail['volume']:,.0f} cổ phiếu")
                 macd_fig = go.Figure()
                 macd_fig.add_trace(go.Bar(x=chart["date"], y=chart["MACD_HIST"], name="MACD Histogram"))
                 macd_fig.add_trace(go.Scatter(x=chart["date"], y=chart["MACD"], name="MACD"))
