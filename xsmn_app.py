@@ -12,7 +12,7 @@ from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
-from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_station_key
+from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, fetch_xosodaiphat_xsmn_partial, normalize_station_key
 from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
 from xsmn_group_check import render_group_check
 from xsmn_hit_analysis import analyze_scope, METHOD_LABELS
@@ -1041,41 +1041,69 @@ try:
                 live_source = "Chưa lấy dữ liệu"
                 source_errors = []
             else:
+                if refresh_clicked:
+                    st.cache_data.clear()
+                partial_parts = []
+                source_labels = []
+                source_errors = []
+                secondary_frame = pd.DataFrame(columns=["date", "province", "prize", "number"])
                 @st.cache_data(ttl=30, show_spinner=False)
                 def _load_secondary_partial():
                     return fetch_live_xsmn_partial()
                 try:
-                    if refresh_clicked:
-                        st.cache_data.clear()
                     secondary_frame, secondary_url = _load_secondary_partial()
-                    partial_parts = []
-                    source_labels = []
-                    source_errors = []
-                    for selected_station in selected_stations:
-                        station_key = normalize_station_key(selected_station)
+                except Exception as secondary_exc:
+                    secondary_url = ""
+                    source_errors.append(f"Nguồn SXMN chung chưa đọc được: {type(secondary_exc).__name__}: {secondary_exc}")
+
+                for selected_station in selected_stations:
+                    station_key = normalize_station_key(selected_station)
+                    if station_key in ISSUER_SOURCES:
+                        issuer_frame = pd.DataFrame(columns=["date", "province", "prize", "number"])
+                        issuer_error = None
                         try:
-                            if station_key in ISSUER_SOURCES:
-                                issuer_part, issuer_url, issuer_id = fetch_issuer_xsmn_partial(selected_station)
-                                if not issuer_part.empty:
-                                    partial_parts.append(issuer_part.assign(source_id=issuer_id))
+                            @st.cache_data(ttl=30, show_spinner=False)
+                            def _load_issuer_partial(station):
+                                return fetch_issuer_xsmn_partial(station)
+                            issuer_frame, issuer_url, issuer_id = _load_issuer_partial(selected_station)
+                            if not issuer_frame.empty:
+                                issuer_dates = pd.to_datetime(issuer_frame["date"], errors="coerce").dt.date
+                                if issuer_dates.isna().any() or set(issuer_dates) != {now_vn.date()}:
+                                    raise ValueError(f"Nguồn nhà đài không trả đúng kỳ hôm nay: {sorted(str(x) for x in set(issuer_dates))}.")
+                                partial_parts.append(issuer_frame.assign(source_id=issuer_id))
                                 source_labels.append(f"{selected_station}: nguồn nhà đài")
-                            else:
-                                issuer_url = secondary_url
-                                issuer_id = "live_sxmn_com_vn_temporary"
-                                selected_part = secondary_frame[
-                                    secondary_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
+                        except Exception as exc:
+                            issuer_error = exc
+
+                        if issuer_error is not None or issuer_frame.empty:
+                            try:
+                                @st.cache_data(ttl=30, show_spinner=False)
+                                def _load_xosodaiphat_partial(draw_date):
+                                    return fetch_xosodaiphat_xsmn_partial(draw_date)
+                                fallback_frame, fallback_url = _load_xosodaiphat_partial(now_vn.date().isoformat())
+                                fallback_station = fallback_frame[
+                                    fallback_frame["province"].astype(str).map(normalize_station_name)
+                                    == normalize_station_name(selected_station)
                                 ].copy()
-                                if not selected_part.empty:
-                                    partial_parts.append(selected_part.assign(source_id=issuer_id))
-                                source_labels.append(f"{selected_station}: nguồn kết quả trực tuyến")
-                        except Exception as station_exc:
-                            source_errors.append(f"{selected_station}: {type(station_exc).__name__}: {station_exc}")
-                    live_frame = pd.concat(partial_parts, ignore_index=True) if partial_parts else pd.DataFrame(columns=["date", "province", "prize", "number", "source_id"])
-                    live_source = " | ".join(source_labels) if source_labels else "Chưa nhận được dữ liệu từ nguồn"
-                except Exception as fetch_exc:
-                    live_frame = pd.DataFrame(columns=["date", "province", "prize", "number", "source_id"])
-                    live_source = "Chưa lấy được nguồn kết quả"
-                    source_errors = [f"{type(fetch_exc).__name__}: {fetch_exc}"]
+                                if fallback_station.empty:
+                                    raise ValueError("Nguồn dự phòng chưa công bố số cho đài này.")
+                                partial_parts.append(fallback_station.assign(source_id="live_xosodaiphat_fallback"))
+                                source_labels.append(f"{selected_station}: dự phòng Xổ Số Đại Phát")
+                            except Exception as fallback_exc:
+                                source_errors.append(f"{selected_station}: nhà đài ({issuer_error or 'chưa có số'}); dự phòng ({type(fallback_exc).__name__}: {fallback_exc})")
+                    else:
+                        selected_part = secondary_frame[
+                            secondary_frame["province"].astype(str).map(normalize_station_name)
+                            == normalize_station_name(selected_station)
+                        ].copy()
+                        if not selected_part.empty:
+                            partial_parts.append(selected_part.assign(source_id="live_sxmn_com_vn_temporary"))
+                            source_labels.append(f"{selected_station}: nguồn kết quả trực tuyến")
+                        else:
+                            source_errors.append(f"{selected_station}: nguồn SXMN chung chưa có số.")
+
+                live_frame = pd.concat(partial_parts, ignore_index=True) if partial_parts else pd.DataFrame(columns=["date", "province", "prize", "number", "source_id"])
+                live_source = " | ".join(source_labels) if source_labels else "Chưa nhận được dữ liệu từ nguồn"
 
             order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
             expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
