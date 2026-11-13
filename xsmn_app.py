@@ -1080,48 +1080,66 @@ try:
                             primary_counts = primary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}).value_counts().to_dict()
                             fallback_needed = any(primary_counts.get(prize, 0) < count for prize, count in expected.items())
                         if fallback_needed:
-                            try:
-                                @st.cache_data(ttl=30, show_spinner=False)
-                                def _load_xosodaiphat_partial(draw_date):
-                                    return fetch_xosodaiphat_xsmn_partial(draw_date)
-                                fallback_frame, fallback_url = _load_xosodaiphat_partial(now_vn.date().isoformat())
-                                fallback_station = fallback_frame[
-                                    fallback_frame["province"].astype(str).map(normalize_station_name)
-                                    == normalize_station_name(selected_station)
-                                ].copy()
-                                if fallback_station.empty:
-                                    raise ValueError("Nguồn dự phòng chưa công bố số cho đài này.")
-                                if primary_station.empty:
-                                    partial_parts.append(fallback_station.assign(source_id="live_xosodaiphat_fallback"))
-                                else:
-                                    # Preserve issuer as primary. Add fallback values only for a prize
-                                    # whose already-published primary values are a matching subset.
-                                    fallback_additions = []
-                                    for prize in expected:
-                                        primary_values = primary_station.loc[primary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"].astype(str).tolist()
-                                        fallback_values = fallback_station.loc[fallback_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"].astype(str).tolist()
-                                        if not fallback_values:
-                                            continue
-                                        if not primary_values:
-                                            fallback_additions.extend((prize, value) for value in fallback_values)
-                                        elif set(primary_values).issubset(set(fallback_values)):
-                                            fallback_additions.extend((prize, value) for value in fallback_values if value not in set(primary_values))
-                                        elif not set(fallback_values).issubset(set(primary_values)):
-                                            source_errors.append(f"{selected_station} {prize}: hai nguồn có số khác nhau; giữ nguyên nguồn nhà đài, không trộn.")
-                                    if fallback_additions:
-                                        add = pd.DataFrame([
-                                            {"date": now_vn.date().isoformat(), "province": selected_station, "prize": prize, "number": value, "source_id": "live_xosodaiphat_fallback"}
-                                            for prize, value in fallback_additions
-                                        ])
-                                        partial_parts.append(primary_station.assign(source_id=issuer_id))
-                                        partial_parts.append(add)
-                                    else:
-                                        partial_parts.append(primary_station.assign(source_id=issuer_id))
-                                source_labels.append(f"{selected_station}: nhà đài ưu tiên + dự phòng Đại Phát")
-                            except Exception as fallback_exc:
+                            # First fallback is the shared SXMN live feed, already fetched and date-validated.
+                            fallback_station = secondary_frame[
+                                secondary_frame["province"].astype(str).map(normalize_station_name)
+                                == normalize_station_name(selected_station)
+                            ].copy() if not secondary_frame.empty else pd.DataFrame(columns=["date", "province", "prize", "number"])
+                            if not fallback_station.empty:
+                                fallback_dates = pd.to_datetime(fallback_station["date"], errors="coerce").dt.date
+                                fallback_station = fallback_station.loc[fallback_dates.eq(now_vn.date())].copy()
+                            fallback_source_id = "live_sxmn_com_vn_fallback"
+                            fallback_label = "nguồn SXMN chung dự phòng"
+                            # Third fallback: Xo So Dai Phat, used only if the validated shared feed has no current-draw rows.
+                            if fallback_station.empty:
+                                try:
+                                    @st.cache_data(ttl=30, show_spinner=False)
+                                    def _load_xosodaiphat_partial(draw_date):
+                                        return fetch_xosodaiphat_xsmn_partial(draw_date)
+                                    tertiary_frame, tertiary_url = _load_xosodaiphat_partial(now_vn.date().isoformat())
+                                    fallback_station = tertiary_frame[
+                                        tertiary_frame["province"].astype(str).map(normalize_station_name)
+                                        == normalize_station_name(selected_station)
+                                    ].copy()
+                                    fallback_source_id = "live_xosodaiphat_fallback"
+                                    fallback_label = "nguồn Xổ Số Đại Phát dự phòng"
+                                except Exception as tertiary_exc:
+                                    source_errors.append(f"{selected_station}: Đại Phát chưa đọc được ({type(tertiary_exc).__name__}: {tertiary_exc})")
+
+                            if fallback_station.empty:
                                 if not primary_station.empty:
                                     partial_parts.append(primary_station.assign(source_id=issuer_id))
-                                source_errors.append(f"{selected_station}: dự phòng Đại Phát ({type(fallback_exc).__name__}: {fallback_exc})")
+                                source_errors.append(f"{selected_station}: không có số kỳ hôm nay từ nguồn dự phòng SXMN/Đại Phát.")
+                            elif primary_station.empty:
+                                partial_parts.append(fallback_station.assign(source_id=fallback_source_id))
+                                source_labels.append(f"{selected_station}: {fallback_label}")
+                            else:
+                                # Preserve issuer as primary. Add fallback only where it agrees with the
+                                # already-published primary values; conflicting prize groups are not mixed.
+                                fallback_additions = []
+                                for prize in expected:
+                                    primary_values = primary_station.loc[
+                                        primary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"
+                                    ].astype(str).tolist()
+                                    fallback_values = fallback_station.loc[
+                                        fallback_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"
+                                    ].astype(str).tolist()
+                                    if not fallback_values:
+                                        continue
+                                    if not primary_values:
+                                        fallback_additions.extend((prize, value) for value in fallback_values)
+                                    elif set(primary_values).issubset(set(fallback_values)):
+                                        fallback_additions.extend((prize, value) for value in fallback_values if value not in set(primary_values))
+                                    elif not set(fallback_values).issubset(set(primary_values)):
+                                        source_errors.append(f"{selected_station} {prize}: hai nguồn có số khác nhau; giữ số nhà đài, không trộn.")
+                                partial_parts.append(primary_station.assign(source_id=issuer_id))
+                                if fallback_additions:
+                                    add = pd.DataFrame([
+                                        {"date": now_vn.date().isoformat(), "province": selected_station, "prize": prize, "number": value, "source_id": fallback_source_id}
+                                        for prize, value in fallback_additions
+                                    ])
+                                    partial_parts.append(add)
+                                source_labels.append(f"{selected_station}: nhà đài ưu tiên + {fallback_label}")
                         elif not primary_station.empty:
                             partial_parts.append(primary_station.assign(source_id=issuer_id))
                             source_labels.append(f"{selected_station}: nguồn nhà đài")
