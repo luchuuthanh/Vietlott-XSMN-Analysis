@@ -1213,10 +1213,33 @@ try:
                     for selected_station in selected_stations:
                         station_key = normalize_station_key(selected_station)
                         if station_key in ISSUER_SOURCES:
-                            issuer_verified, issuer_url, issuer_id = fetch_issuer_xsmn(selected_station)
-                            compare_issuer_with_secondary(issuer_verified, secondary_verified, selected_station)
-                            verified_parts.append(issuer_verified.assign(source_id=issuer_id))
-                            verified_labels.append(f"{selected_station}: nhà đài + nguồn đối chiếu khớp")
+                            # The issuer may publish prizes gradually. Verify every number it has
+                            # against the complete secondary draw, then use the complete validated
+                            # secondary station as the canonical 18-result record.
+                            issuer_partial, issuer_url, issuer_id = fetch_issuer_xsmn_partial(selected_station)
+                            secondary_station = secondary_verified[
+                                secondary_verified["province"].astype(str).map(normalize_station_name)
+                                == normalize_station_name(selected_station)
+                            ].copy()
+                            if secondary_station.empty:
+                                raise ValueError(f"{selected_station}: thiếu bộ kết quả đầy đủ từ nguồn xác nhận.")
+                            secondary_dates = pd.to_datetime(secondary_station["date"], errors="coerce").dt.date
+                            if secondary_dates.isna().any() or set(secondary_dates) != {now_vn.date()}:
+                                raise ValueError(f"{selected_station}: nguồn xác nhận không thuộc kỳ {now_vn.date().isoformat()}.")
+                            if not issuer_partial.empty:
+                                issuer_dates = pd.to_datetime(issuer_partial["date"], errors="coerce").dt.date
+                                if issuer_dates.isna().any() or set(issuer_dates) != {now_vn.date()}:
+                                    raise ValueError(f"{selected_station}: nguồn nhà đài trả dữ liệu sai ngày.")
+                                for prize, issuer_group in issuer_partial.groupby(issuer_partial["prize"].astype(str).str.upper().replace({"DB": "ĐB"})):
+                                    secondary_group = secondary_station[
+                                        secondary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize
+                                    ]
+                                    issuer_values = issuer_group["number"].astype(str).map(lambda value: format_prize_number(prize, value)).tolist()
+                                    secondary_values = secondary_group["number"].astype(str).map(lambda value: format_prize_number(prize, value)).tolist()
+                                    if not set(issuer_values).issubset(set(secondary_values)):
+                                        raise ValueError(f"{selected_station} {prize}: số nhà đài không khớp nguồn xác nhận; chặn ghi lịch sử.")
+                            verified_parts.append(secondary_station.assign(source_id="live_sxmn_com_vn_validated_after_issuer_check"))
+                            verified_labels.append(f"{selected_station}: nguồn đầy đủ + số nhà đài đã đối chiếu")
                         else:
                             secondary_station = secondary_verified[
                                 secondary_verified["province"].astype(str).map(normalize_station_name) == normalize_station_name(selected_station)
