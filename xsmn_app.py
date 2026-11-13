@@ -1075,7 +1075,13 @@ try:
                         except Exception as exc:
                             issuer_error = exc
 
-                        if issuer_error is not None or issuer_frame.empty:
+                        # A partial issuer response is not enough: ask the fallback for missing prizes too.
+                        primary_station = issuer_frame.copy() if not issuer_frame.empty and issuer_error is None else pd.DataFrame(columns=["date", "province", "prize", "number"])
+                        fallback_needed = issuer_error is not None or primary_station.empty
+                        if not fallback_needed:
+                            primary_counts = primary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}).value_counts().to_dict()
+                            fallback_needed = any(primary_counts.get(prize, 0) < count for prize, count in expected.items())
+                        if fallback_needed:
                             try:
                                 @st.cache_data(ttl=30, show_spinner=False)
                                 def _load_xosodaiphat_partial(draw_date):
@@ -1087,10 +1093,40 @@ try:
                                 ].copy()
                                 if fallback_station.empty:
                                     raise ValueError("Nguồn dự phòng chưa công bố số cho đài này.")
-                                partial_parts.append(fallback_station.assign(source_id="live_xosodaiphat_fallback"))
-                                source_labels.append(f"{selected_station}: dự phòng Xổ Số Đại Phát")
+                                if primary_station.empty:
+                                    partial_parts.append(fallback_station.assign(source_id="live_xosodaiphat_fallback"))
+                                else:
+                                    # Preserve issuer as primary. Add fallback values only for a prize
+                                    # whose already-published primary values are a matching subset.
+                                    fallback_additions = []
+                                    for prize in expected:
+                                        primary_values = primary_station.loc[primary_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"].astype(str).tolist()
+                                        fallback_values = fallback_station.loc[fallback_station["prize"].astype(str).str.upper().replace({"DB": "ĐB"}) == prize, "number"].astype(str).tolist()
+                                        if not fallback_values:
+                                            continue
+                                        if not primary_values:
+                                            fallback_additions.extend((prize, value) for value in fallback_values)
+                                        elif set(primary_values).issubset(set(fallback_values)):
+                                            fallback_additions.extend((prize, value) for value in fallback_values if value not in set(primary_values))
+                                        elif not set(fallback_values).issubset(set(primary_values)):
+                                            source_errors.append(f"{selected_station} {prize}: hai nguồn có số khác nhau; giữ nguyên nguồn nhà đài, không trộn.")
+                                    if fallback_additions:
+                                        add = pd.DataFrame([
+                                            {"date": now_vn.date().isoformat(), "province": selected_station, "prize": prize, "number": value, "source_id": "live_xosodaiphat_fallback"}
+                                            for prize, value in fallback_additions
+                                        ])
+                                        partial_parts.append(primary_station.assign(source_id=issuer_id))
+                                        partial_parts.append(add)
+                                    else:
+                                        partial_parts.append(primary_station.assign(source_id=issuer_id))
+                                source_labels.append(f"{selected_station}: nhà đài ưu tiên + dự phòng Đại Phát")
                             except Exception as fallback_exc:
-                                source_errors.append(f"{selected_station}: nhà đài ({issuer_error or 'chưa có số'}); dự phòng ({type(fallback_exc).__name__}: {fallback_exc})")
+                                if not primary_station.empty:
+                                    partial_parts.append(primary_station.assign(source_id=issuer_id))
+                                source_errors.append(f"{selected_station}: dự phòng Đại Phát ({type(fallback_exc).__name__}: {fallback_exc})")
+                        elif not primary_station.empty:
+                            partial_parts.append(primary_station.assign(source_id=issuer_id))
+                            source_labels.append(f"{selected_station}: nguồn nhà đài");
                     else:
                         selected_part = secondary_frame[
                             secondary_frame["province"].astype(str).map(normalize_station_name)
@@ -1108,6 +1144,13 @@ try:
             order = {"ĐB": 0, "G1": 1, "G2": 2, "G3": 3, "G4": 4, "G5": 5, "G6": 6, "G7": 7, "G8": 8}
             expected = {"ĐB": 1, "G1": 1, "G2": 1, "G3": 2, "G4": 7, "G5": 1, "G6": 3, "G7": 1, "G8": 1}
             prize_labels = {"ĐB": "ĐẶC BIỆT", **{f"G{i}": f"GIẢI G{i}" for i in range(1, 9)}}
+            if not live_frame.empty:
+                parsed_live_dates = pd.to_datetime(live_frame["date"], errors="coerce").dt.date
+                wrong_date = parsed_live_dates.ne(now_vn.date())
+                if wrong_date.any():
+                    rejected = live_frame.loc[wrong_date, "province"].astype(str).unique().tolist()
+                    source_errors.append(f"Đã chặn dữ liệu không thuộc ngày {now_vn.date().strftime('%d/%m/%Y')}: {', '.join(rejected)}.")
+                    live_frame = live_frame.loc[~wrong_date].copy()
             if not live_frame.empty:
                 live_frame["prize"] = live_frame["prize"].astype(str).str.upper().replace({"DB": "ĐB"})
                 live_frame["number"] = live_frame.apply(lambda row: format_prize_number(row["prize"], row["number"]), axis=1)
