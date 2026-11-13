@@ -12,7 +12,7 @@ from analytics import frequency_table, gap_table
 from data_loader import load_xsmn
 from xsmn_archive import fetch_xsmn_five_years
 from xsmn_algorithms import draw_history, rank_numbers, pair_frequency, distribution_report, rolling_backtest
-from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, fetch_xosodaiphat_xsmn_partial, normalize_station_key
+from xsmn_live import fetch_live_xsmn, fetch_live_xsmn_partial, normalize_station_key
 from xsmn_issuer_sources import ISSUER_SOURCES, fetch_issuer_xsmn, fetch_issuer_xsmn_partial, compare_issuer_with_secondary
 from xsmn_group_check import render_group_check
 from xsmn_hit_analysis import analyze_scope, METHOD_LABELS
@@ -1090,22 +1090,6 @@ try:
                                 fallback_station = fallback_station.loc[fallback_dates.eq(now_vn.date())].copy()
                             fallback_source_id = "live_sxmn_com_vn_fallback"
                             fallback_label = "nguồn SXMN chung dự phòng"
-                            # Third fallback: Xo So Dai Phat, used only if the validated shared feed has no current-draw rows.
-                            if fallback_station.empty:
-                                try:
-                                    @st.cache_data(ttl=30, show_spinner=False)
-                                    def _load_xosodaiphat_partial(draw_date):
-                                        return fetch_xosodaiphat_xsmn_partial(draw_date)
-                                    tertiary_frame, tertiary_url = _load_xosodaiphat_partial(now_vn.date().isoformat())
-                                    fallback_station = tertiary_frame[
-                                        tertiary_frame["province"].astype(str).map(normalize_station_name)
-                                        == normalize_station_name(selected_station)
-                                    ].copy()
-                                    fallback_source_id = "live_xosodaiphat_fallback"
-                                    fallback_label = "nguồn Xổ Số Đại Phát dự phòng"
-                                except Exception as tertiary_exc:
-                                    source_errors.append(f"{selected_station}: Đại Phát chưa đọc được ({type(tertiary_exc).__name__}: {tertiary_exc})")
-
                             if fallback_station.empty:
                                 if not primary_station.empty:
                                     partial_parts.append(primary_station.assign(source_id=issuer_id))
