@@ -1070,8 +1070,6 @@ try:
                                 issuer_dates = pd.to_datetime(issuer_frame["date"], errors="coerce").dt.date
                                 if issuer_dates.isna().any() or set(issuer_dates) != {now_vn.date()}:
                                     raise ValueError(f"Nguồn nhà đài không trả đúng kỳ hôm nay: {sorted(str(x) for x in set(issuer_dates))}.")
-                                partial_parts.append(issuer_frame.assign(source_id=issuer_id))
-                                source_labels.append(f"{selected_station}: nguồn nhà đài")
                         except Exception as exc:
                             issuer_error = exc
 
@@ -1126,7 +1124,7 @@ try:
                                 source_errors.append(f"{selected_station}: dự phòng Đại Phát ({type(fallback_exc).__name__}: {fallback_exc})")
                         elif not primary_station.empty:
                             partial_parts.append(primary_station.assign(source_id=issuer_id))
-                            source_labels.append(f"{selected_station}: nguồn nhà đài");
+                            source_labels.append(f"{selected_station}: nguồn nhà đài")
                     else:
                         selected_part = secondary_frame[
                             secondary_frame["province"].astype(str).map(normalize_station_name)
