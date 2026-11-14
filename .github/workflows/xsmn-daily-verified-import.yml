@@ -22,7 +22,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: xsmn-daily-verified-import-recovery-v2
+  group: xsmn-daily-verified-import-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
