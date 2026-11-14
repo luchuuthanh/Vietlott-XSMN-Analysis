@@ -12,6 +12,7 @@ on:
     paths:
       - ".github/workflows/xsmn-daily-verified-import.yml"
       - "scripts/validate_383_xsmn_supplement.py"
+      - "scripts/prepare_xsmn_station_fallback.py"
       - "scripts/publish_xsmn_daily_verified.py"
       - "scripts/verify_xsmn_supplement_sources_v2.py"
   schedule:
@@ -71,8 +72,7 @@ jobs:
               curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \
                 https://api.383.im/lottery/region/mn.json \
                 -o xsmn_383_probe/region_sample.json
-              timeout 60s python scripts/validate_383_xsmn_supplement.py
-              timeout 60s python scripts/publish_xsmn_daily_verified.py --prepare
+              timeout 90s python scripts/prepare_xsmn_station_fallback.py
               TODAY=$(date +%F)
               timeout 120s python scripts/verify_xsmn_supplement_sources_v2.py \
                 --csv xsmn_daily_verified.csv \
