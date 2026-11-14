@@ -9,12 +9,16 @@ import requests
 
 from validate_383_xsmn_supplement import PROVINCES, SCHEDULE, PRIZES
 from verify_xsmn_supplement_sources_v2 import parse_daily
+from xsmn_live import fetch_live_xsmn_partial, normalize_station_key
 
 RAW = Path("xsmn_383_probe/region_sample.json")
 OUT = Path("xsmn_daily_verified.csv")
 REPORT = Path("xsmn_383_supplement/validation_report.json")
 AUDIT = Path("xsmn_383_supplement/station_fallback_audit.json")
 COLUMNS = ["date", "province", "prize", "prize_order", "number", "source"]
+
+def chosen_for_station(rows, station, day, prize):
+    return [str(r[4]) for r in rows if r[0] == day and r[1] == station and r[2] == prize.upper()]
 
 def main():
     today = date.today()
@@ -103,6 +107,31 @@ def main():
                 raise SystemExit(f"{station} {prize.upper()}: invalid count/number format after source selection.")
             for index, value in enumerate(vals):
                 rows.append([day, station, prize.upper(), index, value, source])
+
+    if fallback:
+        # XoSoTin fallback must be confirmed by a third independent source.
+        try:
+            live_frame, live_url = fetch_live_xsmn_partial()
+        except Exception as exc:
+            raise SystemExit(f"Cannot independently verify fallback stations against sxmn.com.vn: {exc}")
+        live_dates = set(live_frame["date"].astype(str).str[:10])
+        if live_dates != {day}:
+            raise SystemExit(f"sxmn.com.vn date mismatch: {sorted(live_dates)}")
+        for entry in fallback:
+            station = entry["station"]
+            subset = live_frame[live_frame["province"].map(normalize_station_key) == normalize_station_key(station)]
+            if len(subset) != 18:
+                raise SystemExit(f"{station}: sxmn.com.vn has fewer than 18 results; history write blocked.")
+            live_map = defaultdict(list)
+            for _, record in subset.iterrows():
+                prize = str(record["prize"]).upper().replace("ĐB", "DB")
+                live_map[prize].append(str(record["number"]))
+            for prize, (count, length) in PRIZES.items():
+                if sorted(live_map.get(prize.upper(), [])) != sorted(chosen_for_station(rows, station, day, prize)):
+                    raise SystemExit(f"{station} {prize.upper()}: XoSoTin and sxmn.com.vn disagree; history write blocked.")
+            entry["third_source"] = "sxmn.com.vn"
+            entry["third_source_status"] = "MATCH"
+            entry["third_source_url"] = live_url
 
     if {r[1] for r in rows} != expected_stations or len(rows) != len(expected_stations) * 18:
         raise SystemExit("Final daily station set or row count is incomplete.")
