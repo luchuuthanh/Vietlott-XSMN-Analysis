@@ -2,10 +2,10 @@
 """Build today's XSMN draw in parallel from 383 and XoSoTin, filling only incomplete stations."""
 from __future__ import annotations
 import csv, json, sys, time
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
 
 from validate_383_xsmn_supplement import PROVINCES, SCHEDULE, PRIZES
