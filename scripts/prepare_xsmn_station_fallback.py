@@ -2,6 +2,7 @@
 """Build today's XSMN draw in parallel from 383 and XoSoTin, filling only incomplete stations."""
 from __future__ import annotations
 import csv, json, sys, time
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
@@ -95,8 +96,9 @@ def main():
             for prize, (count, length) in PRIZES.items():
                 p = prize.upper()
                 vals = primary.get(p, [])
-                if len(vals) == count and vals != chosen.get(p, []):
-                    raise SystemExit(f"{station} {p}: 383 and XoSoTin disagree; history write blocked.")
+                # Compare every available 383 number, even when that prize is partial.
+                if vals and not all(value in chosen.get(p, []) for value in vals):
+                    raise SystemExit(f"{station} {p}: available 383 values conflict with XoSoTin; history write blocked.")
             source = "383_supplement"
             fallback.append({"station": station, "reason": "missing_or_incomplete_383_station",
                              "fallback_source": "XoSoTin daily page"})
