@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-14T20:55:03Z",
+  "generated_at_utc": "2026-11-15T13:14:07Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -23,12 +23,12 @@
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl"
     },
     "MEGA645": {
-      "records": 1588,
+      "records": 1589,
       "first_date": "2016-07-20",
-      "latest_date": "2026-11-13",
+      "latest_date": "2026-11-15",
       "first_draw_id": "00001",
-      "latest_draw_id": "01588",
-      "numeric_id_count": 1588,
+      "latest_draw_id": "01589",
+      "numeric_id_count": 1589,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -37,19 +37,19 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "79e00c870057e6dfe8929d39bec744951a9985c09204bf2d53f5573ad3693f26",
-      "bytes": 160879,
+      "sha256": "0a4e7365c38ccd8490bc45fa469bfb3ea8a17c14a4ea388b6024526a50de9464",
+      "bytes": 160980,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl",
       "source_note": "Merged archive: draws 00001-00197 from the NhanAZ-Data/vietlott-research historical Mega 6/45 CSV (which includes official Vietlott source-page/PDF links); draws 00198 onward from the vietvudanh/vietlott-data mirror. Not every historical row has been independently re-checked against official PDFs.",
       "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
     },
     "POWER535": {
-      "records": 1007,
+      "records": 1009,
       "first_date": "2025-06-29",
-      "latest_date": "2026-11-14",
+      "latest_date": "2026-11-15",
       "first_draw_id": "00001",
-      "latest_draw_id": "01007",
-      "numeric_id_count": 1007,
+      "latest_draw_id": "01009",
+      "numeric_id_count": 1009,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -58,8 +58,8 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "926c069d23006d9d44182e353d5d5d4f140e7e83083260eb20ec2f448122171f",
-      "bytes": 106455,
+      "sha256": "7a00ed14e9f37885dd2cd6f11594ade97f6f1565bd95d7c4a222b9c790c9cf7e",
+      "bytes": 106657,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power535.jsonl"
     },
     "MAX3D": {
@@ -115,12 +115,12 @@
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/3d_pro.jsonl"
     },
     "BINGO18": {
-      "records": 100349,
+      "records": 100509,
       "first_date": "2024-12-03",
-      "latest_date": "2026-11-14",
+      "latest_date": "2026-11-15",
       "first_draw_id": "0083123",
-      "latest_draw_id": "0196077",
-      "numeric_id_count": 100349,
+      "latest_draw_id": "0196237",
+      "numeric_id_count": 100509,
       "numeric_id_gaps": [
         {
           "after": "134402",
@@ -345,14 +345,14 @@
           "date": "2026-11-04"
         }
       ],
-      "id_order_anomaly_count": 40,
+      "id_order_anomaly_count": 42,
       "schedule_date_anomalies": [],
       "schedule_date_anomaly_count": 0,
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 100,
-      "sha256": "446fe8e57ac408beac6622e746605a4fded17eb0bf4ee2a51d4c898952c60daf",
-      "bytes": 13625034,
+      "sha256": "a8b901df1ccf64a3b180785b0c8c075552595298b6135eda6e025f35e7ced4fe",
+      "bytes": 13644936,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/bingo18.jsonl",
       "warning": "Numeric draw-id gaps detected; Draw IDs are not in ascending source order. Inspect source history before treating archive as complete."
     }
