@@ -1,0 +1,47 @@
+name: XSMN station fallback safety tests
+
+on:
+  pull_request:
+    paths:
+      - "scripts/prepare_xsmn_station_fallback.py"
+      - "scripts/validate_383_xsmn_supplement.py"
+      - "scripts/verify_xsmn_supplement_sources_v2.py"
+      - "scripts/publish_xsmn_daily_verified.py"
+      - ".github/workflows/xsmn-daily-verified-import.yml"
+
+jobs:
+  fallback-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install parser dependencies
+        run: python -m pip install pandas requests beautifulsoup4
+      - name: Compile all daily XSMN scripts
+        run: |
+          python -m py_compile \
+            scripts/prepare_xsmn_station_fallback.py \
+            scripts/validate_383_xsmn_supplement.py \
+            scripts/verify_xsmn_supplement_sources_v2.py \
+            scripts/publish_xsmn_daily_verified.py \
+            xsmn_live.py
+      - name: Assert fail-closed safety gates and unchanged schedule
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          script = Path("scripts/prepare_xsmn_station_fallback.py").read_text()
+          workflow = Path(".github/workflows/xsmn-daily-verified-import.yml").read_text()
+          publisher = Path("scripts/publish_xsmn_daily_verified.py").read_text()
+          assert "fetch_live_xsmn_partial" in script
+          assert "available 383 values conflict" in script
+          assert "len(subset) != 18" in script
+          assert "XoSoTin and sxmn.com.vn disagree" in script
+          assert "timeout-minutes: 15" in workflow
+          assert "17:30:00" in workflow
+          assert "sleep_for=30" in workflow
+          assert 'check.get("status")!="PASS"' in publisher
+          assert "refusing out-of-order append" in publisher
+          print("PASS: fallback verification gates and existing schedule protections are present")
+          PY
