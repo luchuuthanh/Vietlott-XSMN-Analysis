@@ -1164,12 +1164,15 @@ try:
             else:
                 live_date = None
 
-            all_complete = bool(selected_stations) and not live_frame.empty
+            # Xác nhận và đồng bộ độc lập theo từng đài. Một đài chưa quay xong
+            # không được chặn các đài khác đã đủ 18 kết quả.
+            complete_stations = []
             for station in selected_stations:
                 station_rows = live_frame[live_frame["province"].astype(str).map(normalize_station_name) == normalize_station_name(station)] if not live_frame.empty else live_frame
                 counts = station_rows["prize"].value_counts().to_dict() if not station_rows.empty else {}
-                if len(station_rows) != 18 or any(counts.get(p, 0) != n for p, n in expected.items()):
-                    all_complete = False
+                if len(station_rows) == 18 and counts == expected:
+                    complete_stations.append(station)
+            all_complete = bool(complete_stations)
 
             heading_date = live_date.strftime("%d/%m/%Y") if live_date else "Đang chờ ngày quay"
             st.markdown(f"**{heading_date} · Kết quả theo từng đài**")
@@ -1207,10 +1210,12 @@ try:
             # Chỉ đến đây khi đã đủ 18 kết quả mỗi đài; tải lại nguồn đầy đủ và xác nhận chéo trước khi ghi.
             try:
                 with st.spinner("Đã đủ 18 vị trí. Đang xác nhận nguồn trước khi ghi lịch sử..."):
-                    secondary_verified, secondary_url_verified = fetch_live_xsmn()
+                    # Đọc nguồn đối chiếu ở chế độ partial: đài đã hoàn tất có thể
+                    # được xác minh/lưu ngay, dù đài khác vẫn đang công bố từng giải.
+                    secondary_verified, secondary_url_verified = fetch_live_xsmn_partial()
                     verified_parts = []
                     verified_labels = []
-                    for selected_station in selected_stations:
+                    for selected_station in complete_stations:
                         station_key = normalize_station_key(selected_station)
                         if station_key in ISSUER_SOURCES:
                             # The issuer may publish prizes gradually. Verify every number it has
