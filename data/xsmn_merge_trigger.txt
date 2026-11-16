@@ -1,0 +1,1 @@
+Trigger canonical merge for verified XSMN daily results dated 2026-11-14 and 2026-11-15.

@@ -1,0 +1,64 @@
+name: Merge verified XSMN daily rows into five-year canonical history
+on:
+  push:
+    branches: [main]
+    paths: [data/xsmn_merge_trigger.txt]
+permissions:
+  contents: write
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate and merge
+        run: |
+          python - <<'PY'
+          import csv,json
+          from pathlib import Path
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          d=Path("data"); cp=d/"xsmn_5y_canonical.csv"; mp=d/"xsmn_5y_canonical.json"
+          with cp.open(encoding="utf-8-sig",newline="") as f:
+              rd=csv.DictReader(f); fields=rd.fieldnames; rows=list(rd)
+          keys=("date","province","prize","prize_order")
+          key=lambda r:tuple(str(r.get(k,"")) for k in keys)
+          idx={key(r):r for r in rows}
+          if len(idx)!=len(rows): raise SystemExit("Duplicate keys in canonical")
+          added=[]
+          for date in ("2026-11-14","2026-11-15"):
+              mf=json.loads((d/f"xsmn_daily_verified_{date}.json").read_text())
+              if mf.get("status")!="PASS" or mf.get("date")!=date: raise SystemExit("Manifest not PASS")
+              with (d/f"xsmn_daily_verified_{date}.csv").open(encoding="utf-8-sig",newline="") as f: daily=list(csv.DictReader(f))
+              if len(daily)!=int(mf["expected_rows"]) or len(daily)!=int(mf["actual_rows"]): raise SystemExit("Row count mismatch")
+              if any(r.get("date")!=date or not set(fields).issubset(r) for r in daily): raise SystemExit("Date/schema mismatch")
+              counts={}
+              for r in daily: counts[r["province"]]=counts.get(r["province"],0)+1
+              if set(counts)!=set(mf["stations"]) or any(v!=18 for v in counts.values()): raise SystemExit("Station count mismatch")
+              for r in daily:
+                  k=key(r)
+                  if k in idx:
+                      if any(str(idx[k].get(f,""))!=str(r.get(f,"")) for f in fields): raise SystemExit("Conflicting duplicate")
+                  else: idx[k]=r; added.append(r)
+          rows.extend(added); rows.sort(key=lambda r:(r["date"],r["province"],int(r.get("prize_order") or 0)))
+          with cp.open("w",encoding="utf-8",newline="") as f:
+              w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n"); w.writeheader(); w.writerows(rows)
+          m=json.loads(mp.read_text())
+          m["rows"]=len(rows); m["window_end"]=max(r["date"] for r in rows)
+          m["updated_at_vietnam"]=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat()
+          m["integrated_daily_updates"]=[{"date":"2026-11-14","rows":72,"stations":4,"status":"PASS"},{"date":"2026-11-15","rows":54,"stations":3,"status":"PASS"}]
+          m["note"]="Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026 sau khi xác minh manifest, số dòng, ngày, đài và khóa trùng."
+          mp.write_text(json.dumps(m,ensure_ascii=False,indent=2)+"\n")
+          print(f"MERGE_OK total_rows={len(rows)} added_rows={len(added)}")
+          PY
+      - name: Commit canonical history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json
+          git diff --cached --quiet || (git commit -m "Merge verified XSMN results through 2026-11-15" && git push origin main)
