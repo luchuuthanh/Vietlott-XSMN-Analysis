@@ -14,5 +14,24 @@
     "live_sxmn_com_vn_validated",
     "live_sxmn_com_vn_validated_after_issuer_check"
   ],
-  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync."
+  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync.",
+  "verified_daily_overlays": [
+    {
+      "date": "2026-11-14",
+      "file": "data/xsmn_daily_verified_2026-11-14.csv",
+      "rows": 72,
+      "stations": 4,
+      "status": "PASS",
+      "verification": "Exact match across Minh Ngoc, SXMN.com.vn and XSMN.net; secondary sources, not official issuer certification."
+    },
+    {
+      "date": "2026-11-15",
+      "file": "data/xsmn_daily_verified_2026-11-15.csv",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS",
+      "verification": "Exact match across Minh Ngoc, SXMN.com.vn and XSMN.net; corroborated by VTC News; secondary sources, not official issuer certification."
+    }
+  ],
+  "history_overlay_note": "The Streamlit history loader merges PASS daily overlay files with the canonical archive; canonical CSV itself remains unchanged through 2026-11-13 until the next archive consolidation."
 }
