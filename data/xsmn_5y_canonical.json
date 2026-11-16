@@ -6,7 +6,7 @@
   "rows": 103932,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026 sau khi xác minh manifest, số dòng, ngày, đài và khóa trùng.",
+  "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026; manifest PASS, 103932 dòng dữ liệu từ 2021-11-05 đến 2026-11-15.",
   "last_draw_import": "2026-11-13",
   "last_draw_rows": 54,
   "last_draw_source": "mixed_verified_sources",
@@ -33,7 +33,7 @@
       "verification": "Exact match across Minh Ngoc, SXMN.com.vn and XSMN.net; corroborated by VTC News; secondary sources, not official issuer certification."
     }
   ],
-  "history_overlay_note": "The Streamlit history loader merges PASS daily overlay files with the canonical archive; canonical CSV itself remains unchanged through 2026-11-13 until the next archive consolidation.",
+  "history_overlay_note": "Ngày 14 và 15/11/2026 đã được hợp nhất trực tiếp vào canonical CSV; các tệp daily verified được giữ lại làm bằng chứng xác minh và đối chiếu.",
   "integrated_daily_updates": [
     {
       "date": "2026-11-14",
