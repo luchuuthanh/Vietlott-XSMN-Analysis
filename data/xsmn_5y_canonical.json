@@ -1,20 +1,22 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-16T08:44:08.960735+07:00",
+  "updated_at_vietnam": "2026-11-16T08:46:00+07:00",
   "window_start": "2021-11-05",
   "window_end": "2026-11-15",
   "rows": 103932,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026; manifest PASS, 103932 dòng dữ liệu từ 2021-11-05 đến 2026-11-15.",
-  "last_draw_import": "2026-11-13",
+  "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026; manifest PASS, 103932 dòng dữ liệu từ 2021-11-05 đến 2026-11-15. Đã kiểm tra đủ 72 + 54 dòng, không trùng khóa và giữ nguyên số 0 đầu.",
+  "last_draw_import": "2026-11-15",
   "last_draw_rows": 54,
-  "last_draw_source": "mixed_verified_sources",
+  "last_draw_source": "manual_multi_source_verified",
   "last_draw_source_ids": [
-    "live_sxmn_com_vn_validated",
-    "live_sxmn_com_vn_validated_after_issuer_check"
+    "minh_ngoc_2026-11-15",
+    "sxmn_com_vn_2026-11-15",
+    "xsmn_net_2026-11-15",
+    "vtc_news_2026-11-15"
   ],
-  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync.",
+  "last_draw_verification": "54 rows across 3 stations (18 rows per station) match the retained daily verified overlay exactly; corroborated by multiple secondary published sources. Not official issuer certification.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
