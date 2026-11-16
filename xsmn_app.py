@@ -672,19 +672,35 @@ if source == "Kho lịch sử 5 năm":
             if meta.get("status") != "PASS":
                 raise ValueError("Manifest chưa xác nhận PASS")
             raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
-            # Merge separately verified daily results when the main archive pipeline
-            # has not published that draw yet. Canonical rows take precedence on overlap.
-            daily_verified = Path("data/xsmn_daily_verified_2026-11-07.csv")
-            daily_meta = Path("data/xsmn_daily_verified_2026-11-07.json")
-            if daily_verified.exists() and daily_meta.exists():
+            # Merge every independently verified daily result overlay.
+            # Canonical rows take precedence on overlap; each overlay must have a PASS
+            # manifest, matching row counts, the declared date, and 18 rows per station.
+            for daily_verified in sorted(Path("data").glob("xsmn_daily_verified_*.csv")):
+                daily_meta = daily_verified.with_suffix(".json")
+                if not daily_meta.exists():
+                    continue
                 daily_info = json.loads(daily_meta.read_text(encoding="utf-8"))
-                if daily_info.get("status") == "PASS" and daily_info.get("actual_rows") == daily_info.get("expected_rows"):
-                    daily = pd.read_csv(daily_verified, dtype={"number": str, "last2": str})
-                    raw = pd.concat([raw, daily], ignore_index=True)
-                    raw = raw.drop_duplicates(
-                        subset=["date", "province", "prize", "prize_order"],
-                        keep="first",
-                    )
+                if (
+                    daily_info.get("status") != "PASS"
+                    or daily_info.get("actual_rows") != daily_info.get("expected_rows")
+                    or not daily_info.get("date")
+                ):
+                    continue
+                daily = pd.read_csv(daily_verified, dtype={"number": str, "last2": str})
+                required_daily = ["date", "province", "prize", "prize_order", "number", "number_length", "last2", "last2_numeric", "source"]
+                if not set(required_daily).issubset(daily.columns):
+                    continue
+                if len(daily) != daily_info["expected_rows"] or set(daily["date"].astype(str).str[:10]) != {daily_info["date"]}:
+                    continue
+                if daily.duplicated(subset=["date", "province", "prize", "prize_order"]).any():
+                    continue
+                if not (daily.groupby("province").size() == 18).all():
+                    continue
+                raw = pd.concat([raw, daily], ignore_index=True)
+            raw = raw.drop_duplicates(
+                subset=["date", "province", "prize", "prize_order"],
+                keep="first",
+            )
             # Apply a narrowly scoped, issuer-verified correction overlay.
             correction_path = Path("data/xsmn_correction_2026-11-09_hcm.csv")
             correction_manifest = Path("data/xsmn_correction_2026-11-09_hcm.json")
