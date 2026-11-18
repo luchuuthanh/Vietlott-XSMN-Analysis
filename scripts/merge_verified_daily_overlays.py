@@ -106,6 +106,13 @@ def main():
             right=right.sort_values(KEYS).reset_index(drop=True)
             if not left.equals(right):
                 raise SystemExit(f"{day}: canonical rows differ from verified overlay; refusing overwrite.")
+    if not additions:
+        print(json.dumps({"status":"PASS","action":"already_integrated",
+                          "dates_checked":[x[0] for x in verified],
+                          "rows_added":0,"canonical_rows":int(len(old)),
+                          "window_end":canonical_latest,"duplicate_keys":0},
+                         ensure_ascii=False,indent=2))
+        return
     if additions:
         max_old=pd.to_datetime(old["date"],errors="raise").max().date()
         new_days=sorted(x[0] for x in imported)
