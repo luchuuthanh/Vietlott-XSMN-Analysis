@@ -32,6 +32,7 @@ def main():
         raise SystemExit("Canonical archive manifest is not PASS.")
     if not set(COLS).issubset(old.columns) or old.duplicated(KEYS).any():
         raise SystemExit("Canonical schema invalid or duplicate keys already exist.")
+    canonical_latest=pd.to_datetime(old["date"],errors="raise").max().date().isoformat()
     verified=[]
     for path in sorted(ROOT.glob("xsmn_daily_verified_*.csv")):
         meta_path=path.with_suffix(".json")
@@ -45,6 +46,10 @@ def main():
             raise SystemExit(f"{path}: manifest date/file mismatch.")
         sources=meta.get("sources",[])
         if len(sources)<2 or meta.get("official_issuer_certification") is True:
+            # Legacy overlays already inside the canonical archive do not need to be
+            # re-promoted. A missing-evidence overlay beyond the archive must fail closed.
+            if day <= canonical_latest:
+                continue
             raise SystemExit(f"{day}: source evidence is insufficient or mislabelled.")
         frame=pd.read_csv(path,dtype={"number":str,"last2":str})
         if not set(COLS).issubset(frame.columns) or len(frame)!=meta.get("expected_rows") or len(frame)!=meta.get("actual_rows"):
