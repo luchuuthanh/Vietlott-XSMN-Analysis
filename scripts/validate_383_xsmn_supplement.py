@@ -3,7 +3,7 @@
 from __future__ import annotations
 import csv, json, os, sys
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 SOURCE = Path("xsmn_383_probe/region_sample.json")
@@ -55,6 +55,29 @@ def main():
     if os.environ.get("XSMN_REQUIRE_TODAY") == "1" and not BACKFILL and api_latest_date != today:
         raise SystemExit(f"Daily XSMN feed is stale: API latest date={api_latest_date.isoformat()}, expected={today.isoformat()}. No supplement accepted.")
     end_date=min(today,api_latest_date)
+    # Do not let an in-progress current draw block backfill of already completed dates.
+    # Include today only when every scheduled station has its complete 18-result structure.
+    if BACKFILL and end_date == today:
+        today_item=next((x for x in root["items"] if x.get("d")==today.isoformat()),None)
+        wd=( "mon","tue","wed","thu","fri","sat","sun")[today.weekday()]
+        expected_slugs=SCHEDULE[wd]
+        complete=bool(today_item and isinstance(today_item.get("ps"),list))
+        if complete:
+            stations={x.get("i") for x in today_item["ps"] if isinstance(x,dict)}
+            complete=(stations==expected_slugs)
+            for station in today_item["ps"]:
+                if not isinstance(station,dict) or station.get("i") not in expected_slugs:
+                    complete=False; break
+                prizes=station.get("g")
+                if not isinstance(prizes,dict) or set(prizes)!=set(PRIZES):
+                    complete=False; break
+                for prize,(count,width) in PRIZES.items():
+                    values=prizes.get(prize)
+                    if not isinstance(values,list) or len(values)!=count or any(not str(v).isdigit() or len(str(v))!=width for v in values):
+                        complete=False; break
+                if not complete: break
+        if not complete:
+            end_date=today-timedelta(days=1)
     rows=[]; errors=[]; seen=set(); actual_pairs=set(); daily_dates=set()
     for day in root["items"]:
         try: draw_date=date.fromisoformat(day["d"])
