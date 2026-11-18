@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "draw_date": "2026-11-18",
-  "checked_at_vietnam": "2026-11-18T16:49:00+07:00",
+  "checked_at_vietnam": "2026-11-18T16:50:00+07:00",
   "overall_status": "PARTIAL_WAITING",
   "pass": false,
-  "summary": "Kho lịch sử đã được bù đủ ngày 16-17/11. Kết quả ngày 18/11 hiện chưa có bộ 18 dòng/đài được xác nhận chéo; không nhập số tạm vào canonical.",
+  "summary": "Kho lịch sử đã được bù đủ ngày 16-17/11. Đối chiếu mới nhất cho ngày 18/11 vẫn chưa có bộ kết quả đầy đủ: các nguồn công khai hiển thị Chờ quay/Chưa có dữ liệu hoặc placeholder. Không nhập số chưa xác minh.",
   "canonical_history": {
     "file": "data/xsmn_5y_canonical.csv",
     "manifest": "data/xsmn_5y_canonical.json",
@@ -35,6 +35,10 @@
         {
           "url": "https://vtcnews.vn/xsdn-18-11-ket-qua-xo-so-dong-nai-hom-nay-18-11-2026-xsdn-ngay-18-thang-11-ar1052095.html",
           "observation": "Bài có trang kỳ 18/11 nhưng phần trích xuất chưa có dãy kết quả."
+        },
+        {
+          "url": "https://kqxsviet.vn/xs-dong-nai/18-11-2026",
+          "observation": "Tại lần kiểm tra 16:50, trang vẫn hiển thị Chờ quay và placeholder."
         }
       ],
       "results": {}
@@ -60,6 +64,10 @@
         {
           "url": "https://thethaovanhoa.vn/xsct-18-11-ket-qua-xo-so-can-tho-hom-nay-18-11-2026-truc-tiep-xo-so-hom-nay-ngay-18-thang-11-20261118073912394.htm",
           "observation": "Chỉ có thông tin kỳ quay và kết quả kỳ trước, chưa có bộ số ngày 18/11."
+        },
+        {
+          "url": "https://kqxsviet.vn/xs-can-tho/18-11-2026",
+          "observation": "Tại lần kiểm tra 16:50, trang vẫn hiển thị Chờ quay và placeholder."
         }
       ],
       "results": {}
@@ -89,6 +97,14 @@
         {
           "url": "https://baoquocte.vn/xsst-18-11-2026-ket-qua-xo-so-soc-trang-hom-nay-ngay-18-thang-11-nam-2026-435269.html",
           "observation": "Trang chỉ nhúng iframe trực tiếp, không trích xuất được kết quả số."
+        },
+        {
+          "url": "https://kqxsviet.vn/xs-soc-trang/18-11-2026",
+          "observation": "Tại lần kiểm tra 16:50, trang vẫn hiển thị Chờ quay và placeholder."
+        },
+        {
+          "url": "https://xs.com.vn/xsst-ngay-18-11-2026.html",
+          "observation": "Bảng 18/11 vẫn là placeholder (...), chưa có số công bố."
         }
       ],
       "provisional_results": {
@@ -108,7 +124,8 @@
         ]
       },
       "results": {},
-      "cross_source_confirmed": false
+      "cross_source_confirmed": false,
+      "provisional_results_note": "Các số quan sát từ lần đọc trước chưa được xác nhận độc lập; chỉ lưu trong hồ sơ kiểm tra, không tính là kết quả."
     }
   ],
   "app_runtime": {
