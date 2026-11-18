@@ -88,10 +88,20 @@ jobs:
               set -e
               curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \
                 https://api.383.im/lottery/region/mn.json \
-                -o xsmn_383_probe/region_sample.json
-              timeout 90s python scripts/validate_383_xsmn_supplement.py
-              ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])')
-              API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])')
+                -o xsmn_383_probe/region_sample.json || exit 1
+              timeout 90s python scripts/validate_383_xsmn_supplement.py || exit 1
+              REPORT="xsmn_383_supplement/validation_report.json"
+              if [[ ! -s "$REPORT" ]]; then
+                echo "::error::Validator did not create its report; this is a validation failure, not a no-new-data result."
+                exit 1
+              fi
+              REPORT_STATUS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["status"])') || exit 1
+              if [[ "$REPORT_STATUS" != "PASS" ]]; then
+                echo "::error::383 validation report is not PASS: $REPORT_STATUS"
+                exit 1
+              fi
+              ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])') || exit 1
+              API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])') || exit 1
               if [[ "$API_LATEST" < "$XSMN_BACKFILL_START" ]]; then
                 echo "No new draw date in 383 feed yet (latest=$API_LATEST, needed=$XSMN_BACKFILL_START). Existing PASS overlays have already been consolidated; the next hourly run will retry."
                 exit 0
