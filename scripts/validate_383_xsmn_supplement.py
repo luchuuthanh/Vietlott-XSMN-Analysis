@@ -141,11 +141,18 @@ def main():
     # Explicitly documented corrections supported by the project owner's screenshots.
     # Match by full row identity and old value; fail closed if the expected source value is absent
     # or appears more than once. Original values are retained in correction_audit.json.
-    corrections = [] if DAILY_ONLY else [
+    all_corrections = [
         {"date":"2026-08-29","province":"Long An","prize":"G2","old":"76719","new":"79719",
          "evidence":"User-supplied screenshot of VOH result text, 2026-11-06."},
         {"date":"2026-10-23","province":"Vinh Long","prize":"G4","old":"87992","new":"87962",
          "evidence":"User-supplied screenshot of Minh Ngoc/VOH result text explicitly noting supervisory correction, 2026-11-06."},
+    ]
+    # Apply correction rules only when their dates are inside this validation window.
+    # A narrow backfill starting after the corrected historical dates must not fail
+    # because those rows are intentionally outside the selected supplement.
+    corrections = [] if DAILY_ONLY else [
+        item for item in all_corrections
+        if START.isoformat() <= item["date"] <= end_date.isoformat()
     ]
     applied=[]
     for correction in corrections:
