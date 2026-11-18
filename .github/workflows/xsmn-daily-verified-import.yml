@@ -110,13 +110,13 @@ jobs:
                 echo "No missing draw rows to append."
                 exit 0
               fi
-              timeout 90s python scripts/publish_xsmn_daily_verified.py --prepare
-              BACKFILL_END=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["window_end"])')
+              timeout 90s python scripts/publish_xsmn_daily_verified.py --prepare || exit 1
+              BACKFILL_END=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["window_end"])') || exit 1
               timeout 180s python scripts/verify_xsmn_supplement_sources_v2.py \
                 --csv xsmn_daily_verified.csv \
                 --out xsmn_independent_audit/backfill_comparison.csv \
-                --start "$XSMN_BACKFILL_START" --end "$BACKFILL_END"
-              timeout 90s python scripts/publish_xsmn_daily_verified.py --publish
+                --start "$XSMN_BACKFILL_START" --end "$BACKFILL_END" || exit 1
+              timeout 90s python scripts/publish_xsmn_daily_verified.py --publish || exit 1
             ); then
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
