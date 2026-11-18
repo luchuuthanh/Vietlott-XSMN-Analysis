@@ -1,12 +1,12 @@
-name: XSMN daily verified import (independent of archive audit)
+name: XSMN daily history sync with automatic gap recovery
 
 on:
   workflow_dispatch:
     inputs:
       admin_recovery:
-        description: "Admin-authorized recovery after the 17:30 cutoff"
+        description: "Run an immediate backfill of all missing XSMN draw dates"
         required: false
-        default: "false"
+        default: "true"
         type: boolean
   push:
     paths:
@@ -15,24 +15,25 @@ on:
       - "scripts/publish_xsmn_daily_verified.py"
       - "scripts/verify_xsmn_supplement_sources_v2.py"
   schedule:
-    - cron: "20 9 * * *" # 16:20 Asia/Ho_Chi_Minh
+    - cron: "20 9-13 * * *" # 16:20, 17:20, 18:20, 19:20, 20:20 Asia/Ho_Chi_Minh
 
 permissions:
   contents: write
 
 concurrency:
-  group: xsmn-daily-verified-import-recovery-v2
+  group: xsmn-daily-history-sync
   cancel-in-progress: false
 
 jobs:
   daily-import:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       TZ: Asia/Ho_Chi_Minh
       PYTHONUNBUFFERED: "1"
-      XSMN_REQUIRE_TODAY: "1"
-      XSMN_DAILY_ONLY: "1"
+      XSMN_REQUIRE_TODAY: "0"
+      XSMN_DAILY_ONLY: "0"
+      XSMN_BACKFILL: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,76 +41,91 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install daily validation dependencies
+      - name: Install validation dependencies
         run: |
           export PIP_DEFAULT_TIMEOUT=10 PIP_RETRIES=1
           timeout 120s python -m pip install --no-cache-dir --upgrade pandas requests beautifulsoup4
-      - name: Retry only today's draw validation and independent comparison until 17:30
+      - name: Determine first missing draw date
+        run: |
+          python - <<'PY'
+          import csv
+          from datetime import date, timedelta
+          with open("data/xsmn_5y_canonical.csv", encoding="utf-8-sig", newline="") as f:
+              latest=max(row["date"][:10] for row in csv.DictReader(f))
+          start=(date.fromisoformat(latest)+timedelta(days=1)).isoformat()
+          with open(__import__("os").environ["GITHUB_ENV"],"a") as f:
+              f.write(f"XSMN_BACKFILL_START={start}\\n")
+          print(f"Canonical history ends {latest}; backfill starts {start}")
+          PY
+      - name: Retry backfill and current completed draw until verified
         shell: bash
         run: |
           set -uo pipefail
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.admin_recovery }}" == "true" ]] || [[ "${{ github.event_name }}" == "push" && "${{ github.event.head_commit.message }}" == "Admin-authorized XSMN recovery 2026-11-11" ]]; then
-            # Explicit one-time owner-authorized recovery: still validate and cross-check; bounded 12-minute run.
-            deadline=$(date -d '+12 minutes' +%s)
-            echo "Explicitly authorized XSMN recovery run after the regular 17:30 cutoff."
-          else
-            deadline=$(date -d '17:30:00' +%s)
-            if (( $(date +%s) >= deadline )); then
-              echo "::error::The regular 17:30 Vietnam-time history deadline has passed. Only an explicit Admin recovery dispatch may run late."
-              exit 1
-            fi
-          fi
+          deadline=$(date -d '+12 minutes' +%s)
           attempt=0
           while (( $(date +%s) < deadline )); do
             attempt=$((attempt + 1))
-            echo "===== DAILY DRAW ATTEMPT ${attempt} at $(date -Is) ====="
+            echo "===== HISTORY SYNC ATTEMPT ${attempt} at $(date -Is) ====="
             rm -rf xsmn_383_probe xsmn_383_supplement xsmn_independent_audit
             mkdir -p xsmn_383_probe xsmn_independent_audit
             rm -f xsmn_daily_verified.csv
             if (
               set -e
-              curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \
-                https://api.383.im/lottery/region/mn.json \
+              curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \\
+                https://api.383.im/lottery/region/mn.json \\
                 -o xsmn_383_probe/region_sample.json
-              timeout 60s python scripts/validate_383_xsmn_supplement.py
-              timeout 60s python scripts/publish_xsmn_daily_verified.py --prepare
-              TODAY=$(date +%F)
-              timeout 120s python scripts/verify_xsmn_supplement_sources_v2.py \
-                --csv xsmn_daily_verified.csv \
-                --out xsmn_independent_audit/today_comparison.csv \
-                --start "$TODAY" --end "$TODAY"
-              timeout 60s python scripts/publish_xsmn_daily_verified.py --publish
+              timeout 90s python scripts/validate_383_xsmn_supplement.py
+              ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])')
+              API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])')
+              if [[ "$API_LATEST" < "$XSMN_BACKFILL_START" ]]; then
+                echo "No new draw date in 383 feed yet (latest=$API_LATEST, needed=$XSMN_BACKFILL_START)."
+                exit 3
+              fi
+              if [[ "$ROWS" == "0" ]]; then
+                echo "No missing draw rows to append."
+                exit 0
+              fi
+              timeout 90s python scripts/publish_xsmn_daily_verified.py --prepare
+              BACKFILL_END=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["window_end"])')
+              timeout 180s python scripts/verify_xsmn_supplement_sources_v2.py \\
+                --csv xsmn_daily_verified.csv \\
+                --out xsmn_independent_audit/backfill_comparison.csv \\
+                --start "$XSMN_BACKFILL_START" --end "$BACKFILL_END"
+              timeout 90s python scripts/publish_xsmn_daily_verified.py --publish
             ); then
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json
+              git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json data/xsmn_daily_verified_*.csv data/xsmn_daily_verified_*.json
               if git diff --cached --quiet; then
-                echo "Today's verified draw already exists exactly; no duplicate commit."
+                echo "All verified draw dates already exist exactly; no duplicate commit."
               else
-                git commit -m "Append independently verified daily XSMN draw"
+                git commit -m "Backfill and sync independently verified XSMN history"
                 git push
               fi
-              echo "Daily XSMN import PASS at $(date -Is)."
+              echo "XSMN history sync PASS at $(date -Is)."
               exit 0
+            else
+              rc=$?
+              if (( rc == 3 )); then
+                echo "Feed has not reached the next missing draw date; retrying shortly."
+              else
+                echo "Validation or independent source comparison did not pass; canonical history was not changed."
+              fi
             fi
             now=$(date +%s)
-            if (( now >= deadline )); then
-              echo "::error::Today's draw did not pass daily validation and independent comparison by 17:30. Canonical history was not changed."
-              exit 1
-            fi
-            remaining=$((deadline - now))
-            sleep_for=30
+            if (( now >= deadline )); then break; fi
+            sleep_for=45
+            remaining=$((deadline-now))
             if (( remaining < sleep_for )); then sleep_for=$remaining; fi
-            echo "Daily-only attempt failed; retrying in ${sleep_for}s. The five-year archive audit is not run here."
             sleep "$sleep_for"
           done
-          echo "::error::Daily import deadline reached; canonical history unchanged."
+          echo "::error::No verified backfill was committed in this run. Canonical history remains unchanged."
           exit 1
-      - name: Preserve daily validation and comparison evidence
+      - name: Preserve validation and independent comparison evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: xsmn-daily-verified-import
+          name: xsmn-daily-history-sync
           path: |
             xsmn_383_probe/
             xsmn_383_supplement/
