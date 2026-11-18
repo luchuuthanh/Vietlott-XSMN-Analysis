@@ -1,21 +1,20 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-18T16:47:35.920969+07:00",
+  "updated_at_vietnam": "2026-11-18T17:02:09.078878+07:00",
   "window_start": "2021-11-05",
-  "window_end": "2026-11-17",
-  "rows": 104040,
+  "window_end": "2026-11-18",
+  "rows": 104094,
   "source": "audited quarterly archive + 383 supplement + multi-source daily overlays",
   "independent_check": "Daily results compared against at least two independent published sources; secondary-source agreement, not official issuer certification.",
   "note": "Kho lịch sử XSMN 5 năm đã tích hợp đầy đủ các kỳ đến 17/11/2026: 104040 dòng dữ liệu từ 2021-11-05. Ngày 16 và 17/11 đã được bổ sung 108 dòng, kiểm tra không trùng khóa. Ngày 18/11 vẫn chờ đủ kết quả và đối chiếu chéo.",
-  "last_draw_import": "2026-11-17",
+  "last_draw_import": "2026-11-18",
   "last_draw_rows": 54,
   "last_draw_source": "manual_multi_source_verified",
   "last_draw_source_ids": [
-    "www.xsmn.net",
-    "xosohomnay.com",
-    "www.kq247.com"
+    "www.minhngoc.net.vn",
+    "socauxsmbmienphi.com"
   ],
-  "last_draw_verification": "Đã đối chiếu đủ 54 dòng của 3 đài ngày 17/11 giữa XSMN.net, Xổ Số Hôm Nay và KQ247; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
+  "last_draw_verification": "Đối chiếu đủ 54 dòng ngày 18/11/2026 giữa Minh Ngọc và Soi Cầu XSMB Miễn Phí; khớp từng số và nhóm giải. Xác minh từ nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
@@ -39,7 +38,7 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS",
-      "verification": "Xổ Số Tin, XSMN.net và QuetKQXS đã đối chiếu khớp đủ 54 dòng."
+      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Xổ Số Tin, XSMN.net và QuetKQXS; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
     },
     {
       "date": "2026-11-17",
@@ -47,10 +46,18 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS",
-      "verification": "XSMN.net, Xổ Số Hôm Nay và KQ247 đã đối chiếu khớp đủ 54 dòng."
+      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa XSMN.net, Xổ Số Hôm Nay và KQ247; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
+    },
+    {
+      "date": "2026-11-18",
+      "file": "data/xsmn_daily_verified_2026-11-18.csv",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS",
+      "verification": "Đối chiếu đủ 54 dòng ngày 18/11/2026 giữa Minh Ngọc và Soi Cầu XSMB Miễn Phí; khớp từng số và nhóm giải. Xác minh từ nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
     }
   ],
-  "history_overlay_note": "Tất cả các ngày PASS đến 17/11/2026 đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
+  "history_overlay_note": "Tất cả các ngày PASS đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
   "integrated_daily_updates": [
     {
       "date": "2026-11-14",
@@ -75,6 +82,12 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS"
+    },
+    {
+      "date": "2026-11-18",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS"
     }
   ],
   "latest_live_check": {
@@ -93,22 +106,18 @@
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
-    "checked_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
+    "checked_at_vietnam": "2026-11-18T17:02:09.078878+07:00",
     "status": "PASS",
     "dates_checked": [
       "2026-11-14",
       "2026-11-15",
       "2026-11-16",
-      "2026-11-17"
+      "2026-11-17",
+      "2026-11-18"
     ],
-    "dates_appended": [
-      "2026-11-16",
-      "2026-11-17"
-    ],
-    "new_rows_added": 108,
-    "canonical_rows": 104040,
-    "duplicate_keys": 0,
-    "commit": "0f67e8c04a61b81b899fdb0e8bc9cdd0df7de641"
+    "new_rows_added": 54,
+    "canonical_rows": 104094,
+    "duplicate_keys": 0
   },
   "last_history_recheck": {
     "checked_at_vietnam": "2026-11-18T16:47:35.920969+07:00",
