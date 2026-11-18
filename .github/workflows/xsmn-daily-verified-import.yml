@@ -14,6 +14,9 @@ on:
       - "scripts/validate_383_xsmn_supplement.py"
       - "scripts/publish_xsmn_daily_verified.py"
       - "scripts/verify_xsmn_supplement_sources_v2.py"
+      - "scripts/merge_verified_daily_overlays.py"
+      - "data/xsmn_daily_verified_*.csv"
+      - "data/xsmn_daily_verified_*.json"
   schedule:
     - cron: "20 9-13 * * *" # 16:20, 17:20, 18:20, 19:20, 20:20 Asia/Ho_Chi_Minh
 
@@ -45,6 +48,18 @@ jobs:
         run: |
           export PIP_DEFAULT_TIMEOUT=10 PIP_RETRIES=1
           timeout 120s python -m pip install --no-cache-dir --upgrade pandas requests beautifulsoup4
+      - name: Consolidate every PASS daily overlay into canonical history
+        run: |
+          python scripts/merge_verified_daily_overlays.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json
+          if git diff --cached --quiet; then
+            echo "No verified overlay rows need consolidation."
+          else
+            git commit -m "Consolidate independently verified daily XSMN history"
+            git push
+          fi
       - name: Determine first missing draw date
         run: |
           python - <<'PY'
