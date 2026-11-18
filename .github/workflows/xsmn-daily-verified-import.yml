@@ -93,8 +93,8 @@ jobs:
               ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])')
               API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])')
               if [[ "$API_LATEST" < "$XSMN_BACKFILL_START" ]]; then
-                echo "No new draw date in 383 feed yet (latest=$API_LATEST, needed=$XSMN_BACKFILL_START)."
-                exit 3
+                echo "No new draw date in 383 feed yet (latest=$API_LATEST, needed=$XSMN_BACKFILL_START). Existing PASS overlays have already been consolidated; the next hourly run will retry."
+                exit 0
               fi
               if [[ "$ROWS" == "0" ]]; then
                 echo "No missing draw rows to append."
@@ -121,11 +121,7 @@ jobs:
               exit 0
             else
               rc=$?
-              if (( rc == 3 )); then
-                echo "Feed has not reached the next missing draw date; retrying shortly."
-              else
-                echo "Validation or independent source comparison did not pass; canonical history was not changed."
-              fi
+              echo "Validation or independent source comparison did not pass; canonical history was not changed."
             fi
             now=$(date +%s)
             if (( now >= deadline )); then break; fi
