@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "draw_date": "2026-11-18",
+  "checked_at_vietnam": "2026-11-18T16:30:36+07:00",
+  "overall_status": "PARTIAL_WAITING",
+  "pass": false,
+  "summary": "Chưa có đài nào đủ 18 dòng và được đối chiếu khớp với nhiều nguồn độc lập. Không nhập kết quả ngày 18/11/2026 vào canonical history.",
+  "canonical_history": {
+    "file": "data/xsmn_5y_canonical.csv",
+    "manifest": "data/xsmn_5y_canonical.json",
+    "rows": 103932,
+    "window_end": "2026-11-15",
+    "rows_added_for_draw_date": 0,
+    "status": "UNCHANGED"
+  },
+  "stations": [
+    {
+      "station": "Đồng Nai",
+      "expected_rows": 18,
+      "confirmed_rows": 0,
+      "status": "WAITING_NO_CURRENT_OFFICIAL_RESULT",
+      "pass": false,
+      "official_sources": [
+        {
+          "url": "https://xosodongnai.com.vn/",
+          "observation": "Trang chính thức đang hiển thị kỳ mới nhất ngày 11/11/2026; chưa thấy bảng kết quả ngày 18/11/2026."
+        },
+        {
+          "url": "https://xosodongnai.com.vn/ket-qua-xo-so-kien-thiet-dong-nai/",
+          "observation": "Trang kết quả có iframe nhúng, nội dung 18/11 không trích xuất được để xác nhận."
+        }
+      ],
+      "secondary_sources": [
+        {
+          "url": "https://www.xsmn.net/xsdn-xo-so-dong-nai",
+          "observation": "Trang trực tiếp còn hiển thị kỳ 11/11 và trạng thái ngày 18/11 chưa có kết quả."
+        },
+        {
+          "url": "https://vtcnews.vn/xsdn-18-11-ket-qua-xo-so-dong-nai-hom-nay-18-11-2026-xsdn-ngay-18-thang-11-ar1052095.html",
+          "observation": "Bài cập nhật 15:45 mô tả kỳ quay ngày 18/11 nhưng phần trích xuất chưa có dãy số kết quả."
+        }
+      ],
+      "results": {}
+    },
+    {
+      "station": "Cần Thơ",
+      "expected_rows": 18,
+      "confirmed_rows": 0,
+      "status": "WAITING_OFFICIAL_PAGE_HAS_NO_RESULTS",
+      "pass": false,
+      "official_sources": [
+        {
+          "url": "https://xsktcantho.vn/ket-qua-xo-so/ket-qua-xo-so-truyen-thong",
+          "observation": "Trang chính thức đã chọn kỳ K3T11 ngày 18/11/2026 nhưng các ô giải vẫn là ảnh placeholder và trang ghi rõ 'Chưa có kết quả....'."
+        }
+      ],
+      "secondary_sources": [
+        {
+          "url": "https://www.xsmn.net/xsct-xo-so-can-tho",
+          "observation": "Trang trực tiếp còn ghi ngày 18/11 chưa quay và chỉ hiển thị kỳ trước 11/11."
+        },
+        {
+          "url": "https://xskt24h.net/xo-so/can-tho/2026-11-18",
+          "observation": "Trang ngày 18/11 hiển thị trạng thái chờ quay thưởng, chưa có kết quả."
+        }
+      ],
+      "results": {}
+    },
+    {
+      "station": "Sóc Trăng",
+      "expected_rows": 18,
+      "confirmed_rows": 6,
+      "status": "PARTIAL_PRIMARY_ONLY_WAITING_CROSSCHECK",
+      "pass": false,
+      "official_sources": [
+        {
+          "url": "https://xsktsoctrang.vn/",
+          "observation": "Trang chính thức hiển thị kỳ K3T11 ngày 18/11/2026. Tại bản hiển thị có dấu thời gian 16:21:47, các giải đã đọc được gồm G8, G7, G6 và G5; các giải G4, G3, G2, G1, ĐB vẫn là ảnh placeholder."
+        }
+      ],
+      "secondary_sources": [
+        {
+          "url": "https://www.xsmn.net/xsst-xo-so-soc-trang",
+          "observation": "Trang trực tiếp vẫn ghi ngày 18/11 chưa quay và đang hiển thị kết quả kỳ 11/11; chưa xác nhận được 6 số tạm thời từ nguồn chính thức."
+        },
+        {
+          "url": "https://vtcnews.vn/xsst-18-11-ket-qua-xo-so-soc-trang-hom-nay-18-11-2026-xsst-ngay-18-thang-11-ar1052107.html",
+          "observation": "Bài cập nhật 15:45 mô tả kỳ quay ngày 18/11 nhưng phần trích xuất chưa có dãy số kết quả."
+        }
+      ],
+      "results": {
+        "G8": [
+          "45"
+        ],
+        "G7": [
+          "164"
+        ],
+        "G6": [
+          "1836",
+          "4252",
+          "0499"
+        ],
+        "G5": [
+          "5487"
+        ]
+      },
+      "cross_source_confirmed": false
+    }
+  ],
+  "app_runtime": {
+    "url": "https://xsmn-analysis-inlab.streamlit.app",
+    "status": "NOT_VERIFIED",
+    "observation": "Không truy cập được giao diện Streamlit bằng phiên kiểm tra này; mã nguồn trên main có loader kho lịch sử và các mô-đun lấy kết quả trực tuyến, nhưng điều đó không chứng minh runtime hiện tại đã hiển thị dữ liệu."
+  },
+  "handling": {
+    "partial_results_written_to_canonical": false,
+    "unverified_numbers_promoted": false,
+    "leading_zero_policy": "Keep all lottery numbers as strings; preserve leading zeros.",
+    "next_step": "Tiếp tục lấy kết quả còn thiếu và đối chiếu độc lập; chỉ tạo daily verified CSV và append vào canonical khi từng đài đủ 18 dòng, không trùng khóa và khớp nguồn."
+  }
+}
