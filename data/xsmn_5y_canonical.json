@@ -11,11 +11,11 @@
   "last_draw_rows": 54,
   "last_draw_source": "manual_multi_source_verified",
   "last_draw_source_ids": [
-    "www.minhngoc.net.vn",
     "www.xsmn.net",
-    "ttxs.vn"
+    "xosohomnay.com",
+    "www.kq247.com"
   ],
-  "last_draw_verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
+  "last_draw_verification": "Đã đối chiếu đủ 54 dòng của 3 đài ngày 17/11 giữa XSMN.net, Xổ Số Hôm Nay và KQ247; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
@@ -39,7 +39,7 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS",
-      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Xổ Số Tin, Minh Ngọc và KQXS.vn; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
+      "verification": "Xổ Số Tin, XSMN.net và QuetKQXS đã đối chiếu khớp đủ 54 dòng."
     },
     {
       "date": "2026-11-17",
@@ -47,7 +47,7 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS",
-      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
+      "verification": "XSMN.net, Xổ Số Hôm Nay và KQ247 đã đối chiếu khớp đủ 54 dòng."
     }
   ],
   "history_overlay_note": "Tất cả các ngày PASS đến 17/11/2026 đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
