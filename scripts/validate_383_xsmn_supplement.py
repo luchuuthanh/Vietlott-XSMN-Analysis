@@ -9,7 +9,12 @@ from pathlib import Path
 SOURCE = Path("xsmn_383_probe/region_sample.json")
 OUT = Path("xsmn_383_supplement")
 DAILY_ONLY = os.environ.get("XSMN_DAILY_ONLY") == "1"
-START = date.today() if DAILY_ONLY else date(2026, 7, 1)
+BACKFILL = os.environ.get("XSMN_BACKFILL") == "1"
+START = (
+    date.fromisoformat(os.environ["XSMN_BACKFILL_START"])
+    if BACKFILL and os.environ.get("XSMN_BACKFILL_START")
+    else (date.today() if DAILY_ONLY else date(2026, 7, 1))
+)
 PROVINCES = {
     "an-giang":"An Giang", "bac-lieu":"Bac Lieu", "ben-tre":"Ben Tre",
     "binh-duong":"Binh Duong", "binh-phuoc":"Binh Phuoc", "binh-thuan":"Binh Thuan",
@@ -47,7 +52,7 @@ def main():
     if not available_dates:
         raise SystemExit("API contains no valid draw dates; refusing to export an empty supplement.")
     api_latest_date=max(available_dates)
-    if os.environ.get("XSMN_REQUIRE_TODAY") == "1" and api_latest_date != today:
+    if os.environ.get("XSMN_REQUIRE_TODAY") == "1" and not BACKFILL and api_latest_date != today:
         raise SystemExit(f"Daily XSMN feed is stale: API latest date={api_latest_date.isoformat()}, expected={today.isoformat()}. No supplement accepted.")
     end_date=min(today,api_latest_date)
     rows=[]; errors=[]; seen=set(); actual_pairs=set(); daily_dates=set()
