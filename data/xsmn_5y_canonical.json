@@ -49,5 +49,20 @@
       "stations": 3,
       "status": "PASS"
     }
-  ]
+  ],
+  "latest_live_check": {
+    "date": "2026-11-18",
+    "file": "data/xsmn_live_check_2026-11-18.json",
+    "checked_at_vietnam": "2026-11-18T16:30:36+07:00",
+    "status": "PARTIAL_WAITING",
+    "pass": false,
+    "stations": {
+      "Đồng Nai": "WAITING_NO_CURRENT_OFFICIAL_RESULT",
+      "Cần Thơ": "WAITING_OFFICIAL_PAGE_HAS_NO_RESULTS",
+      "Sóc Trăng": "PARTIAL_PRIMARY_ONLY_WAITING_CROSSCHECK"
+    },
+    "canonical_rows_added": 0,
+    "note": "Trạng thái PASS ở cấp manifest chỉ áp dụng cho kho canonical hiện có đến 15/11/2026; không áp dụng cho kỳ 18/11/2026. Không có kết quả 18/11 nào được nhập vào CSV."
+  },
+  "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS."
 }
