@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "date": "2026-11-18",
+  "expected_rows": 54,
+  "actual_rows": 54,
+  "stations": [
+    "Đồng Nai",
+    "Cần Thơ",
+    "Sóc Trăng"
+  ],
+  "station_count": 3,
+  "verification": "Đủ 54 kết quả (18 dòng mỗi đài) đã đối chiếu theo từng giải, từng số giữa Minh Ngọc và Xổ Số Cộng Đồng; toàn bộ kết quả khớp, bao gồm số 0 đầu. Đây là đối chiếu giữa hai nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
+  "sources": [
+    "https://www.minhngoc.net.vn/kqxs/18-11-2026.html",
+    "https://xoso.congdong.vn/xsmn-thu-4-xo-so-mien-nam-thu-tu.html"
+  ],
+  "source_count": 2,
+  "official_issuer_certification": false
+}
