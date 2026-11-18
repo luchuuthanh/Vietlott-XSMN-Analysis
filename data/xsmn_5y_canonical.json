@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
+  "updated_at_vietnam": "2026-11-18T16:47:35.920969+07:00",
   "window_start": "2021-11-05",
   "window_end": "2026-11-17",
   "rows": 104040,
@@ -93,7 +93,7 @@
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
-    "checked_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
+    "checked_at_vietnam": "2026-11-18T16:47:35.920969+07:00",
     "status": "PASS",
     "dates_checked": [
       "2026-11-14",
@@ -101,7 +101,7 @@
       "2026-11-16",
       "2026-11-17"
     ],
-    "new_rows_added": 108,
+    "new_rows_added": 0,
     "canonical_rows": 104040,
     "duplicate_keys": 0
   }
