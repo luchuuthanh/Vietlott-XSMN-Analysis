@@ -109,7 +109,12 @@ def main():
                                    "actual":len(values) if isinstance(values,list) else None})
                     continue
                 for idx,value in enumerate(values):
-                    number=str(value)
+                    number=str(value).strip()
+                    # Some feeds serialize numeric prizes without leading zeroes.
+                    # Prize width is fixed by the official draw structure, so restore
+                    # only the missing left zeroes; never truncate an over-width value.
+                    if number.isdigit() and len(number)<=expected_len:
+                        number=number.zfill(expected_len)
                     if not number.isdigit() or len(number)!=expected_len:
                         errors.append({"type":"number_format","date":draw_date.isoformat(),"station":slug,
                                        "prize":prize,"value":number,"expected_length":expected_len})
