@@ -9,11 +9,11 @@
     "Bac Lieu"
   ],
   "station_count": 3,
-  "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
+  "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa XSMN.net, Xổ Số Hôm Nay và KQ247; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
   "sources": [
-    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/17-11-2026.html",
-    "https://www.xsmn.net/",
-    "https://ttxs.vn/xsmn/17-11-2026/"
+    "https://xsmn.net/kqxsmn/ngay-17-11-2026",
+    "https://xosohomnay.com/xsmn/17-11-2026",
+    "https://www.kq247.com/ket-qua-xo-so/mien-nam/2026-11-17"
   ],
   "official_issuer_certification": false,
   "source_count": 3
