@@ -9,11 +9,11 @@
     "TP. HCM"
   ],
   "station_count": 3,
-  "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Xổ Số Tin, Minh Ngọc và KQXS.vn; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
+  "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Xổ Số Tin, XSMN.net và QuetKQXS; toàn bộ số khớp theo từng giải. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
   "sources": [
     "https://xosotin.net/ket-qua/xsmn/16-11-2026.html",
-    "https://www.minhngoc.net.vn/kqxs/mien-nam/16-11-2026.html",
-    "https://www.kqxs.vn/mien-nam/ngay-16-11-2026"
+    "https://www.xsmn.net/kqxsmn/ngay-16-11-2026",
+    "https://quetkqxs.com/xsmn/16-11-2026"
   ],
   "official_issuer_certification": false,
   "source_count": 3
