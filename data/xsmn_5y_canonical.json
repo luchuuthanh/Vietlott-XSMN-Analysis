@@ -4,9 +4,9 @@
   "window_start": "2021-11-05",
   "window_end": "2026-11-17",
   "rows": 104040,
-  "source": "audited quarterly archive + structurally validated 383 supplement",
-  "independent_check": "XoSoTin daily page for latest draw date",
-  "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026; manifest PASS, 103932 dòng dữ liệu từ 2021-11-05 đến 2026-11-15. Đã kiểm tra đủ 72 + 54 dòng, không trùng khóa và giữ nguyên số 0 đầu.",
+  "source": "audited quarterly archive + 383 supplement + multi-source daily overlays",
+  "independent_check": "Daily results compared against at least two independent published sources; secondary-source agreement, not official issuer certification.",
+  "note": "Kho lịch sử XSMN 5 năm đã tích hợp đầy đủ các kỳ đến 17/11/2026: 104040 dòng dữ liệu từ 2021-11-05. Ngày 16 và 17/11 đã được bổ sung 108 dòng, kiểm tra không trùng khóa. Ngày 18/11 vẫn chờ đủ kết quả và đối chiếu chéo.",
   "last_draw_import": "2026-11-17",
   "last_draw_rows": 54,
   "last_draw_source": "manual_multi_source_verified",
@@ -50,7 +50,7 @@
       "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
     }
   ],
-  "history_overlay_note": "Tất cả các ngày PASS đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
+  "history_overlay_note": "Tất cả các ngày PASS đến 17/11/2026 đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
   "integrated_daily_updates": [
     {
       "date": "2026-11-14",
@@ -80,16 +80,16 @@
   "latest_live_check": {
     "date": "2026-11-18",
     "file": "data/xsmn_live_check_2026-11-18.json",
-    "checked_at_vietnam": "2026-11-18T16:30:36+07:00",
+    "checked_at_vietnam": "2026-11-18T16:49:00+07:00",
     "status": "PARTIAL_WAITING",
     "pass": false,
     "stations": {
-      "Đồng Nai": "WAITING_NO_CURRENT_OFFICIAL_RESULT",
-      "Cần Thơ": "WAITING_OFFICIAL_PAGE_HAS_NO_RESULTS",
+      "Đồng Nai": "WAITING_NO_CROSS_SOURCE_RESULT",
+      "Cần Thơ": "WAITING_NO_CROSS_SOURCE_RESULT",
       "Sóc Trăng": "PARTIAL_PRIMARY_ONLY_WAITING_CROSSCHECK"
     },
     "canonical_rows_added": 0,
-    "note": "Trạng thái PASS ở cấp manifest chỉ áp dụng cho kho canonical hiện có đến 15/11/2026; không áp dụng cho kỳ 18/11/2026. Không có kết quả 18/11 nào được nhập vào CSV."
+    "note": "Canonical đã đồng bộ đến 17/11/2026 (104040 dòng). Kỳ 18/11 chưa có đài nào đủ 18 dòng và khớp nguồn độc lập; 6 số Sóc Trăng chỉ là quan sát sơ bộ, không đưa vào lịch sử."
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
