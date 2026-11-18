@@ -113,10 +113,10 @@ def main():
                     if not number.isdigit() or len(number)!=expected_len:
                         errors.append({"type":"number_format","date":draw_date.isoformat(),"station":slug,
                                        "prize":prize,"value":number,"expected_length":expected_len})
-                    key=(draw_date.isoformat(),slug,prize,idx)
+                    key=(draw_date.isoformat(),slug,prize,idx+1)
                     if key in seen: errors.append({"type":"duplicate_row","key":key})
                     seen.add(key)
-                    rows.append((draw_date.isoformat(),PROVINCES[slug],prize.upper(),idx,number))
+                    rows.append((draw_date.isoformat(),PROVINCES[slug],prize.upper(),idx+1,number))
     expected_pairs=set()
     expected_dates=set()
     cursor=START
