@@ -80,7 +80,7 @@
   "latest_live_check": {
     "date": "2026-11-18",
     "file": "data/xsmn_live_check_2026-11-18.json",
-    "checked_at_vietnam": "2026-11-18T16:49:00+07:00",
+    "checked_at_vietnam": "2026-11-18T16:50:00+07:00",
     "status": "PARTIAL_WAITING",
     "pass": false,
     "stations": {
@@ -89,7 +89,7 @@
       "Sóc Trăng": "PARTIAL_PRIMARY_ONLY_WAITING_CROSSCHECK"
     },
     "canonical_rows_added": 0,
-    "note": "Canonical đã đồng bộ đến 17/11/2026 (104040 dòng). Kỳ 18/11 chưa có đài nào đủ 18 dòng và khớp nguồn độc lập; 6 số Sóc Trăng chỉ là quan sát sơ bộ, không đưa vào lịch sử."
+    "note": "Canonical đã đồng bộ đến 17/11/2026 (104040 dòng). Tại 16:50, nguồn công khai ngày 18/11 vẫn hiển thị Chờ quay/Chưa có dữ liệu hoặc placeholder; chưa đài nào đủ 18 dòng được xác nhận chéo, không nhập số tạm."
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
