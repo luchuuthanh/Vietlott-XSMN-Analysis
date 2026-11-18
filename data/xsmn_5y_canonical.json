@@ -93,6 +93,24 @@
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
+    "checked_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
+    "status": "PASS",
+    "dates_checked": [
+      "2026-11-14",
+      "2026-11-15",
+      "2026-11-16",
+      "2026-11-17"
+    ],
+    "dates_appended": [
+      "2026-11-16",
+      "2026-11-17"
+    ],
+    "new_rows_added": 108,
+    "canonical_rows": 104040,
+    "duplicate_keys": 0,
+    "commit": "0f67e8c04a61b81b899fdb0e8bc9cdd0df7de641"
+  },
+  "last_history_recheck": {
     "checked_at_vietnam": "2026-11-18T16:47:35.920969+07:00",
     "status": "PASS",
     "dates_checked": [
@@ -103,6 +121,7 @@
     ],
     "new_rows_added": 0,
     "canonical_rows": 104040,
-    "duplicate_keys": 0
+    "duplicate_keys": 0,
+    "note": "Idempotent recheck confirmed the already-integrated rows exactly; no duplicate rows added."
   }
 }
