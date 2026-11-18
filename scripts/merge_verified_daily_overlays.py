@@ -2,6 +2,7 @@
 """Consolidate PASS daily XSMN overlays into the canonical five-year history."""
 from __future__ import annotations
 import json
+from urllib.parse import urlparse
 from pathlib import Path
 import pandas as pd
 
@@ -62,21 +63,18 @@ def main():
         for station,group in frame.groupby("province"):
             if len(group)!=18:
                 raise SystemExit(f"{day} {station}: expected 18 rows, got {len(group)}.")
-            if group["prize"].value_counts().to_dict()!={k:v for k,v in COUNTS.items() if k in set(group["prize"])}:
-                # Explicit prize-count check below is authoritative and handles DB/ĐB aliases.
-                pass
-            for prize,count in COUNTS.items():
+            group=group.copy()
+            group["prize"]=group["prize"].replace({"DB":"ĐB"})
+            expected_counts={"ĐB":1,"G1":1,"G2":1,"G3":2,"G4":7,"G5":1,"G6":3,"G7":1,"G8":1}
+            if group["prize"].value_counts().to_dict()!=expected_counts:
+                raise SystemExit(f"{day} {station}: prize counts do not match the 18-row structure.")
+            for prize,count in expected_counts.items():
                 subset=group[group["prize"]==prize]
-                if len(subset)!=count:
-                    continue
                 if sorted(subset["prize_order"].tolist())!=list(range(1,count+1)):
                     raise SystemExit(f"{day} {station} {prize}: prize_order must be one-based and complete.")
                 for number in subset["number"]:
                     if not number.isdigit() or len(number)!=WIDTH[prize]:
                         raise SystemExit(f"{day} {station} {prize}: invalid number {number!r}.")
-            labels=set(group["prize"])
-            if labels not in ({"ĐB","G1","G2","G3","G4","G5","G6","G7","G8"},{"DB","G1","G2","G3","G4","G5","G6","G7","G8"}):
-                raise SystemExit(f"{day} {station}: missing or unexpected prize labels {sorted(labels)}.")
         frame["number_length"]=frame["number"].str.len().astype(int)
         frame["last2"]=frame["number"].str[-2:].str.zfill(2)
         frame["last2_numeric"]=pd.to_numeric(frame["last2"],errors="raise").astype(int)
@@ -134,7 +132,7 @@ def main():
       "status":"PASS","updated_at_vietnam":now,"window_end":max(pd.to_datetime(merged["date"]).dt.strftime("%Y-%m-%d")),
       "rows":int(len(merged)),"last_draw_import":latest,"last_draw_rows":int(len(latest_frame)),
       "last_draw_source":"manual_multi_source_verified",
-      "last_draw_source_ids":[Path(u).netloc for u in next(x[2]["sources"] for x in verified if x[0]==latest)],
+      "last_draw_source_ids":[urlparse(u).netloc for u in next(x[2]["sources"] for x in verified if x[0]==latest)],
       "last_draw_verification":next(x[2].get("verification","") for x in verified if x[0]==latest),
       "verified_daily_overlays":sorted(overlays,key=lambda x:x["date"]),
       "integrated_daily_updates":sorted(integrated,key=lambda x:x["date"]),
