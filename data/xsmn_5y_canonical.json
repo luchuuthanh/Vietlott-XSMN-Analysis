@@ -1,22 +1,21 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-16T08:46:00+07:00",
+  "updated_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
   "window_start": "2021-11-05",
-  "window_end": "2026-11-15",
-  "rows": 103932,
+  "window_end": "2026-11-17",
+  "rows": 104040,
   "source": "audited quarterly archive + structurally validated 383 supplement",
   "independent_check": "XoSoTin daily page for latest draw date",
   "note": "Canonical CSV đã tích hợp kết quả XSMN ngày 14-15/11/2026; manifest PASS, 103932 dòng dữ liệu từ 2021-11-05 đến 2026-11-15. Đã kiểm tra đủ 72 + 54 dòng, không trùng khóa và giữ nguyên số 0 đầu.",
-  "last_draw_import": "2026-11-15",
+  "last_draw_import": "2026-11-17",
   "last_draw_rows": 54,
   "last_draw_source": "manual_multi_source_verified",
   "last_draw_source_ids": [
-    "minh_ngoc_2026-11-15",
-    "sxmn_com_vn_2026-11-15",
-    "xsmn_net_2026-11-15",
-    "vtc_news_2026-11-15"
+    "www.minhngoc.net.vn",
+    "www.xsmn.net",
+    "ttxs.vn"
   ],
-  "last_draw_verification": "54 rows across 3 stations (18 rows per station) match the retained daily verified overlay exactly; corroborated by multiple secondary published sources. Not official issuer certification.",
+  "last_draw_verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
@@ -24,7 +23,7 @@
       "rows": 72,
       "stations": 4,
       "status": "PASS",
-      "verification": "Exact match across Minh Ngoc, SXMN.com.vn and XSMN.net; secondary sources, not official issuer certification."
+      "verification": "All 72 result rows and prize groups cross-matched exactly across Minh Ngoc, SXMN.com.vn and XSMN.net; no differences found. Secondary-source agreement; not official issuer certification."
     },
     {
       "date": "2026-11-15",
@@ -32,10 +31,26 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS",
-      "verification": "Exact match across Minh Ngoc, SXMN.com.vn and XSMN.net; corroborated by VTC News; secondary sources, not official issuer certification."
+      "verification": "All 54 result rows and prize groups cross-matched exactly across Minh Ngoc, SXMN.com.vn and XSMN.net; VTC News also independently corroborates the published draw. No differences found. Secondary-source agreement; not official issuer certification."
+    },
+    {
+      "date": "2026-11-16",
+      "file": "data/xsmn_daily_verified_2026-11-16.csv",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS",
+      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Xổ Số Tin, Minh Ngọc và KQXS.vn; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
+    },
+    {
+      "date": "2026-11-17",
+      "file": "data/xsmn_daily_verified_2026-11-17.csv",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS",
+      "verification": "Đã đối chiếu đủ 54 dòng của 3 đài giữa Minh Ngọc, XSMN.net và TT Xổ Số; các số khớp theo từng giải sau khi chuẩn hóa thứ tự. Nguồn công bố thứ cấp, không phải chứng nhận chính thức của nhà đài."
     }
   ],
-  "history_overlay_note": "Ngày 14 và 15/11/2026 đã được hợp nhất trực tiếp vào canonical CSV; các tệp daily verified được giữ lại làm bằng chứng xác minh và đối chiếu.",
+  "history_overlay_note": "Tất cả các ngày PASS đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
   "integrated_daily_updates": [
     {
       "date": "2026-11-14",
@@ -45,6 +60,18 @@
     },
     {
       "date": "2026-11-15",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS"
+    },
+    {
+      "date": "2026-11-16",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS"
+    },
+    {
+      "date": "2026-11-17",
       "rows": 54,
       "stations": 3,
       "status": "PASS"
@@ -64,5 +91,18 @@
     "canonical_rows_added": 0,
     "note": "Trạng thái PASS ở cấp manifest chỉ áp dụng cho kho canonical hiện có đến 15/11/2026; không áp dụng cho kỳ 18/11/2026. Không có kết quả 18/11 nào được nhập vào CSV."
   },
-  "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS."
+  "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
+  "last_history_sync": {
+    "checked_at_vietnam": "2026-11-18T16:46:47.977362+07:00",
+    "status": "PASS",
+    "dates_checked": [
+      "2026-11-14",
+      "2026-11-15",
+      "2026-11-16",
+      "2026-11-17"
+    ],
+    "new_rows_added": 108,
+    "canonical_rows": 104040,
+    "duplicate_keys": 0
+  }
 }
