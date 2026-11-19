@@ -18,14 +18,16 @@ on:
       - "data/xsmn_daily_verified_*.csv"
       - "data/xsmn_daily_verified_*.json"
   schedule:
-    - cron: "20 9-13 * * *" # 16:20, 17:20, 18:20, 19:20, 20:20 Asia/Ho_Chi_Minh
+    - cron: "20,30,40,50 9 * * *" # 16:20-16:50 Asia/Ho_Chi_Minh
+    - cron: "0,10,20,30,40,50 10 * * *" # 17:00-17:50 Asia/Ho_Chi_Minh
+    - cron: "20 11-13 * * *" # 18:20, 19:20, 20:20 recovery
 
 permissions:
   contents: write
 
 concurrency:
   group: xsmn-daily-history-sync
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   daily-import:
