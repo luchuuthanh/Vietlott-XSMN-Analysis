@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "date": "2026-11-19",
+  "expected_rows": 54,
+  "actual_rows": 54,
+  "stations": [
+    "Tay Ninh",
+    "An Giang",
+    "Binh Thuan"
+  ],
+  "station_count": 3,
+  "verification": "54 results compared prize by prize across Minh Ngoc and KQXS.org published 2026-11-19; independent secondary-source agreement, not official issuer certification.",
+  "sources": [
+    "https://www.minhngoc.net/ket-qua-xo-so/19-11-2026.html",
+    "https://kqxs.org/xsmn-ngay-19-11-2026"
+  ],
+  "official_issuer_certification": false,
+  "source_count": 2
+}
