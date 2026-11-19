@@ -60,7 +60,20 @@ jobs:
             echo "No verified overlay rows need consolidation."
           else
             git commit -m "Consolidate independently verified daily XSMN history"
-            git push
+            # Other live writers may update main while this job is running.
+            # Rebase and retry without force-pushing or dropping history.
+            for attempt in 1 2 3 4 5; do
+              if git pull --rebase origin main && git push origin HEAD:main; then
+                echo "Canonical history push confirmed."
+                break
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::Canonical push failed after 5 retries."
+                exit 1
+              fi
+              git rebase --abort 2>/dev/null || true
+              sleep 3
+            done
           fi
       - name: Determine first missing draw date
         run: |
@@ -127,7 +140,18 @@ jobs:
                 echo "All verified draw dates already exist exactly; no duplicate commit."
               else
                 git commit -m "Backfill and sync independently verified XSMN history"
-                git push
+                for attempt in 1 2 3 4 5; do
+                  if git pull --rebase origin main && git push origin HEAD:main; then
+                    echo "Verified backfill push confirmed."
+                    break
+                  fi
+                  if [ "$attempt" -eq 5 ]; then
+                    echo "::error::Backfill push failed after 5 retries."
+                    exit 1
+                  fi
+                  git rebase --abort 2>/dev/null || true
+                  sleep 3
+                done
               fi
               echo "XSMN history sync PASS at $(date -Is)."
               exit 0
