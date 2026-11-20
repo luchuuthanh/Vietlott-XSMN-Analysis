@@ -94,7 +94,18 @@ jobs:
           set -euo pipefail
           deadline=$(date -d '+12 minutes' +%s)
           while (( $(date +%s) < deadline )); do
-            if timeout 90s python scripts/archive_xsmn_from_primary_sources.py; then
+            target="$(python - <<'PY'
+          import csv
+          from datetime import date,timedelta
+          with open('data/xsmn_5y_canonical.csv',encoding='utf-8-sig',newline='') as f:
+              latest=max(row['date'][:10] for row in csv.DictReader(f))
+          missing=(date.fromisoformat(latest)+timedelta(days=1))
+          print(missing.isoformat() if missing<=date.today() else '')
+          PY
+          )"
+            if [ -z "$target" ]; then echo "History current through today."; exit 0; fi
+            echo "Verifying earliest missing draw: $target"
+            if XSMN_TARGET_DATE="$target" timeout 90s python scripts/archive_xsmn_from_primary_sources.py; then
               python scripts/merge_verified_daily_overlays.py
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -107,7 +118,8 @@ jobs:
               for attempt in 1 2 3 4 5; do
                 if git pull --rebase origin main && git push origin HEAD:main; then
                   echo "Verified XSMN history committed."
-                  exit 0
+                  if [ "$target" = "$(date +%F)" ]; then exit 0; fi
+                  break
                 fi
                 git rebase --abort 2>/dev/null || true
                 sleep 3
