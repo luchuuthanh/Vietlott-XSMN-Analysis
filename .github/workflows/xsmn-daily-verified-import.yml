@@ -15,6 +15,7 @@ on:
       - "scripts/publish_xsmn_daily_verified.py"
       - "scripts/verify_xsmn_supplement_sources_v2.py"
       - "scripts/merge_verified_daily_overlays.py"
+      - "scripts/archive_xsmn_from_primary_sources.py"
       - "data/xsmn_daily_verified_*.csv"
       - "data/xsmn_daily_verified_*.json"
   schedule:
@@ -87,86 +88,37 @@ jobs:
               f.write(f"XSMN_BACKFILL_START={start}\n")
           print(f"Canonical history ends {latest}; backfill starts {start}")
           PY
-      - name: Retry backfill and current completed draw until verified
+      - name: Verify and archive from primary independent sources (383 optional only)
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
           deadline=$(date -d '+12 minutes' +%s)
-          attempt=0
           while (( $(date +%s) < deadline )); do
-            attempt=$((attempt + 1))
-            echo "===== HISTORY SYNC ATTEMPT ${attempt} at $(date -Is) ====="
-            rm -rf xsmn_383_probe xsmn_383_supplement xsmn_independent_audit
-            mkdir -p xsmn_383_probe xsmn_independent_audit
-            rm -f xsmn_daily_verified.csv
-            if (
-              set -e
-              curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 25 \
-                https://api.383.im/lottery/region/mn.json \
-                -o xsmn_383_probe/region_sample.json || exit 1
-              timeout 90s python scripts/validate_383_xsmn_supplement.py || exit 1
-              REPORT="xsmn_383_supplement/validation_report.json"
-              if [[ ! -s "$REPORT" ]]; then
-                echo "::error::Validator did not create its report; this is a validation failure, not a no-new-data result."
-                exit 1
-              fi
-              REPORT_STATUS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["status"])') || exit 1
-              if [[ "$REPORT_STATUS" != "PASS" ]]; then
-                echo "::error::383 validation report is not PASS: $REPORT_STATUS"
-                exit 1
-              fi
-              ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])') || exit 1
-              API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])') || exit 1
-              if [[ "$API_LATEST" < "$XSMN_BACKFILL_START" ]]; then
-                echo "::warning::383 feed stale (latest=$API_LATEST, needed=$XSMN_BACKFILL_START); retrying during this run rather than reporting success."
-                exit 2
-              fi
-              if [[ "$ROWS" == "0" ]]; then
-                echo "::warning::383 returned zero rows for missing draw date; retrying rather than reporting success."
-                exit 2
-              fi
-              timeout 90s python scripts/publish_xsmn_daily_verified.py --prepare || exit 1
-              BACKFILL_END=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["window_end"])') || exit 1
-              timeout 180s python scripts/verify_xsmn_supplement_sources_v2.py \
-                --csv xsmn_daily_verified.csv \
-                --out xsmn_independent_audit/backfill_comparison.csv \
-                --start "$XSMN_BACKFILL_START" --end "$BACKFILL_END" || exit 1
-              timeout 90s python scripts/publish_xsmn_daily_verified.py --publish || exit 1
-            ); then
+            if timeout 90s python scripts/archive_xsmn_from_primary_sources.py; then
+              python scripts/merge_verified_daily_overlays.py
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
               git add data/xsmn_5y_canonical.csv data/xsmn_5y_canonical.json data/xsmn_daily_verified_*.csv data/xsmn_daily_verified_*.json
               if git diff --cached --quiet; then
-                echo "All verified draw dates already exist exactly; no duplicate commit."
-              else
-                git commit -m "Backfill and sync independently verified XSMN history"
-                for attempt in 1 2 3 4 5; do
-                  if git pull --rebase origin main && git push origin HEAD:main; then
-                    echo "Verified backfill push confirmed."
-                    break
-                  fi
-                  if [ "$attempt" -eq 5 ]; then
-                    echo "::error::Backfill push failed after 5 retries."
-                    exit 1
-                  fi
-                  git rebase --abort 2>/dev/null || true
-                  sleep 3
-                done
+                echo "Verified draw already archived."
+                exit 0
               fi
-              echo "XSMN history sync PASS at $(date -Is)."
-              exit 0
-            else
-              rc=$?
-              echo "Validation or independent source comparison did not pass; canonical history was not changed."
+              git commit -m "Archive XSMN from independently cross-checked primary publishers"
+              for attempt in 1 2 3 4 5; do
+                if git pull --rebase origin main && git push origin HEAD:main; then
+                  echo "Verified XSMN history committed."
+                  exit 0
+                fi
+                git rebase --abort 2>/dev/null || true
+                sleep 3
+              done
+              echo "::error::Verified archive push failed."
+              exit 1
             fi
-            now=$(date +%s)
-            if (( now >= deadline )); then break; fi
-            sleep_for=45
-            remaining=$((deadline-now))
-            if (( remaining < sleep_for )); then sleep_for=$remaining; fi
-            sleep "$sleep_for"
+            echo "::warning::Primary/independent source not yet verified; retry in 45 seconds. No history written."
+            sleep 45
           done
-          echo "::error::No verified backfill was committed in this run. Canonical history remains unchanged."
+          echo "::error::Primary and independent publishers did not verify a complete draw."
           exit 1
       - name: Preserve validation and independent comparison evidence
         if: always()
