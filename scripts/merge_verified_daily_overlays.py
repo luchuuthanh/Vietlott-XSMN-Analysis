@@ -104,8 +104,20 @@ def main():
             right["prize"]=right["prize"].astype(str).str.upper()
             left=left.sort_values(KEYS).reset_index(drop=True)
             right=right.sort_values(KEYS).reset_index(drop=True)
-            if not left.equals(right):
-                raise SystemExit(f"{day}: canonical rows differ from verified overlay; refusing overwrite.")
+            # Source labels and derived numeric columns may differ between
+            # independent ingestion paths. Never overwrite historical rows:
+            # require the prize keys and the exact zero-padded winning numbers
+            # to match before treating an existing day as already integrated.
+            compare_cols=KEYS+["number"]
+            left["number"]=left["number"].astype(str).str.strip()
+            right["number"]=right["number"].astype(str).str.strip()
+            if not left[compare_cols].equals(right[compare_cols]):
+                diff=left[compare_cols].merge(right[compare_cols],on=KEYS,
+                    how="outer",suffixes=("_canonical","_overlay"),indicator=True)
+                mismatch=diff[(diff["_merge"]!="both") |
+                              (diff["number_canonical"]!=diff["number_overlay"])]
+                raise SystemExit(f"{day}: {len(mismatch)} prize-key/number mismatches; refusing overwrite. Sample: {mismatch.head(3).to_dict('records')}")
+            print(f"{day}: existing prize keys and winning numbers match; source metadata may differ.")
     if not additions:
         print(json.dumps({"status":"PASS","action":"already_integrated",
                           "dates_checked":[x[0] for x in verified],
