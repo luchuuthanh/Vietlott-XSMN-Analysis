@@ -23,26 +23,34 @@ def prize(s):
 def cells(row):
  c=row.find_all(["th","td"],recursive=True);return c or row.find_all(attrs={"role":"cell"},recursive=True)
 def parse_daily(html):
- soup=BeautifulSoup(html,"html.parser",from_encoding="utf-8");groups=[]
- for t in soup.find_all("table"):
-  r=t.find_all("tr")
-  if r:groups.append(r)
- rr=soup.find_all(attrs={"role":"row"})
- if rr:groups.append(rr)
+ """Parse a complete station-by-prize grid; reject partial or ambiguous tables.
+
+ Supports both normal HTML tables and ARIA grids, with prize values split
+ across nested spans/line breaks. Numbers are always preserved as strings.
+ """
+ soup=BeautifulSoup(html,"html.parser",from_encoding="utf-8")
+ groups=[t.find_all("tr") for t in soup.find_all("table")]
+ aria=soup.find_all(attrs={"role":"row"})
+ if aria:groups.append(aria)
  for rows in groups:
   for hi,row in enumerate(rows):
-   h=cells(row)
-   if len(h)<4:continue
-   names=[station(c.get_text(" ",strip=True)) for c in h[1:]]
-   if any(x is None for x in names) or len(set(names))!=len(names):continue
-   out={s:defaultdict(list) for s in names}
-   for r in rows[hi+1:]:
-    cs=cells(r)
-    if len(cs)<len(names)+1:continue
-    p=prize(cs[0].get_text(" ",strip=True))
-    if p:
-     for i,s in enumerate(names,1):out[s][p].extend(NUM.findall(cs[i].get_text(" ",strip=True)))
-   if all(all(len(out[s].get(p,[]))==n for p,n in COUNTS.items()) for s in names):return out
+   header=cells(row)
+   if len(header)<3:continue
+   # Header can contain a leading prize-label column and 2-4 stations.
+   for offset in (1,0):
+    names=[station(c.get_text(" ",strip=True)) for c in header[offset:]]
+    if len(names)<2 or len(names)>4 or any(x is None for x in names) or len(set(names))!=len(names):continue
+    out={name:defaultdict(list) for name in names}
+    for result_row in rows[hi+1:]:
+     cs=cells(result_row)
+     if len(cs)<len(names)+1:continue
+     label=prize(cs[0].get_text(" ",strip=True))
+     if not label:continue
+     for idx,name in enumerate(names,1):
+      values=NUM.findall(cs[idx].get_text(" ",strip=True))
+      out[name][label].extend(values)
+    if all(all(len(out[name].get(p,[]))==count and all(len(v)==LENGTHS[p] for v in out[name][p]) for p,count in COUNTS.items()) for name in names):
+     return out
  return {}
 def load(path,start,end):
  out=defaultdict(lambda:defaultdict(list))
