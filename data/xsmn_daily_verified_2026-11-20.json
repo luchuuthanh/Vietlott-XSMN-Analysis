@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "date": "2026-11-20",
+  "expected_rows": 54,
+  "actual_rows": 54,
+  "stations": [
+    "Binh Duong",
+    "Tra Vinh",
+    "Vinh Long"
+  ],
+  "station_count": 3,
+  "sources": [
+    "https://xskt.net/xsmn/20-11-2026",
+    "https://hpsc.com.vn/xsmn-20-11-2026.html"
+  ],
+  "source_count": 2,
+  "verification": "All 54 zero-padded winning numbers independently cross-checked against XSKT.net and HPSC published tables; not official issuer certification.",
+  "official_issuer_certification": false
+}
