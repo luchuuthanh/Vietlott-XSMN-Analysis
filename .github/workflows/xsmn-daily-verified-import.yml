@@ -115,17 +115,22 @@ jobs:
                 exit 0
               fi
               git commit -m "Archive XSMN from independently cross-checked primary publishers"
+              pushed=0
               for attempt in 1 2 3 4 5; do
                 if git pull --rebase origin main && git push origin HEAD:main; then
                   echo "Verified XSMN history committed."
-                  if [ "$target" = "$(date +%F)" ]; then exit 0; fi
+                  pushed=1
                   break
                 fi
                 git rebase --abort 2>/dev/null || true
                 sleep 3
               done
-              echo "::error::Verified archive push failed."
-              exit 1
+              if [ "$pushed" -ne 1 ]; then
+                echo "::error::Verified archive push failed."
+                exit 1
+              fi
+              if [ "$target" = "$(date +%F)" ]; then exit 0; fi
+              continue
             fi
             echo "::warning::Primary/independent source not yet verified; retry in 45 seconds. No history written."
             sleep 45
