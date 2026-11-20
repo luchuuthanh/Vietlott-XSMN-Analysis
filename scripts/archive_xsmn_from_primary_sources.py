@@ -36,38 +36,12 @@ def main():
         p="DB" if r.prize in ("ĐB","DB") else r.prize
         groups[key][p].append(str(r.number))
     if set(groups)!=expected:raise RuntimeError(f"Station set differs: {set(groups)}")
-    # XoSoTin was repeatedly returning HTTP 522. Use Minh Ngoc as the
-    # independent source, with kqsx.vn as an alternative publisher.
+    # Independent fallback publishers. Minh Ngoc intentionally excluded.
+    # Validate every station, prize count and exact zero-padded value before writing.
     sources=[
-        f"https://www.minhngoc.net.vn/kqxs/mien-nam/{datetime.fromisoformat(day):%d-%m-%Y}.html",
-        f"https://kqsx.vn/ket-qua-ngay/xsmn-{day}",
+        f"https://xskt.net/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}",
+        f"https://kqsx.vn/ket-qua-ngay/xsmn-{datetime.fromisoformat(day):%d-%m-%Y}",
     ]
-    def parse_minhngoc(content):
-        soup=BeautifulSoup(content,"html.parser")
-        text=soup.get_text(" ",strip=True)
-        out={}
-        for st in expected:
-            label=STATION[st]
-            # The site prints one complete station section, followed by the next.
-            pattern=r"KẾT QUẢ XỔ SỐ\\s+"+re.escape(label)+r"\\s*-\\s*"+datetime.fromisoformat(day).strftime("%d/%m/%Y")
-            match=re.search(pattern,text,re.I)
-            if not match:continue
-            section=text[match.end():]
-            next_station=re.search(r"KẾT QUẢ XỔ SỐ\\s+[^\\n]{2,70}?\\s*-\\s*\\d{2}/\\d{2}/\\d{4}",section,re.I)
-            if next_station:section=section[:next_station.start()]
-            prizes={}
-            labels=[("DB",r"Giải\\s*(?:ĐB|đặc biệt)"),("G1",r"Giải\\s*(?:nhất|1)"),("G2",r"Giải\\s*(?:nhì|2)"),("G3",r"Giải\\s*(?:ba|3)"),("G4",r"Giải\\s*(?:tư|4)"),("G5",r"Giải\\s*(?:năm|5)"),("G6",r"Giải\\s*(?:sáu|6)"),("G7",r"Giải\\s*(?:bảy|7)"),("G8",r"Giải\\s*(?:8|tám)")]
-            spans=[]
-            for p,pat in labels:
-                m=re.search(pat,section,re.I)
-                if m:spans.append((m.start(),m.end(),p))
-            spans.sort()
-            for i,(_,endpos,p) in enumerate(spans):
-                fragment=section[endpos:spans[i+1][0] if i+1<len(spans) else len(section)]
-                nums=re.findall(r"(?<!\\d)\\d{2,6}(?!\\d)",fragment)
-                if len(nums)==COUNTS[p] and all(len(n)==WIDTH[p] for n in nums):prizes[p]=nums
-            if all(len(prizes.get(p,[]))==n for p,n in COUNTS.items()):out[st]=prizes
-        return out
     independent={};secondary_url=None;errors=[]
     for url in sources:
         try:
@@ -75,8 +49,6 @@ def main():
             resp.raise_for_status()
             parsed=parse_daily(resp.content)
             candidate={normalize_station_key(k):v for k,v in parsed.items()}
-            if set(candidate)!=expected and "minhngoc.net.vn" in url:
-                candidate=parse_minhngoc(resp.content)
             if set(candidate)==expected:
                 independent=candidate;secondary_url=url;break
             errors.append(f"{url}: incomplete station/prize parse {list(candidate)}")
