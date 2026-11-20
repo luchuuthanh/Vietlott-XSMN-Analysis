@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """Archive a completed XSMN draw from the live publisher, not from 383.
 
-Fail closed: the independently parsed XoSoTin page must match all 18
+Fail closed: an independently parsed publisher page must match all 18
 zero-padded prize numbers per station before any PASS overlay is written.
 383 is not consulted or required by this primary pipeline.
 """
-import csv, json, sys, re
+import csv, json, sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
-from bs4 import BeautifulSoup
 from xsmn_live import fetch_live_xsmn, normalize_station_key
 from scripts.verify_xsmn_supplement_sources_v2 import parse_daily
 
@@ -66,12 +65,12 @@ def main():
             for i,n in enumerate(primary,1):
                 rows.append({"date":day,"province":STATION[st],"prize":"ĐB" if prize=="DB" else prize,"prize_order":i,
                     "number":n,"number_length":len(n),"last2":n[-2:],
-                    "last2_numeric":int(n[-2:]),"source":"sxmn_xosotin_crosscheck"})
+                    "last2_numeric":int(n[-2:]),"source":"sxmn_independent_crosscheck"})
     expected_rows=18*len(expected)
     if len(rows)!=expected_rows:raise RuntimeError(f"Expected {expected_rows} rows, got {len(rows)}")
     csv_path=Path(f"data/xsmn_daily_verified_{day}.csv")
     meta_path=csv_path.with_suffix(".json")
-    # Write only after both sources have matched every result.
+    # Write only after the primary and independent source match every result.
     with csv_path.open("w",encoding="utf-8-sig",newline="") as f:
         w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerows(rows)
     metadata={"status":"PASS","date":day,"expected_rows":expected_rows,"actual_rows":expected_rows,
