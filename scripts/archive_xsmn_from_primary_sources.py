@@ -9,6 +9,8 @@ import csv, json, sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
 from xsmn_live import fetch_live_xsmn, normalize_station_key
 from scripts.verify_xsmn_supplement_sources_v2 import parse_daily
@@ -23,7 +25,7 @@ def main():
     dates=sorted(set(frame.date.astype(str).str[:10]))
     if len(dates)!=1:raise RuntimeError("Primary returned multiple draw dates")
     day=dates[0]
-    now=datetime.now().astimezone().date().isoformat()
+    now=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
     if day!=now:raise RuntimeError(f"Primary draw date {day} is not today {now}")
     if day not in ("2026-11-20",) and datetime.fromisoformat(day).weekday()!=4:
         # Other weekdays supported only when station mapping is extended.
