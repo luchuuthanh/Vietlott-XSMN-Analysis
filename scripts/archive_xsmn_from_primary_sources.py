@@ -17,7 +17,8 @@ from scripts.verify_xsmn_supplement_sources_v2 import parse_daily
 
 COUNTS={"DB":1,"G1":1,"G2":1,"G3":2,"G4":7,"G5":1,"G6":3,"G7":1,"G8":1}
 WIDTH={"DB":6,"G1":5,"G2":5,"G3":5,"G4":5,"G5":4,"G6":4,"G7":3,"G8":2}
-STATION={"vinhlong":"Vinh Long","binhduong":"Binh Duong","travinh":"Tra Vinh"}
+STATION={"vinhlong":"Vinh Long","binhduong":"Binh Duong","travinh":"Tra Vinh","camau":"Ca Mau","dongthap":"Dong Thap","tphcm":"TP. HCM","baclieu":"Bac Lieu","bentre":"Ben Tre","vungtau":"Vung Tau","cantho":"Can Tho","dongnai":"Dong Nai","soctrang":"Soc Trang","angiang":"An Giang","binhthuan":"Binh Thuan","tayninh":"Tay Ninh","binhphuoc":"Binh Phuoc","haugiang":"Hau Giang","longan":"Long An","dalat":"Da Lat","kiengiang":"Kien Giang","tiengiang":"Tien Giang"}
+SCHEDULE={0:{"camau","dongthap","tphcm"},1:{"baclieu","bentre","vungtau"},2:{"cantho","dongnai","soctrang"},3:{"angiang","binhthuan","tayninh"},4:{"vinhlong","binhduong","travinh"},5:{"binhphuoc","haugiang","longan","tphcm"},6:{"dalat","kiengiang","tiengiang"}}
 FIELDS=["date","province","prize","prize_order","number","number_length","last2","last2_numeric","source"]
 
 def main():
@@ -27,10 +28,7 @@ def main():
     day=dates[0]
     now=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
     if day!=now:raise RuntimeError(f"Primary draw date {day} is not today {now}")
-    if day not in ("2026-11-20",) and datetime.fromisoformat(day).weekday()!=4:
-        # Other weekdays supported only when station mapping is extended.
-        raise RuntimeError("Unexpected draw day")
-    expected={"vinhlong","binhduong","travinh"}
+    expected=SCHEDULE[datetime.fromisoformat(day).weekday()]
     groups=defaultdict(lambda:defaultdict(list))
     for r in frame.itertuples(index=False):
         key=normalize_station_key(r.province)
@@ -52,20 +50,21 @@ def main():
                 raise RuntimeError(f"Independent mismatch {day} {st} {prize}: primary={primary}, secondary={secondary}")
             if any(not n.isdigit() or len(n)!=WIDTH[prize] for n in primary):
                 raise RuntimeError(f"Invalid number width {st} {prize}")
-            for i,n in enumerate(primary):
-                rows.append({"date":day,"province":STATION[st],"prize":prize,"prize_order":i,
+            for i,n in enumerate(primary,1):
+                rows.append({"date":day,"province":STATION[st],"prize":"ĐB" if prize=="DB" else prize,"prize_order":i,
                     "number":n,"number_length":len(n),"last2":n[-2:],
                     "last2_numeric":int(n[-2:]),"source":"sxmn_xosotin_crosscheck"})
-    if len(rows)!=54:raise RuntimeError(f"Expected 54 rows, got {len(rows)}")
+    expected_rows=18*len(expected)
+    if len(rows)!=expected_rows:raise RuntimeError(f"Expected {expected_rows} rows, got {len(rows)}")
     csv_path=Path(f"data/xsmn_daily_verified_{day}.csv")
     meta_path=csv_path.with_suffix(".json")
     # Write only after both sources have matched every result.
     with csv_path.open("w",encoding="utf-8-sig",newline="") as f:
         w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerows(rows)
-    metadata={"status":"PASS","date":day,"expected_rows":54,"actual_rows":54,
-        "stations":sorted(STATION.values()),"station_count":3,
+    metadata={"status":"PASS","date":day,"expected_rows":expected_rows,"actual_rows":expected_rows,
+        "stations":sorted(STATION[k] for k in expected),"station_count":len(expected),
         "sources":[primary_url,secondary_url],"source_count":2,
-        "verification":"All 54 winning numbers matched two independent publisher pages; no official issuer certification.",
+        "verification":"All winning numbers matched two independent publisher pages; no official issuer certification.",
         "official_issuer_certification":False}
     meta_path.write_text(json.dumps(metadata,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps({"status":"PASS","date":day,"rows":len(rows),"sources":metadata["sources"]},ensure_ascii=False))
