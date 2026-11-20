@@ -18,8 +18,8 @@ on:
       - "data/xsmn_daily_verified_*.csv"
       - "data/xsmn_daily_verified_*.json"
   schedule:
-    - cron: "20,30,40,50 9 * * *" # 16:20-16:50 Asia/Ho_Chi_Minh
-    - cron: "0,10,20,30,40,50 10 * * *" # 17:00-17:50 Asia/Ho_Chi_Minh
+    - cron: "20,30,40,45,50,55 9 * * *" # 16:20-16:55, including 16:45 confirmation
+    - cron: "0,10,20,30,40,45,50,55 10 * * *" # 17:00-17:55, including 17:45 confirmation
     - cron: "20 11-13 * * *" # 18:20, 19:20, 20:20 recovery
 
 permissions:
@@ -118,12 +118,12 @@ jobs:
               ROWS=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["rows"])') || exit 1
               API_LATEST=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["api_latest_date"])') || exit 1
               if [[ "$API_LATEST" < "$XSMN_BACKFILL_START" ]]; then
-                echo "No new draw date in 383 feed yet (latest=$API_LATEST, needed=$XSMN_BACKFILL_START). Existing PASS overlays have already been consolidated; the next hourly run will retry."
-                exit 0
+                echo "::warning::383 feed stale (latest=$API_LATEST, needed=$XSMN_BACKFILL_START); retrying during this run rather than reporting success."
+                exit 2
               fi
               if [[ "$ROWS" == "0" ]]; then
-                echo "No missing draw rows to append."
-                exit 0
+                echo "::warning::383 returned zero rows for missing draw date; retrying rather than reporting success."
+                exit 2
               fi
               timeout 90s python scripts/publish_xsmn_daily_verified.py --prepare || exit 1
               BACKFILL_END=$(python -c 'import json; print(json.load(open("xsmn_383_supplement/validation_report.json"))["window_end"])') || exit 1
