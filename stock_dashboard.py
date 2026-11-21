@@ -306,7 +306,7 @@ def render_stock_dashboard():
             with st.expander(f"Lỗi dữ liệu trong các lượt quét ({len(stats['errors'])})"):
                 st.write(stats["errors"][-50:])
 
-    tab_scan, tab_chart, tab_compare, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "🕯️ So sánh 2 CP", "📋 Toàn bộ thị trường"])
+    tab_scan, tab_chart, tab_all = st.tabs(["🔎 Bộ lọc cổ phiếu", "📊 Biểu đồ kỹ thuật", "📋 Toàn bộ thị trường"])
     with tab_scan:
         mom_tab, roc_tab = st.tabs(["MOM10 ≥ ngưỡng", "ROC14 ≥ ngưỡng"])
         with mom_tab:
@@ -414,95 +414,6 @@ def render_stock_dashboard():
             missing_symbols = [symbol for symbol in chart_symbols if symbol not in set(comparison["Mã"].astype(str).str.upper())]
             if missing_symbols:
                 st.caption("Chưa có dữ liệu đối chiếu cho: " + ", ".join(missing_symbols))
-
-    with tab_compare:
-        st.subheader("So sánh nến Nhật · 2 cổ phiếu")
-        st.caption("Hai biểu đồ D1 xếp trên/dưới, cùng trục thời gian; mỗi mã giữ thang giá riêng.")
-        left, right = st.columns(2)
-        with left:
-            symbol_a = st.text_input("Cổ phiếu trên", value="FPT", key="compare_symbol_a").strip().upper()
-        with right:
-            symbol_b = st.text_input("Cổ phiếu dưới", value="HPG", key="compare_symbol_b").strip().upper()
-        compare_days = st.select_slider("Thời gian so sánh", options=[90, 180, 365, 520, 730], value=365, key="compare_days")
-        show_ema = st.checkbox("Hiển thị EMA20 và EMA50", value=False, key="compare_ema")
-        show_bb = st.checkbox("Hiển thị Bollinger Bands (20, 2)", value=False, key="compare_bb")
-        if not (symbol_a and symbol_b) or symbol_a == symbol_b:
-            st.info("Nhập hai mã cổ phiếu khác nhau để so sánh.")
-        elif not all(3 <= len(t) <= 6 and t.isalnum() for t in (symbol_a, symbol_b)):
-            st.warning("Mã cổ phiếu phải gồm 3–6 ký tự chữ hoặc số.")
-        else:
-            try:
-                start_date = (date.today() - timedelta(days=compare_days)).isoformat()
-                end_date = date.today().isoformat()
-                charts = []
-                sources = []
-                for ticker in (symbol_a, symbol_b):
-                    candles, source = fetch_chart_quotes(ticker, start_date, end_date, interval="1D")
-                    candles = candles.dropna(subset=["date", "open", "high", "low", "close"]).copy()
-                    candles["date"] = pd.to_datetime(candles["date"]).dt.normalize()
-                    candles = candles.drop_duplicates("date").sort_values("date")
-                    if candles.empty:
-                        raise MarketDataError(f"{ticker}: không có nến D1 hợp lệ")
-                    candles = add_indicators(candles)
-                    candles["BB_MID"] = candles["close"].rolling(20, min_periods=20).mean()
-                    std = candles["close"].rolling(20, min_periods=20).std(ddof=0)
-                    candles["BB_UPPER"] = candles["BB_MID"] + 2 * std
-                    candles["BB_LOWER"] = candles["BB_MID"] - 2 * std
-                    charts.append(candles)
-                    sources.append(source)
-                fig_compare = make_subplots(
-                    rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.055,
-                    subplot_titles=(symbol_a + " · D1", symbol_b + " · D1"),
-                )
-                for row_idx, (ticker, candles) in enumerate(zip((symbol_a, symbol_b), charts), start=1):
-                    fig_compare.add_trace(go.Candlestick(
-                        x=candles["date"], open=candles["open"], high=candles["high"],
-                        low=candles["low"], close=candles["close"], name=ticker,
-                        increasing_line_color="#26a69a", decreasing_line_color="#ef5350",
-                        showlegend=False,
-                    ), row=row_idx, col=1)
-                    if show_ema:
-                        for field in ("EMA20", "EMA50"):
-                            fig_compare.add_trace(go.Scatter(
-                                x=candles["date"], y=candles[field], mode="lines",
-                                name=ticker + " " + field, line=dict(width=1.3),
-                            ), row=row_idx, col=1)
-                    if show_bb:
-                        for field in ("BB_UPPER", "BB_LOWER"):
-                            fig_compare.add_trace(go.Scatter(
-                                x=candles["date"], y=candles[field], mode="lines",
-                                name=ticker + " " + field, line=dict(width=1, dash="dot"),
-                            ), row=row_idx, col=1)
-                fig_compare.update_layout(
-                    height=820, template="plotly_dark", hovermode="x unified",
-                    dragmode="pan", margin=dict(l=6, r=6, t=48, b=10),
-                    legend=dict(orientation="h", y=1.06),
-                    xaxis_rangeslider_visible=False, xaxis2_rangeslider_visible=False,
-                    uirevision=f"{symbol_a}-{symbol_b}-{compare_days}",
-                )
-                fig_compare.update_xaxes(matches="x", showspikes=True, spikemode="across", spikesnap="cursor",
-                                         spikedash="dot", spikethickness=1)
-                fig_compare.update_yaxes(title_text=symbol_a, row=1, col=1, fixedrange=False)
-                fig_compare.update_yaxes(title_text=symbol_b, row=2, col=1, fixedrange=False)
-                st.plotly_chart(fig_compare, use_container_width=True, config={"scrollZoom": True, "displaylogo": False})
-                common = pd.merge(
-                    charts[0][["date", "close"]].rename(columns={"close": symbol_a}),
-                    charts[1][["date", "close"]].rename(columns={"close": symbol_b}),
-                    on="date", how="inner",
-                ).sort_values("date")
-                if len(common) >= 2:
-                    p_a = (common[symbol_a].iloc[-1] / common[symbol_a].iloc[0] - 1) * 100
-                    p_b = (common[symbol_b].iloc[-1] / common[symbol_b].iloc[0] - 1) * 100
-                    m1, m2, m3 = st.columns(3)
-                    m1.metric(symbol_a + " · thay đổi", f"{p_a:+.2f}%")
-                    m2.metric(symbol_b + " · thay đổi", f"{p_b:+.2f}%")
-                    m3.metric("Chênh lệch", f"{p_a-p_b:+.2f} điểm %")
-                    st.caption(f"So sánh trên {len(common)} phiên chung, từ {common['date'].iloc[0]:%d/%m/%Y} đến {common['date'].iloc[-1]:%d/%m/%Y}. Không điều chỉnh cổ tức.")
-                else:
-                    st.warning("Hai mã không có đủ phiên giao dịch trùng nhau để so sánh hiệu suất.")
-                st.caption(f"Nguồn: {symbol_a} — {sources[0]}; {symbol_b} — {sources[1]}.")
-            except Exception as exc:
-                st.error(f"Không tải được biểu đồ so sánh: {exc}")
 
     with tab_all:
         st.subheader("Bảng dữ liệu toàn thị trường")
