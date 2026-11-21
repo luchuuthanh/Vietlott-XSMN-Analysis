@@ -125,8 +125,15 @@ jobs:
           from datetime import date,timedelta
           with open('data/xsmn_5y_canonical.csv',encoding='utf-8-sig',newline='') as f:
               latest=max(row['date'][:10] for row in csv.DictReader(f))
+          from pathlib import Path
           missing=(date.fromisoformat(latest)+timedelta(days=1))
-          print(missing.isoformat() if missing<=date.today() else '')
+          # Re-verify an existing latest draw if its evidence is missing.
+          # A manifest PASS alone is not sufficient to skip this date.
+          evidence=Path(f'data/xsmn_daily_verified_{latest}.json')
+          if not evidence.exists():
+              print(latest)
+          else:
+              print(missing.isoformat() if missing<=date.today() else '')
           PY
           )"
             if [ -z "$target" ]; then echo "History current through today."; exit 0; fi
