@@ -3,6 +3,8 @@ from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 from pathlib import Path
 import html
+import json
+from io import BytesIO
 import re
 import traceback
 import requests
@@ -660,6 +662,45 @@ with st.sidebar:
 source = st.session_state.get("xsmn_data_source", "Kho lịch sử 5 năm")
 upload = st.session_state.get("xsmn_csv_upload") if source == "Tải CSV riêng" else None
 
+XSMN_HISTORY_REPO = "luchuuthanh/Vietlott-XSMN-Analysis"
+XSMN_HISTORY_RAW = f"https://raw.githubusercontent.com/{XSMN_HISTORY_REPO}"
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def published_history_manifest():
+    response = requests.get(f"{XSMN_HISTORY_RAW}/main/data/xsmn_5y_canonical.json", timeout=5)
+    response.raise_for_status()
+    return response.json()
+
+
+@st.cache_data(max_entries=2, show_spinner=False)
+def published_history_snapshot(revision):
+    response = requests.get(f"https://api.github.com/repos/{XSMN_HISTORY_REPO}/git/ref/heads/main", timeout=5)
+    response.raise_for_status()
+    commit = response.json()["object"]["sha"]
+    base = f"{XSMN_HISTORY_RAW}/{commit}/data/xsmn_5y_canonical"
+    manifest_response = requests.get(f"{base}.json", timeout=5)
+    manifest_response.raise_for_status()
+    metadata = manifest_response.json()
+    if metadata.get("status") != "PASS" or metadata.get("updated_at_vietnam") != revision:
+        raise ValueError("Bản lịch sử công bố đang thay đổi.")
+    csv_response = requests.get(f"{base}.csv", timeout=12)
+    csv_response.raise_for_status()
+    frame = pd.read_csv(BytesIO(csv_response.content), dtype={"number": str, "last2": str})
+    keys = ["date", "province", "prize", "prize_order"]
+    if (
+        len(frame) != metadata.get("rows")
+        or frame["date"].max() != metadata.get("window_end")
+        or frame.duplicated(keys).any()
+    ):
+        raise ValueError("CSV và trạng thái lịch sử công bố không khớp.")
+    return frame
+
+
+def history_revision(metadata):
+    return str(metadata.get("updated_at_vietnam") or "")
+
+
 raw = pd.DataFrame()
 archive_status = pd.DataFrame()
 if source == "Kho lịch sử 5 năm":
@@ -667,11 +708,24 @@ if source == "Kho lịch sử 5 năm":
     manifest = Path("data/xsmn_5y_canonical.json")
     if canonical.exists() and manifest.exists():
         try:
-            import json
             meta = json.loads(manifest.read_text(encoding="utf-8"))
             if meta.get("status") != "PASS":
                 raise ValueError("Manifest chưa xác nhận PASS")
-            raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
+            loaded_revision = history_revision(meta)
+            snapshot = st.session_state.get("xsmn_published_history")
+            try:
+                published = published_history_manifest()
+                revision = history_revision(published)
+                if published.get("status") == "PASS" and revision > max(loaded_revision, snapshot[0] if snapshot else ""):
+                    snapshot = (revision, published_history_snapshot(revision))
+                    st.session_state["xsmn_published_history"] = snapshot
+            except (requests.RequestException, ValueError, KeyError):
+                # Keep the last validated snapshot if GitHub is temporarily unavailable.
+                pass
+            if snapshot and snapshot[0] > loaded_revision:
+                loaded_revision, raw = snapshot
+            else:
+                raw = pd.read_csv(canonical, dtype={"number": str, "last2": str})
             # Merge every independently verified daily result overlay.
             # Canonical rows take precedence on overlap; each overlay must have a PASS
             # manifest, matching row counts, the declared date, and 18 rows per station.
@@ -1440,6 +1494,21 @@ try:
         _render_xsmn_live_section()
 
     if selected_nav == "Lịch sử kết quả":
+        if source == "Kho lịch sử 5 năm" and canonical.exists() and manifest.exists():
+            @st.fragment(run_every=60)
+            def refresh_published_history():
+                try:
+                    published = published_history_manifest()
+                    revision = history_revision(published)
+                    if published.get("status") != "PASS" or revision <= loaded_revision:
+                        return
+                    snapshot = published_history_snapshot(revision)
+                except (requests.RequestException, ValueError, KeyError):
+                    return
+                st.session_state["xsmn_published_history"] = (revision, snapshot)
+                st.rerun()
+
+            refresh_published_history()
         st.subheader(f"Kết quả lịch sử XSMN — {province}")
         st.caption("Kết quả được trình bày trực tiếp trong XSMN Analysis Lab từ kho dữ liệu hiện có; không nhúng website bên ngoài.")
         live_dates = sorted(data["date"].dropna().astype(str).unique(), reverse=True)

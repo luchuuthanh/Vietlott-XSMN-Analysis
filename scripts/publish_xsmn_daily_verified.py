@@ -121,13 +121,24 @@ def publish():
     tmp_path.replace(CANONICAL)
     now=pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").isoformat()
     total_new=int(sum(len(x) for x in additions))
+    latest=merged["date"].max()
+    latest_frame=merged.loc[merged["date"]==latest]
+    if latest in new_dates:
+        manifest.update({
+            "last_draw_source":"383_supplement_independent_crosscheck",
+            "last_draw_source_ids":["api.383.im","xosotin.net"],
+            "last_draw_verification":"The latest draw passed 18-row structure validation and XoSoTin comparison.",
+        })
+    elif manifest.get("last_draw_import")!=latest:
+        manifest.update({
+            "last_draw_source":"canonical_history",
+            "last_draw_source_ids":sorted(latest_frame["source"].astype(str).unique()),
+            "last_draw_verification":"Source labels recovered from existing canonical rows.",
+        })
     manifest.update({
       "status":"PASS","updated_at_vietnam":now,
-      "window_end":max(new_dates),"rows":int(len(merged)),
-      "last_draw_import":max(new_dates),
-      "last_draw_rows":int(len(new[new.date.astype(str).str[:10]==max(new_dates)])),
-      "last_draw_source":"383_supplement_independent_crosscheck",
-      "last_draw_verification":"Every station-day in the imported backfill window passed 18-row structure validation and XoSoTin secondary-source comparison; not official issuer certification.",
+      "window_end":latest,"rows":int(len(merged)),
+      "last_draw_import":latest,"last_draw_rows":int(len(latest_frame)),
       "last_backfill_window":{"start":start_day,"end":end_day,"rows":total_new,"station_days":int(new[["date","province"]].drop_duplicates().shape[0]),"status":"PASS"},
       "note":"Daily and missed-date XSMN results are appended in chronological order after independent comparison; missed dates are backfilled automatically."
     })

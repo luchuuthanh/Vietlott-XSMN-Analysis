@@ -137,8 +137,22 @@ def main():
     merged.to_csv(tmp,index=False,encoding="utf-8-sig")
     tmp.replace(CANONICAL)
     now=pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").isoformat()
-    latest=max(x[0] for x in verified)
-    latest_frame=next(x[1] for x in verified if x[0]==latest)
+    latest=merged["date"].max()
+    latest_frame=merged.loc[merged["date"]==latest]
+    latest_evidence=next((meta for day, _, meta in verified if day==latest), None)
+    latest_metadata={}
+    if latest_evidence is not None:
+        latest_metadata={
+            "last_draw_source":"manual_multi_source_verified",
+            "last_draw_source_ids":[urlparse(u).netloc for u in latest_evidence["sources"]],
+            "last_draw_verification":latest_evidence.get("verification",""),
+        }
+    elif manifest.get("last_draw_import")!=latest:
+        latest_metadata={
+            "last_draw_source":"canonical_history",
+            "last_draw_source_ids":sorted(latest_frame["source"].astype(str).unique()),
+            "last_draw_verification":"Source labels recovered from existing canonical rows.",
+        }
     overlays=manifest.setdefault("verified_daily_overlays",[])
     integrated=manifest.setdefault("integrated_daily_updates",[])
     for day,frame,meta in verified:
@@ -148,11 +162,9 @@ def main():
         overlays=[x for x in overlays if x.get("date")!=day]+[item]
         integrated=[x for x in integrated if x.get("date")!=day]+[{"date":day,"rows":len(frame),"stations":frame["province"].nunique(),"status":"PASS"}]
     manifest.update({
-      "status":"PASS","updated_at_vietnam":now,"window_end":max(pd.to_datetime(merged["date"]).dt.strftime("%Y-%m-%d")),
+      "status":"PASS","updated_at_vietnam":now,"window_end":latest,
       "rows":int(len(merged)),"last_draw_import":latest,"last_draw_rows":int(len(latest_frame)),
-      "last_draw_source":"manual_multi_source_verified",
-      "last_draw_source_ids":[urlparse(u).netloc for u in next(x[2]["sources"] for x in verified if x[0]==latest)],
-      "last_draw_verification":next(x[2].get("verification","") for x in verified if x[0]==latest),
+      **latest_metadata,
       "verified_daily_overlays":sorted(overlays,key=lambda x:x["date"]),
       "integrated_daily_updates":sorted(integrated,key=lambda x:x["date"]),
       "history_overlay_note":"Tất cả các ngày PASS đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",

@@ -7,14 +7,14 @@
   "source": "audited quarterly archive + 383 supplement + multi-source daily overlays",
   "independent_check": "Daily results compared against at least two independent published sources; secondary-source agreement, not official issuer certification.",
   "note": "Kho lịch sử XSMN 5 năm đã tích hợp đầy đủ các kỳ đến 17/11/2026: 104040 dòng dữ liệu từ 2021-11-05. Ngày 16 và 17/11 đã được bổ sung 108 dòng, kiểm tra không trùng khóa. Ngày 18/11 vẫn chờ đủ kết quả và đối chiếu chéo.",
-  "last_draw_import": "2026-11-20",
-  "last_draw_rows": 54,
-  "last_draw_source": "manual_multi_source_verified",
+  "last_draw_import": "2026-11-21",
+  "last_draw_rows": 72,
+  "last_draw_source": "canonical_history",
   "last_draw_source_ids": [
-    "xskt.net",
-    "hpsc.com.vn"
+    "live_sxmn_com_vn_validated",
+    "live_sxmn_com_vn_validated_after_issuer_check"
   ],
-  "last_draw_verification": "All 54 zero-padded winning numbers independently cross-checked against XSKT.net and HPSC published tables; not official issuer certification.",
+  "last_draw_verification": "Source labels recovered from existing canonical rows.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
