@@ -51,6 +51,38 @@ jobs:
         run: |
           export PIP_DEFAULT_TIMEOUT=10 PIP_RETRIES=1
           timeout 120s python -m pip install --no-cache-dir --upgrade pandas requests beautifulsoup4
+      - name: Capture and persist today's complete live draw before historical recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Historical gaps must never prevent capturing the current draw.
+          # The archive command can fail verification; its pending snapshot is
+          # intentionally retained as UNVERIFIED and never promoted here.
+          timeout 65s python scripts/archive_xsmn_from_primary_sources.py || true
+          today="$(date +%F)"
+          pending="data/xsmn_live_pending_${today}.json"
+          if [ ! -f "$pending" ]; then
+            echo "::notice::No complete live snapshot available yet."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$pending"
+          if git diff --cached --quiet; then
+            echo "Today's live snapshot already persisted."
+            exit 0
+          fi
+          git commit -m "Preserve today's complete XSMN live draw before verification"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo "Today's pending snapshot persisted."
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep 3
+          done
+          echo "::error::Could not persist today's pending live snapshot."
+          exit 1
       - name: Consolidate every PASS daily overlay into canonical history
         run: |
           python scripts/merge_verified_daily_overlays.py
