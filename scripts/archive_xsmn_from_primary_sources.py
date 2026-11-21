@@ -93,7 +93,12 @@ def main():
                 groups[st][p]=list(pending_groups[st][p])
     # Independent fallback publishers. Minh Ngoc intentionally excluded.
     # Validate every station, prize count and exact zero-padded value before writing.
+    # Reuse the publisher set documented by the successful 2026-11-14
+    # verified overlay. SXMN remains the primary live publisher, so its
+    # archive is not counted as an independent second publisher.
     sources=[
+        f"https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/{datetime.fromisoformat(day):%d-%m-%Y}.html",
+        f"https://www.xsmn.net/kqxs-ngay-{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://xskt.net/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://kqsx.vn/ket-qua-ngay/xsmn-{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://xosotin.net/ket-qua/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}.html",
