@@ -76,6 +76,32 @@ jobs:
               sleep 3
             done
           fi
+      - name: Audit canonical last draw against independently verified evidence
+        run: |
+          python - <<'PY'
+          import csv,json
+          from collections import Counter
+          from pathlib import Path
+          with open("data/xsmn_5y_canonical.csv",encoding="utf-8-sig",newline="") as f:
+              rows=list(csv.DictReader(f))
+          manifest=json.loads(Path("data/xsmn_5y_canonical.json").read_text(encoding="utf-8"))
+          latest=max(r["date"][:10] for r in rows)
+          actual=[r for r in rows if r["date"][:10]==latest]
+          if latest!=manifest.get("window_end") or len(rows)!=manifest.get("rows"):
+              raise SystemExit(f"MANIFEST_MISMATCH: CSV latest={latest}, rows={len(rows)}; manifest latest={manifest.get('window_end')}, rows={manifest.get('rows')}")
+          if len(actual)!=18*len({r["province"] for r in actual}):
+              raise SystemExit(f"INCOMPLETE_LATEST_DRAW: {latest}, rows={len(actual)}")
+          evidence=Path(f"data/xsmn_daily_verified_{latest}.json")
+          if not evidence.exists():
+              print(f"::warning::UNVERIFIED_CANONICAL_DRAW {latest}: {len(actual)} rows present, but independent verification evidence is absent. Archive PASS is NOT a verification PASS for this date.")
+              with open(__import__("os").environ["GITHUB_ENV"],"a") as f:
+                  f.write(f"XSMN_UNVERIFIED_LATEST={latest}\\n")
+          else:
+              meta=json.loads(evidence.read_text(encoding="utf-8"))
+              if meta.get("status")!="PASS" or meta.get("actual_rows")!=len(actual) or len(meta.get("sources",[]))<2:
+                  raise SystemExit(f"INVALID_VERIFICATION_EVIDENCE: {latest}")
+              print(f"Latest draw {latest}: independent verification evidence present")
+          PY
       - name: Determine first missing draw date
         run: |
           python - <<'PY'
