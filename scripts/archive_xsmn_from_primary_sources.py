@@ -34,6 +34,27 @@ def main():
         except Exception as exc:
             print(f"Live publisher unavailable: {exc}; trying independent published archives",file=sys.stderr)
     expected=SCHEDULE[datetime.fromisoformat(day).weekday()]
+    # Preserve complete live results immediately, even if independent publishers fail.
+    # This is a pending snapshot, NOT a verified historical overlay.
+    if frame is not None:
+        live_groups=defaultdict(lambda:defaultdict(list))
+        for row in frame.itertuples(index=False):
+            key=normalize_station_key(row.province)
+            prize="DB" if row.prize in ("ĐB","DB") else row.prize
+            live_groups[key][prize].append(str(row.number))
+        if set(live_groups)==expected and all(
+            len(live_groups[station].get(prize,[]))==count
+            and all(n.isdigit() and len(n)==WIDTH[prize] for n in live_groups[station][prize])
+            for station in expected for prize,count in COUNTS.items()
+        ):
+            pending=Path(f"data/xsmn_live_pending_{day}.json")
+            payload={"status":"PENDING_INDEPENDENT_VERIFICATION","date":day,
+                     "source":primary_url,"stations":len(expected),
+                     "rows":18*len(expected),
+                     "results":{station:dict(prizes) for station,prizes in live_groups.items()}}
+            pending.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
+            print(f"LIVE_SNAPSHOT_SAVED: {pending}; awaiting independent verification",flush=True)
+
     groups=defaultdict(lambda:defaultdict(list))
     if frame is not None:
         for r in frame.itertuples(index=False):
