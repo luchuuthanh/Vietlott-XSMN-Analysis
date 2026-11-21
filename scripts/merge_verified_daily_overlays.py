@@ -118,14 +118,7 @@ def main():
                               (diff["number_canonical"]!=diff["number_overlay"])]
                 raise SystemExit(f"{day}: {len(mismatch)} prize-key/number mismatches; refusing overwrite. Sample: {mismatch.head(3).to_dict('records')}")
             print(f"{day}: existing prize keys and winning numbers match; source metadata may differ.")
-    if not additions:
-        print(json.dumps({"status":"PASS","action":"already_integrated",
-                          "dates_checked":[x[0] for x in verified],
-                          "rows_added":0,"canonical_rows":int(len(old)),
-                          "window_end":canonical_latest,"duplicate_keys":0},
-                         ensure_ascii=False,indent=2))
-        return
-    if additions:
+    # Even when every winning number is already present, refresh the manifest\n    # with the independently verified evidence instead of returning early.\n    if additions:
         max_old=pd.to_datetime(old["date"],errors="raise").max().date()
         new_days=sorted(x[0] for x in imported)
         expected=pd.date_range(pd.Timestamp(max_old)+pd.Timedelta(days=1),pd.Timestamp(new_days[-1]),freq="D").strftime("%Y-%m-%d").tolist()
