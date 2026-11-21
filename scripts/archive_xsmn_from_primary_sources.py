@@ -55,6 +55,31 @@ def main():
             pending.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
             print(f"LIVE_SNAPSHOT_SAVED: {pending}; awaiting independent verification",flush=True)
 
+    # Recover the durable live capture on later runs, including historical backfills.
+    # Pending data is a primary candidate only; it can NEVER independently pass.
+    pending_path=Path(f"data/xsmn_live_pending_{day}.json")
+    pending_groups=None
+    if pending_path.exists():
+        snapshot=json.loads(pending_path.read_text(encoding="utf-8"))
+        raw=snapshot.get("results",{})
+        recovered={normalize_station_key(k):{p:list(nums) for p,nums in v.items()} for k,v in raw.items()}
+        valid=(snapshot.get("date")==day and
+               snapshot.get("status")=="PENDING_INDEPENDENT_VERIFICATION" and
+               set(recovered)==expected and
+               all(set(recovered[st])==set(COUNTS) and
+                   all(len(recovered[st][p])==count and
+                       all(isinstance(n,str) and n.isdigit() and len(n)==WIDTH[p]
+                           for n in recovered[st][p])
+                       for p,count in COUNTS.items())
+                   for st in expected))
+        if not valid:
+            raise RuntimeError(f"Invalid pending live snapshot: {pending_path}")
+        pending_groups=recovered
+        if frame is None:
+            primary_url=snapshot.get("source")
+            if not isinstance(primary_url,str) or not primary_url.startswith("https://"):
+                raise RuntimeError("Pending snapshot missing valid original publisher URL")
+            print(f"RECOVERED_LIVE_SNAPSHOT: {pending_path}",flush=True)
     groups=defaultdict(lambda:defaultdict(list))
     if frame is not None:
         for r in frame.itertuples(index=False):
@@ -62,6 +87,10 @@ def main():
             p="DB" if r.prize in ("ĐB","DB") else r.prize
             groups[key][p].append(str(r.number))
         if set(groups)!=expected:raise RuntimeError(f"Station set differs: {set(groups)}")
+    if frame is None and pending_groups is not None:
+        for st in expected:
+            for p in COUNTS:
+                groups[st][p]=list(pending_groups[st][p])
     # Independent fallback publishers. Minh Ngoc intentionally excluded.
     # Validate every station, prize count and exact zero-padded value before writing.
     sources=[
@@ -79,7 +108,7 @@ def main():
                 parsed_sources.append((url,candidate))
             else:errors.append(f"{url}: incomplete station/prize parse {list(candidate)}")
         except Exception as exc:errors.append(f"{url}: {exc}")
-    if frame is not None:
+    if frame is not None or pending_groups is not None:
         if not parsed_sources:raise RuntimeError("Independent sources unavailable: "+"; ".join(errors))
         secondary_url,independent=parsed_sources[0]
     else:
