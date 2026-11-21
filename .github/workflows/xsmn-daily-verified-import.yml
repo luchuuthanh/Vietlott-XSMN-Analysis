@@ -132,7 +132,24 @@ jobs:
               if [ "$target" = "$(date +%F)" ]; then exit 0; fi
               continue
             fi
-            echo "::warning::Primary/independent source not yet verified; retry in 45 seconds. No history written."
+            # Commit pending live capture so the next scheduled run can recover it.
+            if [ -f "data/xsmn_live_pending_${target}.json" ]; then
+              git add "data/xsmn_live_pending_${target}.json"
+              if ! git diff --cached --quiet; then
+                git commit -m "Preserve XSMN live snapshot pending independent verification"
+                saved=0
+                for attempt in 1 2 3 4 5; do
+                  if git pull --rebase origin main && git push origin HEAD:main; then saved=1; break; fi
+                  git rebase --abort 2>/dev/null || true
+                  sleep 3
+                done
+                if [ "$saved" -ne 1 ]; then
+                  echo "::error::Could not persist pending live snapshot."
+                  exit 1
+                fi
+              fi
+            fi
+            echo "::warning::Primary/independent source not yet verified; retry in 45 seconds. No verified history written."
             sleep 45
           done
           echo "::error::Primary and independent publishers did not verify a complete draw."
