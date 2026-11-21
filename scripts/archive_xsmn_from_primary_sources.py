@@ -96,6 +96,7 @@ def main():
     sources=[
         f"https://xskt.net/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://kqsx.vn/ket-qua-ngay/xsmn-{datetime.fromisoformat(day):%d-%m-%Y}",
+        f"https://xosotin.net/ket-qua/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}.html",
     ]
     independent={};secondary_url=None;errors=[];parsed_sources=[]
     for url in sources:
