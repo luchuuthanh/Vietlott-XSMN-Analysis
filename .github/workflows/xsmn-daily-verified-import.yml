@@ -20,7 +20,7 @@ on:
       - "data/xsmn_daily_verified_*.json"
   schedule:
     - cron: "20,30,40,45,50,55 9 * * *" # 16:20-16:55, including 16:45 confirmation
-    - cron: "0,10,20,30,40,45,50,55 10 * * *" # 17:00-17:55, including 17:45 confirmation
+    - cron: "0,5,10,15,20,25,30 10 * * *" # 17:00-17:30 every 5 minutes (Asia/Ho_Chi_Minh)
     - cron: "20 11-13 * * *" # 18:20, 19:20, 20:20 recovery
 
 permissions:
