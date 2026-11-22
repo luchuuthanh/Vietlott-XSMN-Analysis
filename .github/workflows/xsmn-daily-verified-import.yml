@@ -83,6 +83,49 @@ jobs:
           done
           echo "::error::Could not persist today's pending live snapshot."
           exit 1
+      - name: Verify and publish today's live draw before recovering older gaps
+        shell: bash
+        run: |
+          set -euo pipefail
+          today="$(date +%F)"
+          # Today's independently verified result takes priority over historical gaps.
+          # The verifier requires a complete live result and an agreeing independent publisher.
+          if ! timeout 100s python scripts/archive_xsmn_from_primary_sources.py; then
+            echo "::warning::Today's draw not independently verified yet; keeping any pending snapshot and continuing safely."
+            exit 0
+          fi
+          overlay="data/xsmn_daily_verified_${today}.csv"
+          evidence="data/xsmn_daily_verified_${today}.json"
+          if [ ! -f "$overlay" ] || [ ! -f "$evidence" ]; then
+            echo "::warning::No verified overlay for today."
+            exit 0
+          fi
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          today=__import__('datetime').datetime.now(__import__('zoneinfo').ZoneInfo('Asia/Ho_Chi_Minh')).date().isoformat()
+          evidence=json.loads(Path(f'data/xsmn_daily_verified_{today}.json').read_text(encoding='utf-8'))
+          if evidence.get('status')!='PASS' or evidence.get('date')!=today or evidence.get('actual_rows')!=evidence.get('expected_rows') or len(evidence.get('sources',[]))<2:
+              raise SystemExit('Refusing to publish an unverified daily overlay')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$overlay" "$evidence"
+          if git diff --cached --quiet; then
+            echo "Today's independently verified overlay already persisted."
+            exit 0
+          fi
+          git commit -m "Persist today's independently verified XSMN results before backfill"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo "Today's verified overlay published."
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep 3
+          done
+          echo "::error::Verified today's overlay could not be pushed."
+          exit 1
       - name: Consolidate every PASS daily overlay into canonical history
         run: |
           python scripts/merge_verified_daily_overlays.py
