@@ -114,16 +114,51 @@ def main():
                 parsed_sources.append((url,candidate))
             else:errors.append(f"{url}: incomplete station/prize parse {list(candidate)}")
         except Exception as exc:errors.append(f"{url}: {exc}")
+    # Match the live snapshot against ANY available independent publisher,
+    # not merely the first publisher that responds. Keep all candidate sources
+    # and their discrepancies in the verification evidence.
+    def matches(a, b):
+        return all(
+            sorted(a[st].get(p, [])) == sorted(b[st].get(p, []))
+            for st in expected for p in COUNTS
+        )
+
+    verification_checks = []
     if frame is not None or pending_groups is not None:
-        if not parsed_sources:raise RuntimeError("Independent sources unavailable: "+"; ".join(errors))
-        secondary_url,independent=parsed_sources[0]
+        if not parsed_sources:
+            raise RuntimeError("Independent sources unavailable: " + "; ".join(errors))
+        matched = []
+        for url, candidate in parsed_sources:
+            ok = matches(groups, candidate)
+            verification_checks.append({"url": url, "matches_live": ok})
+            if ok:
+                matched.append(url)
+        if not matched:
+            raise RuntimeError("No independent publisher matches the live snapshot; checks="
+                               + json.dumps(verification_checks, ensure_ascii=False)
+                               + "; errors=" + "; ".join(errors))
+        secondary_url = matched[0]
+        # Two independent backup publishers are always configured above;
+        # only independently fetched, matching publishers count as evidence.
+        evidence_urls = [primary_url] + matched
     else:
-        if len(parsed_sources)<2:raise RuntimeError("Need two complete independent sources for backfill/fallback: "+"; ".join(errors))
-        primary_url,groups=parsed_sources[0]
-        secondary_url,independent=parsed_sources[1]
-        for st in expected:
-            for p in COUNTS:
-                groups[st][p]=list(groups[st][p])
+        # Backfill: select an agreeing pair from all available publishers.
+        # Do not reject valid results merely because the first two disagree.
+        pair = next(
+            ((url_a, data_a, url_b) for i, (url_a, data_a) in enumerate(parsed_sources)
+             for url_b, data_b in parsed_sources[i + 1:]
+             if matches(data_a, data_b)),
+            None,
+        )
+        if pair is None:
+            raise RuntimeError("Need two agreeing independent sources for backfill; available="
+                               + str([url for url, _ in parsed_sources])
+                               + "; errors=" + "; ".join(errors))
+        primary_url, groups, secondary_url = pair
+        evidence_urls = [primary_url, secondary_url]
+        verification_checks = [{"url": url, "matches_selected": matches(groups, candidate)}
+                               for url, candidate in parsed_sources]
+    independent = next(candidate for url, candidate in parsed_sources if url == secondary_url)
     rows=[]
     for st in sorted(expected):
         for prize,count in COUNTS.items():
@@ -146,7 +181,9 @@ def main():
         w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerows(rows)
     metadata={"status":"PASS","date":day,"expected_rows":expected_rows,"actual_rows":expected_rows,
         "stations":sorted(STATION[k] for k in expected),"station_count":len(expected),
-        "sources":[primary_url,secondary_url],"source_count":2,
+        "sources":evidence_urls,"source_count":len(evidence_urls),
+        "configured_independent_sources":sources,
+        "source_checks":verification_checks,"source_errors":errors,
         "verification":"All winning numbers matched two independent publisher pages; no official issuer certification.",
         "official_issuer_certification":False}
     meta_path.write_text(json.dumps(metadata,ensure_ascii=False,indent=2),encoding="utf-8")
