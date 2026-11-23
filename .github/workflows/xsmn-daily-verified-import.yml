@@ -193,6 +193,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Historical recovery is isolated from live draws. A 12-minute
+          # retry on an older missing date previously blocked today's ingestion.
+          # Evening runs and manual dispatch still perform full backfill.
+          local_hour="$(TZ=Asia/Ho_Chi_Minh date +%H)"
+          if [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] && [ "$local_hour" -lt 18 ]; then
+            echo "::notice::Live window: historical backfill deferred until 18:00; today's verified overlay was processed first."
+            exit 0
+          fi
           deadline=$(date -d '+12 minutes' +%s)
           while (( $(date +%s) < deadline )); do
             target="$(python - <<'PY'
