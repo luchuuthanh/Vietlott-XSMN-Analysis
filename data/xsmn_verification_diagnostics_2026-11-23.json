@@ -4,7 +4,7 @@
   "stations": {
     "camau": [
       {
-        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
         "status": "INCOMPLETE",
         "prizes_found": {
           "DB": 0,
@@ -71,7 +71,7 @@
     ],
     "dongthap": [
       {
-        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
         "status": "INCOMPLETE",
         "prizes_found": {
           "DB": 0,
@@ -138,7 +138,7 @@
     ],
     "tphcm": [
       {
-        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
         "status": "INCOMPLETE",
         "prizes_found": {
           "DB": 0,
@@ -205,14 +205,14 @@
     ]
   },
   "source_errors": [
-    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html: incomplete station/prize parse []",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html: incomplete station/prize parse []",
     "https://www.xsmn.net/kqxs-ngay-23-11-2026: incomplete station/prize parse []",
     "https://xskt.net/xsmn/23-11-2026: incomplete station/prize parse []",
     "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026: incomplete station/prize parse []",
     "https://xosotin.net/ket-qua/xsmn/23-11-2026.html: HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
   ],
   "source_urls": [
-    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
     "https://www.xsmn.net/kqxs-ngay-23-11-2026",
     "https://xskt.net/xsmn/23-11-2026",
     "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026",
