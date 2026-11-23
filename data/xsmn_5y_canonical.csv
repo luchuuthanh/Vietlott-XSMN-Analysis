@@ -1,4 +1,4 @@
-date,province,prize,prize_order,number,number_length,last2,last2_numeric,source
+﻿date,province,prize,prize_order,number,number_length,last2,last2_numeric,source
 2021-11-05,Binh Duong,DB,0,313543,6,43,43,quarterly_archive
 2021-11-05,Binh Duong,G1,0,71421,5,21,21,quarterly_archive
 2021-11-05,Binh Duong,G2,0,14757,5,57,57,quarterly_archive
