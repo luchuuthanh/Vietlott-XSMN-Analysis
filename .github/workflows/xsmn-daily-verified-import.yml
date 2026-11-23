@@ -1,4 +1,5 @@
 name: XSMN daily history sync with automatic gap recovery
+# Manual recovery restart requested 2026-11-23; verification remains fail-closed.
 
 on:
   workflow_dispatch:
