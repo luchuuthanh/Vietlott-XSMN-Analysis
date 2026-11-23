@@ -21,7 +21,8 @@ on:
   schedule:
     - cron: "20,30,40,45,50,55 9 * * *" # 16:20-16:55, including 16:45 confirmation
     - cron: "0,5,10,15,20,25,30 10 * * *" # 17:00-17:30 every 5 minutes (Asia/Ho_Chi_Minh)
-    - cron: "20 11-13 * * *" # 18:20, 19:20, 20:20 recovery
+    - cron: "35,40,45,50,55 10 * * *" # 17:35-17:55 every 5 minutes
+    - cron: "*/5 11-13 * * *" # 18:00-20:55 every 5 minutes for pending verification/recovery
 
 permissions:
   contents: write
@@ -197,8 +198,8 @@ jobs:
           # retry on an older missing date previously blocked today's ingestion.
           # Evening runs and manual dispatch still perform full backfill.
           local_hour="$(TZ=Asia/Ho_Chi_Minh date +%H)"
-          if [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] && [ "$local_hour" -lt 18 ]; then
-            echo "::notice::Live window: historical backfill deferred until 18:00; today's verified overlay was processed first."
+          if [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] && [ "$local_hour" -lt 21 ]; then
+            echo "::notice::Live/pending verification window: historical backfill deferred until 21:00; today's verified overlay was processed first."
             exit 0
           fi
           deadline=$(date -d '+12 minutes' +%s)
