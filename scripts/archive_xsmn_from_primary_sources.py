@@ -22,6 +22,50 @@ STATION={"vinhlong":"Vinh Long","binhduong":"Binh Duong","travinh":"Tra Vinh","c
 SCHEDULE={0:{"camau","dongthap","tphcm"},1:{"baclieu","bentre","vungtau"},2:{"cantho","dongnai","soctrang"},3:{"angiang","binhthuan","tayninh"},4:{"vinhlong","binhduong","travinh"},5:{"binhphuoc","haugiang","longan","tphcm"},6:{"dalat","kiengiang","tiengiang"}}
 FIELDS=["date","province","prize","prize_order","number","number_length","last2","last2_numeric","source"]
 
+def parse_minhngoc_station_blocks(html, expected):
+    """Read Minh Ngoc's station-first daily result layout, not a prize-row grid.
+
+    The publisher displays G8, G7, G6, G5, G4, G3, G2, G1, DB in
+    that order under each station. Reject ambiguous/missing blocks.
+    """
+    import re
+    from bs4 import BeautifulSoup
+    soup=BeautifulSoup(html,"html.parser")
+    # Keep line boundaries so unrelated analysis/loto tables cannot be
+    # mistaken for the winning-number sequence.
+    lines=[re.sub(r"\\s+"," ",x).strip() for x in soup.get_text("\\n").splitlines()]
+    lines=[x for x in lines if x]
+    aliases={"tphcm":("TP. HCM","TP.HCM","Thành Phố Hồ Chí Minh"),
+             "dongthap":("Đồng Tháp",),"camau":("Cà Mau",)}
+    sequence=[("G8",1,2),("G7",1,3),("G6",3,4),("G5",1,4),
+              ("G4",7,5),("G3",2,5),("G2",1,5),("G1",1,5),("DB",1,6)]
+    result={}
+    for station in expected:
+        names=aliases.get(station,())
+        candidates=[]
+        for i,line in enumerate(lines):
+            if line not in names:continue
+            # Skip lottery ticket identifiers; consume only number-only
+            # lines, in strict order, and stop at the next station header.
+            window=[]
+            for item in lines[i+1:i+100]:
+                if any(item==name for group in aliases.values() for name in group):
+                    break
+                if re.fullmatch(r"[0-9]+(?:\\s+[0-9]+)*",item):
+                    window.extend(item.split())
+                if len(window)>=18:break
+            offset=0;parsed={}
+            for prize,count,width in sequence:
+                vals=window[offset:offset+count]
+                if len(vals)!=count or any(len(v)!=width for v in vals):
+                    break
+                parsed[prize]=vals;offset+=count
+            if len(parsed)==len(sequence):candidates.append(parsed)
+        if len(candidates)!=1:
+            return {}
+        result[station]=candidates[0]
+    return result
+
 def main():
     now=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
     day=os.environ.get("XSMN_TARGET_DATE",now)
@@ -98,7 +142,7 @@ def main():
     # verified overlay. SXMN remains the primary live publisher, so its
     # archive is not counted as an independent second publisher.
     sources=[
-        f"https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/{datetime.fromisoformat(day):%d-%m-%Y}.html",
+        f"https://www.minhngoc.net.vn/free/kqxs/mien-nam/{datetime.fromisoformat(day):%d-%m-%Y}.html",
         f"https://www.xsmn.net/kqxs-ngay-{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://xskt.net/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://kqsx.vn/ket-qua-ngay/xsmn-{datetime.fromisoformat(day):%d-%m-%Y}",
@@ -111,7 +155,7 @@ def main():
         try:
             resp=requests.get(url,headers={"User-Agent":"Mozilla/5.0","Accept-Language":"vi-VN,vi;q=0.9"},timeout=18)
             resp.raise_for_status()
-            parsed=parse_daily(resp.content)
+            parsed=(parse_minhngoc_station_blocks(resp.content,expected) if "minhngoc.net.vn" in url else parse_daily(resp.content))
             candidate={normalize_station_key(k):v for k,v in parsed.items()}
             return url,candidate,None
         except Exception as exc:
