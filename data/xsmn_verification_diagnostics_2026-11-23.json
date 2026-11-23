@@ -1,0 +1,221 @@
+{
+  "status": "DIAGNOSTIC_ONLY",
+  "date": "2026-11-23",
+  "stations": {
+    "camau": [
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/23-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+      }
+    ],
+    "dongthap": [
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/23-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+      }
+    ],
+    "tphcm": [
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/23-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+      }
+    ]
+  },
+  "source_errors": [
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html: incomplete station/prize parse []",
+    "https://www.xsmn.net/kqxs-ngay-23-11-2026: incomplete station/prize parse []",
+    "https://xskt.net/xsmn/23-11-2026: incomplete station/prize parse []",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026: incomplete station/prize parse []",
+    "https://xosotin.net/ket-qua/xsmn/23-11-2026.html: HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+  ],
+  "source_urls": [
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/23-11-2026.html",
+    "https://www.xsmn.net/kqxs-ngay-23-11-2026",
+    "https://xskt.net/xsmn/23-11-2026",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026",
+    "https://xosotin.net/ket-qua/xsmn/23-11-2026.html"
+  ]
+}
