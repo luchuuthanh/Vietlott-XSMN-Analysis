@@ -76,7 +76,7 @@ jobs:
           fi
           git commit -m "Preserve today's complete XSMN live draw before verification"
           for attempt in 1 2 3 4 5; do
-            if git pull --rebase origin main && git push origin HEAD:main; then
+            if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then
               echo "Today's pending snapshot persisted."
               exit 0
             fi
@@ -119,7 +119,7 @@ jobs:
           fi
           git commit -m "Persist today's independently verified XSMN results before backfill"
           for attempt in 1 2 3 4 5; do
-            if git pull --rebase origin main && git push origin HEAD:main; then
+            if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then
               echo "Today's verified overlay published."
               exit 0
             fi
@@ -145,7 +145,7 @@ jobs:
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Record XSMN source-by-source diagnostics for ${today}"
           for attempt in 1 2 3 4 5; do
-            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
             git rebase --abort 2>/dev/null || true
             sleep 3
           done
@@ -164,7 +164,7 @@ jobs:
             # Other live writers may update main while this job is running.
             # Rebase and retry without force-pushing or dropping history.
             for attempt in 1 2 3 4 5; do
-              if git pull --rebase origin main && git push origin HEAD:main; then
+              if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then
                 echo "Canonical history push confirmed."
                 break
               fi
@@ -258,7 +258,7 @@ jobs:
               git commit -m "Archive XSMN from independently cross-checked primary publishers"
               pushed=0
               for attempt in 1 2 3 4 5; do
-                if git pull --rebase origin main && git push origin HEAD:main; then
+                if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then
                   echo "Verified XSMN history committed."
                   pushed=1
                   break
@@ -280,7 +280,7 @@ jobs:
                 git commit -m "Preserve XSMN live snapshot pending independent verification"
                 saved=0
                 for attempt in 1 2 3 4 5; do
-                  if git pull --rebase origin main && git push origin HEAD:main; then saved=1; break; fi
+                  if git -c rebase.autoStash=true pull --rebase origin main && git push origin HEAD:main; then saved=1; break; fi
                   git rebase --abort 2>/dev/null || true
                   sleep 3
                 done
