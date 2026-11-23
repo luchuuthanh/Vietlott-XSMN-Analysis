@@ -23,42 +23,55 @@ SCHEDULE={0:{"camau","dongthap","tphcm"},1:{"baclieu","bentre","vungtau"},2:{"ca
 FIELDS=["date","province","prize","prize_order","number","number_length","last2","last2_numeric","source"]
 
 def parse_minhngoc_station_blocks(html, expected):
-    """Parse Minh Ngoc dated pages: station headings followed by labeled DB..G8 rows.
-
-    A dated page may include previous draws, so accept only a single complete
-    result per expected station from the FIRST three dated station blocks.
-    """
+    """Parse dated Minh Ngoc station sections; fail closed on missing prizes."""
     import re
     from bs4 import BeautifulSoup
-    soup=BeautifulSoup(html,"html.parser")
-    lines=[re.sub(r"\\s+"," ",x).strip() for x in soup.get_text("\\n").splitlines()]
-    lines=[x for x in lines if x]
-    labels={"Giải ĐB":"DB","Giải nhất":"G1","Giải nhì":"G2",
-            "Giải ba":"G3","Giải tư":"G4","Giải năm":"G5",
-            "Giải sáu":"G6","Giải bảy":"G7","Giải 8":"G8"}
-    aliases={"tphcm":("TP. HCM","TP.HCM","Hồ Chí Minh"),
-             "dongthap":("Đồng Tháp",),"camau":("Cà Mau",)}
-    out={}
-    for station in expected:
-        names=aliases.get(station,())
-        starts=[i for i,line in enumerate(lines) if
-                "KẾT QUẢ XỔ SỐ" in line.upper() and
-                any(name.casefold() in line.casefold() for name in names)]
-        if not starts: return {}
-        i=starts[0]
-        stop=next((j for j in range(i+1,len(lines))
-                   if "KẾT QUẢ XỔ SỐ" in lines[j].upper()),len(lines))
-        parsed={}
-        for line in lines[i+1:stop]:
-            for label,prize in labels.items():
-                if not line.casefold().startswith(label.casefold()):continue
-                if prize in parsed:return {}
-                numbers=re.findall(r"(?<!\\d)\\d+(?!\\d)",line[len(label):])
-                if len(numbers)==COUNTS[prize] and all(len(n)==WIDTH[prize] for n in numbers):
-                    parsed[prize]=numbers
-                break
-        if set(parsed)!=set(COUNTS):return {}
-        out[station]=parsed
+    soup = BeautifulSoup(html, "html.parser")
+    lines = [re.sub(r"\s+", " ", x).strip() for x in soup.get_text("\n").splitlines()]
+    lines = [x for x in lines if x]
+    labels = {"Giải ĐB": "DB", "Giải nhất": "G1", "Giải nhì": "G2",
+              "Giải ba": "G3", "Giải tư": "G4", "Giải năm": "G5",
+              "Giải sáu": "G6", "Giải bảy": "G7", "Giải 8": "G8"}
+    aliases = {"tphcm": ("TP. HCM", "TP.HCM", "Hồ Chí Minh"),
+               "dongthap": ("Đồng Tháp",), "camau": ("Cà Mau",)}
+    headers = [i for i, line in enumerate(lines)
+               if line.upper().startswith("KẾT QUẢ XỔ SỐ ")
+               and re.search(r"\d{2}/\d{2}/\d{4}", line)]
+    out = {}
+    for st in expected:
+        candidates = [i for i in headers if any(
+            name.casefold() in lines[i].casefold() for name in aliases.get(st, ()))]
+        if len(candidates) != 1:
+            return {}
+        start = candidates[0]
+        end = next((i for i in headers if i > start), len(lines))
+        found = {}
+        current = None
+        chunks = []
+        def finish():
+            if current is None:
+                return True
+            values = re.findall(r"(?<!\d)\d+(?!\d)", " ".join(chunks))
+            if len(values) != COUNTS[current] or any(
+                len(v) != WIDTH[current] for v in values):
+                return False
+            found[current] = values
+            return True
+        for line in lines[start + 1:end]:
+            match = next(((label, prize) for label, prize in labels.items()
+                          if line.casefold().startswith(label.casefold())), None)
+            if match:
+                if not finish():
+                    return {}
+                label, current = match
+                if current in found:
+                    return {}
+                chunks = [line[len(label):]]
+            elif current is not None:
+                chunks.append(line)
+        if not finish() or set(found) != set(COUNTS):
+            return {}
+        out[st] = found
     return out
 
 def main():
