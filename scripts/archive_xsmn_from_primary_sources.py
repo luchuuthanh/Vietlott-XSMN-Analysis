@@ -23,48 +23,43 @@ SCHEDULE={0:{"camau","dongthap","tphcm"},1:{"baclieu","bentre","vungtau"},2:{"ca
 FIELDS=["date","province","prize","prize_order","number","number_length","last2","last2_numeric","source"]
 
 def parse_minhngoc_station_blocks(html, expected):
-    """Read Minh Ngoc's station-first daily result layout, not a prize-row grid.
+    """Parse Minh Ngoc dated pages: station headings followed by labeled DB..G8 rows.
 
-    The publisher displays G8, G7, G6, G5, G4, G3, G2, G1, DB in
-    that order under each station. Reject ambiguous/missing blocks.
+    A dated page may include previous draws, so accept only a single complete
+    result per expected station from the FIRST three dated station blocks.
     """
     import re
     from bs4 import BeautifulSoup
     soup=BeautifulSoup(html,"html.parser")
-    # Keep line boundaries so unrelated analysis/loto tables cannot be
-    # mistaken for the winning-number sequence.
     lines=[re.sub(r"\\s+"," ",x).strip() for x in soup.get_text("\\n").splitlines()]
     lines=[x for x in lines if x]
-    aliases={"tphcm":("TP. HCM","TP.HCM","Thành Phố Hồ Chí Minh"),
+    labels={"Giải ĐB":"DB","Giải nhất":"G1","Giải nhì":"G2",
+            "Giải ba":"G3","Giải tư":"G4","Giải năm":"G5",
+            "Giải sáu":"G6","Giải bảy":"G7","Giải 8":"G8"}
+    aliases={"tphcm":("TP. HCM","TP.HCM","Hồ Chí Minh"),
              "dongthap":("Đồng Tháp",),"camau":("Cà Mau",)}
-    sequence=[("G8",1,2),("G7",1,3),("G6",3,4),("G5",1,4),
-              ("G4",7,5),("G3",2,5),("G2",1,5),("G1",1,5),("DB",1,6)]
-    result={}
+    out={}
     for station in expected:
         names=aliases.get(station,())
-        candidates=[]
-        for i,line in enumerate(lines):
-            if line not in names:continue
-            # Skip lottery ticket identifiers; consume only number-only
-            # lines, in strict order, and stop at the next station header.
-            window=[]
-            for item in lines[i+1:i+100]:
-                if any(item==name for group in aliases.values() for name in group):
-                    break
-                if re.fullmatch(r"[0-9]+(?:\\s+[0-9]+)*",item):
-                    window.extend(item.split())
-                if len(window)>=18:break
-            offset=0;parsed={}
-            for prize,count,width in sequence:
-                vals=window[offset:offset+count]
-                if len(vals)!=count or any(len(v)!=width for v in vals):
-                    break
-                parsed[prize]=vals;offset+=count
-            if len(parsed)==len(sequence):candidates.append(parsed)
-        if len(candidates)!=1:
-            return {}
-        result[station]=candidates[0]
-    return result
+        starts=[i for i,line in enumerate(lines) if
+                "KẾT QUẢ XỔ SỐ" in line.upper() and
+                any(name.casefold() in line.casefold() for name in names)]
+        if not starts: return {}
+        i=starts[0]
+        stop=next((j for j in range(i+1,len(lines))
+                   if "KẾT QUẢ XỔ SỐ" in lines[j].upper()),len(lines))
+        parsed={}
+        for line in lines[i+1:stop]:
+            for label,prize in labels.items():
+                if not line.casefold().startswith(label.casefold()):continue
+                if prize in parsed:return {}
+                numbers=re.findall(r"(?<!\\d)\\d+(?!\\d)",line[len(label):])
+                if len(numbers)==COUNTS[prize] and all(len(n)==WIDTH[prize] for n in numbers):
+                    parsed[prize]=numbers
+                break
+        if set(parsed)!=set(COUNTS):return {}
+        out[station]=parsed
+    return out
 
 def main():
     now=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
