@@ -58,6 +58,8 @@ def parse_minhngoc_station_blocks(html, expected):
             found[current] = values
             return True
         for line in lines[start + 1:end]:
+            if current == "G8" and ("Đổi số trúng" in line or "In vé dò" in line):
+                break
             match = next(((label, prize) for label, prize in labels.items()
                           if line.casefold().startswith(label.casefold())), None)
             if match:
