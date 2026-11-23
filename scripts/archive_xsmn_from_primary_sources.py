@@ -6,6 +6,7 @@ zero-padded prize numbers per station before any PASS overlay is written.
 383 is not consulted or required by this primary pipeline.
 """
 import csv, json, sys, os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 from datetime import datetime, date
 from pathlib import Path
@@ -104,16 +105,51 @@ def main():
         f"https://xosotin.net/ket-qua/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}.html",
     ]
     independent={};secondary_url=None;errors=[];parsed_sources=[]
-    for url in sources:
+    # Fetch independent publishers concurrently to avoid sequential 25-second
+    # timeouts exhausting the workflow's 100-second verification budget.
+    def fetch_publisher(url):
         try:
-            resp=requests.get(url,headers={"User-Agent":"Mozilla/5.0","Accept-Language":"vi-VN,vi;q=0.9"},timeout=25)
+            resp=requests.get(url,headers={"User-Agent":"Mozilla/5.0","Accept-Language":"vi-VN,vi;q=0.9"},timeout=18)
             resp.raise_for_status()
             parsed=parse_daily(resp.content)
             candidate={normalize_station_key(k):v for k,v in parsed.items()}
-            if set(candidate)==expected and all(all(len(candidate[st].get(p,[]))==count and all(n.isdigit() and len(n)==WIDTH[p] for n in candidate[st][p]) for p,count in COUNTS.items()) for st in expected):
-                parsed_sources.append((url,candidate))
-            else:errors.append(f"{url}: incomplete station/prize parse {list(candidate)}")
-        except Exception as exc:errors.append(f"{url}: {exc}")
+            return url,candidate,None
+        except Exception as exc:
+            return url,{},str(exc)
+    with ThreadPoolExecutor(max_workers=len(sources)) as pool:
+        futures=[pool.submit(fetch_publisher,url) for url in sources]
+        fetched=[future.result() for future in futures]
+    station_checks={st:[] for st in sorted(expected)}
+    for url,candidate,error in fetched:
+        if error:
+            errors.append(f"{url}: {error}")
+            for st in expected: station_checks[st].append({"url":url,"status":"FETCH_ERROR","error":error})
+            continue
+        for st in sorted(expected):
+            prizes=candidate.get(st,{})
+            complete=(all(len(prizes.get(p,[]))==count and
+                          all(n.isdigit() and len(n)==WIDTH[p] for n in prizes.get(p,[]))
+                          for p,count in COUNTS.items()))
+            if not complete:
+                station_checks[st].append({"url":url,"status":"INCOMPLETE","prizes_found":{p:len(prizes.get(p,[])) for p in COUNTS}})
+            else:
+                reference=groups.get(st,{})
+                mismatches=[p for p in COUNTS if sorted(prizes[p])!=sorted(reference.get(p,[]))]
+                station_checks[st].append({"url":url,"status":"MATCH" if not mismatches else "MISMATCH","mismatched_prizes":mismatches})
+        if set(candidate)==expected and all(
+            all(len(candidate[st].get(p,[]))==count and
+                all(n.isdigit() and len(n)==WIDTH[p] for n in candidate[st][p])
+                for p,count in COUNTS.items()) for st in expected):
+            parsed_sources.append((url,candidate))
+        else:
+            errors.append(f"{url}: incomplete station/prize parse {list(candidate)}")
+    # Diagnostics are not a PASS overlay and never enter canonical history.
+    diagnostic_path=Path(f"data/xsmn_verification_diagnostics_{day}.json")
+    diagnostic_path.write_text(json.dumps({
+        "status":"DIAGNOSTIC_ONLY","date":day,"stations":station_checks,
+        "source_errors":errors,"source_urls":sources
+    },ensure_ascii=False,indent=2),encoding="utf-8")
+    print(f"VERIFICATION_DIAGNOSTICS: {diagnostic_path}",flush=True)
     # Match the live snapshot against ANY available independent publisher,
     # not merely the first publisher that responds. Keep all candidate sources
     # and their discrepancies in the verification evidence.
