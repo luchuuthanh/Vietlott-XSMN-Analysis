@@ -5,18 +5,8 @@
     "camau": [
       {
         "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
-        "status": "INCOMPLETE",
-        "prizes_found": {
-          "DB": 0,
-          "G1": 0,
-          "G2": 0,
-          "G3": 0,
-          "G4": 0,
-          "G5": 0,
-          "G6": 0,
-          "G7": 0,
-          "G8": 0
-        }
+        "status": "MATCH",
+        "mismatched_prizes": []
       },
       {
         "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
@@ -72,18 +62,8 @@
     "dongthap": [
       {
         "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
-        "status": "INCOMPLETE",
-        "prizes_found": {
-          "DB": 0,
-          "G1": 0,
-          "G2": 0,
-          "G3": 0,
-          "G4": 0,
-          "G5": 0,
-          "G6": 0,
-          "G7": 0,
-          "G8": 0
-        }
+        "status": "MATCH",
+        "mismatched_prizes": []
       },
       {
         "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
@@ -139,18 +119,8 @@
     "tphcm": [
       {
         "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html",
-        "status": "INCOMPLETE",
-        "prizes_found": {
-          "DB": 0,
-          "G1": 0,
-          "G2": 0,
-          "G3": 0,
-          "G4": 0,
-          "G5": 0,
-          "G6": 0,
-          "G7": 0,
-          "G8": 0
-        }
+        "status": "MATCH",
+        "mismatched_prizes": []
       },
       {
         "url": "https://www.xsmn.net/kqxs-ngay-23-11-2026",
@@ -205,7 +175,6 @@
     ]
   },
   "source_errors": [
-    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/23-11-2026.html: incomplete station/prize parse []",
     "https://www.xsmn.net/kqxs-ngay-23-11-2026: incomplete station/prize parse []",
     "https://xskt.net/xsmn/23-11-2026: incomplete station/prize parse []",
     "https://kqsx.vn/ket-qua-ngay/xsmn-23-11-2026: incomplete station/prize parse []",
