@@ -66,7 +66,7 @@
       {
         "url": "https://xosotin.net/ket-qua/xsmn/24-11-2026.html",
         "status": "FETCH_ERROR",
-        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/24-11-2026.html"
       }
     ],
     "bentre": [
@@ -133,7 +133,7 @@
       {
         "url": "https://xosotin.net/ket-qua/xsmn/24-11-2026.html",
         "status": "FETCH_ERROR",
-        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/24-11-2026.html"
       }
     ],
     "vungtau": [
@@ -200,7 +200,7 @@
       {
         "url": "https://xosotin.net/ket-qua/xsmn/24-11-2026.html",
         "status": "FETCH_ERROR",
-        "error": "HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/24-11-2026.html"
       }
     ]
   },
@@ -209,7 +209,7 @@
     "https://www.xsmn.net/kqxs-ngay-24-11-2026: incomplete station/prize parse []",
     "https://xskt.net/xsmn/24-11-2026: incomplete station/prize parse []",
     "https://kqsx.vn/ket-qua-ngay/xsmn-24-11-2026: incomplete station/prize parse []",
-    "https://xosotin.net/ket-qua/xsmn/24-11-2026.html: HTTPSConnectionPool(host='xosotin.net', port=443): Read timed out. (read timeout=18)"
+    "https://xosotin.net/ket-qua/xsmn/24-11-2026.html: 525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/24-11-2026.html"
   ],
   "source_urls": [
     "https://www.minhngoc.net.vn/free/kqxs/mien-nam/24-11-2026.html",
