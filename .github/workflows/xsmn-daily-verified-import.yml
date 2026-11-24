@@ -23,6 +23,7 @@ on:
     - cron: "20,30,40,45,50,55 9 * * *" # 16:20-16:55, including 16:45 confirmation
     - cron: "0,5,10,15,20,25,30 10 * * *" # 17:00-17:30 every 5 minutes (Asia/Ho_Chi_Minh)
     - cron: "35,40,45,50,55 10 * * *" # 17:35-17:55 every 5 minutes
+    - cron: "0,20,40 14 * * *" # 21:00-21:40 historical recovery
     - cron: "*/5 11-13 * * *" # 18:00-20:55 every 5 minutes for pending verification/recovery
 
 permissions:
@@ -295,6 +296,31 @@ jobs:
           done
           echo "::error::Primary and independent publishers did not verify a complete draw."
           exit 1
+      - name: Enforce current draw completion after 17:35
+        if: always()
+        run: |
+          python - <<'PY'
+          import csv,json
+          from collections import Counter
+          from datetime import datetime,time
+          from zoneinfo import ZoneInfo
+          from pathlib import Path
+          now=datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+          if now.time()<time(17,35):
+              raise SystemExit(0)
+          today=now.date().isoformat()
+          evidence=Path(f"data/xsmn_daily_verified_{today}.json")
+          if not evidence.exists():
+              raise SystemExit(f"Missing verified evidence for {today}")
+          meta=json.loads(evidence.read_text(encoding="utf-8"))
+          expected=72 if now.weekday()==5 else 54
+          with open("data/xsmn_5y_canonical.csv",encoding="utf-8-sig",newline="") as f:
+              rows=[r for r in csv.DictReader(f) if r["date"][:10]==today]
+          counts=Counter(r["province"] for r in rows)
+          if meta.get("status")!="PASS" or meta.get("date")!=today or meta.get("actual_rows")!=expected or len(meta.get("sources",[]))<2 or len(rows)!=expected or any(n!=18 for n in counts.values()):
+              raise SystemExit(f"Current draw incomplete or unverified: {today}, {dict(counts)}")
+          print(f"Verified current history: {today}, {expected} rows")
+          PY
       - name: Preserve validation and independent comparison evidence
         if: always()
         uses: actions/upload-artifact@v4
