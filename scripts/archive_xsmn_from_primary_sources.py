@@ -40,7 +40,7 @@ def parse_minhngoc_station_blocks(html, expected):
     out = {}
     for st in expected:
         candidates = [i for i in headers if any(
-            name.casefold() in lines[i].casefold() for name in aliases.get(st, ()))]
+            normalize_station_key(name) in normalize_station_key(lines[i]) for name in aliases.get(st, (STATION[st],)))]
         if len(candidates) != 1:
             return {}
         start = candidates[0]
@@ -165,7 +165,7 @@ def main():
         try:
             resp=requests.get(url,headers={"User-Agent":"Mozilla/5.0","Accept-Language":"vi-VN,vi;q=0.9"},timeout=18)
             resp.raise_for_status()
-            parsed=(parse_minhngoc_station_blocks(resp.content,expected) if "minhngoc.net.vn" in url else parse_daily(resp.content))
+            parsed=(parse_minhngoc_station_blocks(resp.content,expected) or parse_daily(resp.content)) if "minhngoc.net.vn" in url else parse_daily(resp.content)
             candidate={normalize_station_key(k):v for k,v in parsed.items()}
             return url,candidate,None
         except Exception as exc:
