@@ -141,7 +141,9 @@ def main():
             key=normalize_station_key(r.province)
             p="DB" if r.prize in ("ĐB","DB") else r.prize
             groups[key][p].append(str(r.number))
-        if set(groups)!=expected:raise RuntimeError(f"Station set differs: {set(groups)}")
+        if set(groups)!=expected or any(len(groups[st].get(p,[]))!=count or any(not n.isdigit() or len(n)!=WIDTH[p] for n in groups[st].get(p,[])) for st in expected for p,count in COUNTS.items()):
+            frame=None
+            groups=defaultdict(lambda:defaultdict(list))
     if frame is None and pending_groups is not None:
         for st in expected:
             for p in COUNTS:
@@ -157,6 +159,12 @@ def main():
         f"https://xskt.net/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://kqsx.vn/ket-qua-ngay/xsmn-{datetime.fromisoformat(day):%d-%m-%Y}",
         f"https://xosotin.net/ket-qua/xsmn/{datetime.fromisoformat(day):%d-%m-%Y}.html",
+    ]
+    stamp=datetime.fromisoformat(day).strftime("%d-%m-%Y")
+    sources += [
+        f"https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/{stamp}.html",
+        f"https://xosodaiphatvn.com/kqxsmn/{stamp}",
+        f"https://kqxsmn.net/xsmn/{stamp}.html",
     ]
     independent={};secondary_url=None;errors=[];parsed_sources=[]
     # Fetch independent publishers concurrently to avoid sequential 25-second
@@ -213,6 +221,18 @@ def main():
             for st in expected for p in COUNTS
         )
 
+    from urllib.parse import urlparse
+    def publisher(url):
+        return (urlparse(url or "").hostname or "").removeprefix("www.")
+    fallback_allowed = day != now or datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).strftime("%H:%M") >= "16:45"
+    live_available = bool(groups) and set(groups)==expected
+    live_matches = [(u,c) for u,c in parsed_sources if live_available and publisher(u)!=publisher(primary_url) and matches(groups,c)]
+    if fallback_allowed and not live_matches:
+        # Do not override a conflicting complete live draw automatically.
+        if live_available:
+            raise RuntimeError("Complete live draw conflicts with backup publishers; manual review required")
+        frame=None
+        pending_groups=None
     verification_checks = []
     if frame is not None or pending_groups is not None:
         if not parsed_sources:
@@ -221,7 +241,7 @@ def main():
         for url, candidate in parsed_sources:
             ok = matches(groups, candidate)
             verification_checks.append({"url": url, "matches_live": ok})
-            if ok:
+            if ok and publisher(url)!=publisher(primary_url) and publisher(url) not in {publisher(u) for u in matched}:
                 matched.append(url)
         if not matched:
             raise RuntimeError("No independent publisher matches the live snapshot; checks="
@@ -232,12 +252,14 @@ def main():
         # only independently fetched, matching publishers count as evidence.
         evidence_urls = [primary_url] + matched
     else:
+        if not fallback_allowed:
+            raise RuntimeError("Backup-only verification starts at 16:45")
         # Backfill: select an agreeing pair from all available publishers.
         # Do not reject valid results merely because the first two disagree.
         pair = next(
             ((url_a, data_a, url_b) for i, (url_a, data_a) in enumerate(parsed_sources)
              for url_b, data_b in parsed_sources[i + 1:]
-             if matches(data_a, data_b)),
+             if publisher(url_a)!=publisher(url_b) and matches(data_a, data_b)),
             None,
         )
         if pair is None:
@@ -245,6 +267,8 @@ def main():
                                + str([url for url, _ in parsed_sources])
                                + "; errors=" + "; ".join(errors))
         primary_url, groups, secondary_url = pair
+        if any(not matches(groups,candidate) for url,candidate in parsed_sources):
+            raise RuntimeError("Complete backup publishers disagree; manual review required")
         evidence_urls = [primary_url, secondary_url]
         verification_checks = [{"url": url, "matches_selected": matches(groups, candidate)}
                                for url, candidate in parsed_sources]
