@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "scripts/sync_vietlott.py"
+      - "scripts/vietlott_publishers.py"
       - "scripts/package_power535.py"
   schedule:
     # All times are UTC. Viet Nam is UTC+7. Start 5 minutes before
@@ -14,13 +15,15 @@ on:
     - cron: "55 5,13 * * *"
     # Power 6/55 / Mega 6/45: 18:00 VN => 10:55 UTC.
     - cron: "55 10 * * *"
+    # Retry after a delayed publication in each draw window.
+    - cron: "34 6,11,14 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: vietlott-draw-time-polling
+  group: vietlott-archive-writer
   cancel-in-progress: false
 
 jobs:
@@ -52,7 +55,7 @@ jobs:
             echo "Polling attempt $attempt/16 at $(date -u +%FT%TZ)"
             before=$(sha256sum data/vietlott/power535.jsonl data/vietlott/power655.jsonl data/vietlott/power645.jsonl | sha256sum | cut -d' ' -f1)
             before_snapshot=$(sha256sum data/vietlott/*.jsonl | sha256sum | cut -d' ' -f1)
-            if ! python scripts/sync_vietlott.py; then
+            if ! python scripts/sync_vietlott.py --draw-window; then
               echo "Source not ready or validation failed; retrying in 2 minutes."
             else
               after=$(sha256sum data/vietlott/power535.jsonl data/vietlott/power655.jsonl data/vietlott/power645.jsonl | sha256sum | cut -d' ' -f1)

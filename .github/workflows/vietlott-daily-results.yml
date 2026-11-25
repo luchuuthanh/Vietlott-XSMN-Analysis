@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: vietlott-daily-results-sync
+  group: vietlott-archive-writer
   cancel-in-progress: false
 
 jobs:

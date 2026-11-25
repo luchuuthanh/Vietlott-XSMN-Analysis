@@ -62,5 +62,5 @@ def fetch_vietlott(game):
     if df.empty:
         raise ValueError("Nguồn trả về dữ liệu nhưng không nhận diện được cấu trúc kỳ quay.")
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
+    df = df.dropna(subset=["date"]).sort_values(["date", "draw_id"]).reset_index(drop=True)
     return df

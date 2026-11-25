@@ -15,7 +15,13 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+if __package__:
+    from .vietlott_publishers import extend_archive
+else:
+    from vietlott_publishers import extend_archive
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -336,7 +342,7 @@ def audit_payload(game: str, payload: bytes) -> dict:
         "sha256": None,
     }
 
-def main() -> int:
+def main(draw_window=False) -> int:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -346,17 +352,24 @@ def main() -> int:
         "excluded_games": {"KENO": "Excluded from this project by user request; not synchronized or analyzed."},
         "status": "ok",
     }
+    if draw_window:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        manifest["generated_at_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     staged = []
     failures = []
     for game, (filename, remote_name) in GAMES.items():
+        if draw_window and game not in {"MEGA645", "POWER535", "POWER655"}:
+            continue
         url = BASE + remote_name
-        print(f"Downloading {game}: {url}", flush=True)
+        print(f"Checking {game} publishers" if draw_window else f"Downloading {game}: {url}", flush=True)
         try:
-            payload = fetch(url)
+            payload = (DATA_DIR / filename).read_bytes() if draw_window else fetch(url)
             payload = apply_verified_corrections(game, payload)
             payload = merge_verified_supplements(game, payload)
             if game == "MEGA645":
                 payload = merge_mega645_backfill(payload)
+            payload = extend_archive(game, payload, DATA_DIR / filename, validate_result,
+                                     datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date())
             summary = audit_payload(game, payload)
             summary["sha256"] = hashlib.sha256(payload).hexdigest()
             summary["bytes"] = len(payload)
@@ -409,12 +422,12 @@ def main() -> int:
         os.replace(tmp, path)
 
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"All {len(GAMES)} selected datasets validated. Manifest: {MANIFEST}", flush=True)
+    print(f"All {len(staged)} selected datasets validated. Manifest: {MANIFEST}", flush=True)
     return 0
 
 if __name__ == "__main__":
     try:
-        raise SystemExit(main())
+        raise SystemExit(main(draw_window="--draw-window" in sys.argv[1:]))
     except Exception as exc:
         print(f"FATAL: {exc}", file=sys.stderr)
         raise SystemExit(1)

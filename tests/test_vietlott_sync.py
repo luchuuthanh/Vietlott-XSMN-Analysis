@@ -1,4 +1,7 @@
 import json
+from datetime import date
+from unittest.mock import patch
+from scripts.vietlott_publishers import extend_archive
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +10,26 @@ from scripts.sync_vietlott import (
 )
 
 class VietlottSyncTests(unittest.TestCase):
+    def test_late_mirror_and_publisher_agreement(self):
+        base = b'{"id":"01592","date":"2026-11-22","result":[1,13,14,18,23,39]}\n'
+        draw = ("2026-11-25", [1, 13, 16, 23, 24, 38])
+        today = date.fromisoformat(draw[0])
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "history"
+            def run(first, second):
+                with patch("scripts.vietlott_publishers.read_cards",
+                           side_effect=lambda url: first if "xsmn.net" in url else second):
+                    return extend_archive("MEGA645", base, archive, validate_result, today)
+            cards = {1593: draw}
+            self.assertEqual(run(cards, {}), base)
+            self.assertEqual(run({1594: draw}, {1594: draw}), base)
+            self.assertEqual(run(cards, {1593: (draw[0], [1, 2, 3, 4, 5, 6])}), base)
+            updated = run(cards, cards)
+            self.assertEqual(json.loads(updated.splitlines()[-1])["result"], draw[1])
+            archive.write_bytes(updated)
+            self.assertEqual(run({}, {}), updated)
+            self.assertEqual(run(cards, cards), updated)
+
     def test_power655(self):
         # Six main balls and the separately drawn special ball are distinct.
         self.assertIsNone(validate_result("POWER655", [1, 2, 3, 4, 5, 6, 7]))
