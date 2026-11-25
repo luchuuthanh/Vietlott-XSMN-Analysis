@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "date": "2026-11-25",
+  "expected_rows": 54,
+  "actual_rows": 54,
+  "stations": [
+    "Dong Nai",
+    "Can Tho",
+    "Soc Trang"
+  ],
+  "station_count": 3,
+  "sources": [
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/25-11-2026.html",
+    "https://xosodaiphatvn.com/kqxsmn/25-11-2026",
+    "https://kqxsmn.net/xsmn/25-11-2026.html",
+    "https://cvwork.vn/ket-qua-xo-so/mien-nam/25-11-2026"
+  ],
+  "source_count": 4,
+  "official_issuer_certification": false,
+  "verification": "Manual comparison of all 54 winning numbers and prize orders across four publisher pages; no official issuer certification; publisher upstream independence not established."
+}
