@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-25T11:54:13Z",
+  "generated_at_utc": "2026-11-25T16:32:57Z",
   "source_repository": "https://github.com/vietvudanh/vietlott-data",
   "source_note": "Third-party mirror stating that results are collected from vietlott.vn; cross-check important records against official Vietlott publications.",
   "games": {
@@ -44,12 +44,12 @@
       "historical_backfill_source": "https://github.com/NhanAZ-Data/vietlott-research/blob/main/datasets/draws/mega645/all.csv"
     },
     "POWER535": {
-      "records": 1029,
+      "records": 1030,
       "first_date": "2025-06-29",
       "latest_date": "2026-11-25",
       "first_draw_id": "00001",
-      "latest_draw_id": "01029",
-      "numeric_id_count": 1029,
+      "latest_draw_id": "01030",
+      "numeric_id_count": 1030,
       "numeric_id_gaps": [],
       "id_order_anomalies": [],
       "id_order_anomaly_count": 0,
@@ -58,8 +58,8 @@
       "missing_special_count": 0,
       "missing_bonus_count": 0,
       "numeric_id_gap_count_sampled": 0,
-      "sha256": "d81b5522d3da22be890d809c9a64f1c48f4bd20d4dc87b306ebd349191c35aa0",
-      "bytes": 108780,
+      "sha256": "49863dae6cc425261c249f377f3e0fa133dbdef188682ab09d9681e3d868334e",
+      "bytes": 109000,
       "source_url": "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power535.jsonl"
     },
     "MAX3D": {
