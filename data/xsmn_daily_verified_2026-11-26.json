@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "date": "2026-11-26",
+  "expected_rows": 54,
+  "actual_rows": 54,
+  "stations": [
+    "An Giang",
+    "Binh Thuan",
+    "Tay Ninh"
+  ],
+  "station_count": 3,
+  "sources": [
+    "https://sxmn.com.vn/",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/26-11-2026.html",
+    "https://xosodaiphatvn.com/kqxsmn/26-11-2026",
+    "https://kqxs.wiki/xsmn-26-11-2026"
+  ],
+  "source_count": 4,
+  "configured_independent_sources": [
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/26-11-2026.html",
+    "https://www.xsmn.net/kqxs-ngay-26-11-2026",
+    "https://xskt.net/xsmn/26-11-2026",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-26-11-2026",
+    "https://xosotin.net/ket-qua/xsmn/26-11-2026.html",
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/26-11-2026.html",
+    "https://xosodaiphatvn.com/kqxsmn/26-11-2026",
+    "https://kqxsmn.net/xsmn/26-11-2026.html",
+    "https://www.xoso.net/kqxs/mien-nam/26-11-2026.html",
+    "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-26-11-2026.html",
+    "https://kqxs.wiki/xsmn-26-11-2026"
+  ],
+  "source_checks": [
+    {
+      "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/26-11-2026.html",
+      "matches_live": true
+    },
+    {
+      "url": "https://xosodaiphatvn.com/kqxsmn/26-11-2026",
+      "matches_live": true
+    },
+    {
+      "url": "https://kqxs.wiki/xsmn-26-11-2026",
+      "matches_live": true
+    }
+  ],
+  "source_errors": [
+    "https://www.xsmn.net/kqxs-ngay-26-11-2026: incomplete station/prize parse []",
+    "https://xskt.net/xsmn/26-11-2026: incomplete station/prize parse []",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-26-11-2026: incomplete station/prize parse []",
+    "https://xosotin.net/ket-qua/xsmn/26-11-2026.html: 525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/26-11-2026.html",
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/26-11-2026.html: incomplete station/prize parse []",
+    "https://kqxsmn.net/xsmn/26-11-2026.html: incomplete station/prize parse []",
+    "https://www.xoso.net/kqxs/mien-nam/26-11-2026.html: incomplete station/prize parse []",
+    "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-26-11-2026.html: incomplete station/prize parse []"
+  ],
+  "verification": "All winning numbers matched two independent publisher pages; no official issuer certification.",
+  "official_issuer_certification": false
+}
