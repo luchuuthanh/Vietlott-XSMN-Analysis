@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-26T16:38:04.718376+07:00",
+  "updated_at_vietnam": "2026-11-26T17:32:45.711071+07:00",
   "window_start": "2021-11-05",
   "window_end": "2026-11-26",
   "rows": 104544,
@@ -9,12 +9,14 @@
   "note": "Kho lịch sử XSMN 5 năm đã tích hợp đầy đủ các kỳ đến 17/11/2026: 104040 dòng dữ liệu từ 2021-11-05. Ngày 16 và 17/11 đã được bổ sung 108 dòng, kiểm tra không trùng khóa. Ngày 18/11 vẫn chờ đủ kết quả và đối chiếu chéo.",
   "last_draw_import": "2026-11-26",
   "last_draw_rows": 54,
-  "last_draw_source": "mixed_verified_sources",
+  "last_draw_source": "manual_multi_source_verified",
   "last_draw_source_ids": [
-    "live_sxmn_com_vn_validated",
-    "live_sxmn_com_vn_validated_after_issuer_check"
+    "sxmn.com.vn",
+    "www.minhngoc.net.vn",
+    "xosodaiphatvn.com",
+    "kqxs.wiki"
   ],
-  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync.",
+  "last_draw_verification": "All winning numbers matched two independent publisher pages; no official issuer certification.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
@@ -95,6 +97,14 @@
       "stations": 3,
       "status": "PASS",
       "verification": "All winning numbers matched two independent publisher pages; no official issuer certification."
+    },
+    {
+      "date": "2026-11-26",
+      "file": "data/xsmn_daily_verified_2026-11-26.csv",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS",
+      "verification": "All winning numbers matched two independent publisher pages; no official issuer certification."
     }
   ],
   "history_overlay_note": "Tất cả các ngày PASS đã được hợp nhất trực tiếp vào canonical CSV; tệp daily verified được giữ làm bằng chứng đối chiếu.",
@@ -158,6 +168,12 @@
       "rows": 54,
       "stations": 3,
       "status": "PASS"
+    },
+    {
+      "date": "2026-11-26",
+      "rows": 54,
+      "stations": 3,
+      "status": "PASS"
     }
   ],
   "latest_live_check": {
@@ -176,7 +192,7 @@
   },
   "archive_status_scope": "PASS applies only to the canonical archive through window_end; latest_live_check has its own status and must not be interpreted as PASS.",
   "last_history_sync": {
-    "checked_at_vietnam": "2026-11-26T05:58:15.557815+07:00",
+    "checked_at_vietnam": "2026-11-26T17:32:45.711071+07:00",
     "status": "PASS",
     "dates_checked": [
       "2026-11-14",
@@ -188,10 +204,11 @@
       "2026-11-20",
       "2026-11-23",
       "2026-11-24",
-      "2026-11-25"
+      "2026-11-25",
+      "2026-11-26"
     ],
     "new_rows_added": 0,
-    "canonical_rows": 104490,
+    "canonical_rows": 104544,
     "duplicate_keys": 0
   },
   "last_history_recheck": {
