@@ -54,5 +54,8 @@
     "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-26-11-2026.html: incomplete station/prize parse []"
   ],
   "verification": "All winning numbers matched two independent publisher pages; no official issuer certification.",
-  "official_issuer_certification": false
+  "official_issuer_certification": false,
+  "verification_mode": "automatic_multi_source",
+  "verified_at_vietnam": "2026-11-26T18:12:09.655926+07:00",
+  "distinct_publisher_count": 4
 }
