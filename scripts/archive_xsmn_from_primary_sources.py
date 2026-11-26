@@ -226,7 +226,8 @@ def main():
 
     from urllib.parse import urlparse
     def publisher(url):
-        return (urlparse(url or "").hostname or "").removeprefix("www.")
+        host = (urlparse(url or "").hostname or "").removeprefix("www.")
+        return "minhngoc" if host in {"minhngoc.net.vn", "xoso.net"} else host
     fallback_allowed = day != now or datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).strftime("%H:%M") >= "16:45"
     live_available = bool(groups) and set(groups)==expected
     live_matches = [(u,c) for u,c in parsed_sources if live_available and publisher(u)!=publisher(primary_url) and matches(groups,c)]
@@ -246,10 +247,12 @@ def main():
             verification_checks.append({"url": url, "matches_live": ok})
             if ok and publisher(url)!=publisher(primary_url) and publisher(url) not in {publisher(u) for u in matched}:
                 matched.append(url)
-        if not matched:
-            raise RuntimeError("No independent publisher matches the live snapshot; checks="
+        if len(matched) < 2:
+            raise RuntimeError("Need two distinct backup publishers matching the live snapshot; checks="
                                + json.dumps(verification_checks, ensure_ascii=False)
                                + "; errors=" + "; ".join(errors))
+        if any(not matches(groups, candidate) for _, candidate in parsed_sources):
+            raise RuntimeError("Complete publisher disagrees with live snapshot; manual review required")
         secondary_url = matched[0]
         # Two independent backup publishers are always configured above;
         # only independently fetched, matching publishers count as evidence.
@@ -302,7 +305,10 @@ def main():
         "configured_independent_sources":sources,
         "source_checks":verification_checks,"source_errors":errors,
         "verification":"All winning numbers matched two independent publisher pages; no official issuer certification.",
-        "official_issuer_certification":False}
+        "official_issuer_certification":False,
+        "verification_mode":"automatic_multi_source",
+        "verified_at_vietnam":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),
+        "distinct_publisher_count":len({publisher(u) for u in evidence_urls})}
     meta_path.write_text(json.dumps(metadata,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps({"status":"PASS","date":day,"rows":len(rows),"sources":metadata["sources"]},ensure_ascii=False))
 
