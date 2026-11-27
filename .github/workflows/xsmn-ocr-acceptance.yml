@@ -5,7 +5,7 @@ on:
       - '.github/workflows/xsmn-ocr-acceptance.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,6 +20,7 @@ jobs:
           python -m playwright install --with-deps chromium
           sudo apt-get install -y tesseract-ocr tesseract-ocr-vie
       - name: Force screenshot OCR without HTML number extraction
+        id: ocr_test
         run: |
           python - <<'PY'
           import csv,json,html,subprocess,re,unicodedata
@@ -95,15 +96,17 @@ jobs:
                       if not parsed:
                           parsed=parse_minhngoc_station_blocks("<pre>"+html.escape(raw)+"</pre>",expected)
                       correct=wrong=missing=extra=0
+                      details=[]
                       for (st,pr),nums in ref.items():
                           got=parsed.get(st,{}).get(pr,[])
                           match=sum((Counter(nums)&Counter(got)).values())
+                          details.append({"station":st,"prize":pr,"correct":match,"expected":nums,"recognized":got})
                           correct+=match
                           wrong+=min(len(nums),len(got))-match
                           missing+=max(0,len(nums)-len(got))
                           extra+=max(0,len(got)-len(nums))
                       date_ok="27/11/2026" in raw or "27-11-2026" in raw
-                      report.update(correct=correct,wrong=wrong,missing=missing,extra=extra,date_ok=date_ok,status="PASS" if correct==54 and not wrong and not missing and not extra and date_ok else "FAIL")
+                      report.update(details=details,correct=correct,wrong=wrong,missing=missing,extra=extra,date_ok=date_ok,status="PASS" if correct==54 and not wrong and not missing and not extra and date_ok else "FAIL")
                   except Exception as e:
                       report.update(status="FAIL",error=str(e))
                   finally:
@@ -120,3 +123,29 @@ jobs:
         with:
           name: xsmn-forced-ocr-evidence
           path: ocr-test/
+      - name: Publish isolated OCR test report
+        if: always()
+        env:
+          OCR_OUTCOME: ${{ steps.ocr_test.outcome }}
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          source=Path("ocr-test/report.json")
+          results=json.loads(source.read_text()) if source.exists() else []
+          report={"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"tested_commit":os.environ["GITHUB_SHA"],"reported_at":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),"draw_date":"2026-11-27","test_outcome":os.environ.get("OCR_OUTCOME"),"status":"PASS" if sum(r.get("status")=="PASS" for r in results)>=2 and os.environ.get("OCR_OUTCOME")=="success" else "FAIL" if results else "NO_RESULT","sources":results}
+          folder=Path("reports/ocr");folder.mkdir(parents=True,exist_ok=True)
+          (folder/f'{report["run_id"]}-{report["run_attempt"]}.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ocr/
+          git commit -m "Record isolated OCR acceptance report"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep 3
+          done
+          exit 1
