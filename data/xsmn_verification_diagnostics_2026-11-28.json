@@ -1,0 +1,628 @@
+{
+  "status": "DIAGNOSTIC_ONLY",
+  "date": "2026-11-28",
+  "stations": {
+    "binhphuoc": [
+      {
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/28-11-2026.html"
+      },
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosodaiphatvn.com/kqxsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqxsmn.net/xsmn/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "404 Client Error: Not Found for url: https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html"
+      },
+      {
+        "url": "https://kqxs.wiki/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      }
+    ],
+    "haugiang": [
+      {
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/28-11-2026.html"
+      },
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosodaiphatvn.com/kqxsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqxsmn.net/xsmn/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "404 Client Error: Not Found for url: https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html"
+      },
+      {
+        "url": "https://kqxs.wiki/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      }
+    ],
+    "longan": [
+      {
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/28-11-2026.html"
+      },
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosodaiphatvn.com/kqxsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqxsmn.net/xsmn/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "404 Client Error: Not Found for url: https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html"
+      },
+      {
+        "url": "https://kqxs.wiki/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      }
+    ],
+    "tphcm": [
+      {
+        "url": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xsmn.net/kqxs-ngay-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xskt.net/xsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/28-11-2026.html"
+      },
+      {
+        "url": "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://xosodaiphatvn.com/kqxsmn/28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://kqxsmn.net/xsmn/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      },
+      {
+        "url": "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+        "status": "FETCH_ERROR",
+        "error": "404 Client Error: Not Found for url: https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html"
+      },
+      {
+        "url": "https://kqxs.wiki/xsmn-28-11-2026",
+        "status": "INCOMPLETE",
+        "prizes_found": {
+          "DB": 0,
+          "G1": 0,
+          "G2": 0,
+          "G3": 0,
+          "G4": 0,
+          "G5": 0,
+          "G6": 0,
+          "G7": 0,
+          "G8": 0
+        }
+      }
+    ]
+  },
+  "source_errors": [
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/www.minhngoc.net.vn-6f871eebef.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
+    "https://xosodaiphatvn.com/kqxsmn/28-11-2026: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/xosodaiphatvn.com-cdc6309872.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
+    "https://kqxs.wiki/xsmn-28-11-2026: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/kqxs.wiki-cd739a460d.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html: incomplete station/prize parse []",
+    "https://www.xsmn.net/kqxs-ngay-28-11-2026: incomplete station/prize parse []",
+    "https://xskt.net/xsmn/28-11-2026: incomplete station/prize parse []",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026: incomplete station/prize parse []",
+    "https://xosotin.net/ket-qua/xsmn/28-11-2026.html: 525 Server Error: <none> for url: https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html: incomplete station/prize parse []",
+    "https://xosodaiphatvn.com/kqxsmn/28-11-2026: incomplete station/prize parse []",
+    "https://kqxsmn.net/xsmn/28-11-2026.html: incomplete station/prize parse []",
+    "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html: incomplete station/prize parse []",
+    "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html: 404 Client Error: Not Found for url: https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+    "https://kqxs.wiki/xsmn-28-11-2026: incomplete station/prize parse []"
+  ],
+  "source_urls": [
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+    "https://www.xsmn.net/kqxs-ngay-28-11-2026",
+    "https://xskt.net/xsmn/28-11-2026",
+    "https://kqsx.vn/ket-qua-ngay/xsmn-28-11-2026",
+    "https://xosotin.net/ket-qua/xsmn/28-11-2026.html",
+    "https://www.minhngoc.net.vn/ket-qua-xo-so/mien-nam/28-11-2026.html",
+    "https://xosodaiphatvn.com/kqxsmn/28-11-2026",
+    "https://kqxsmn.net/xsmn/28-11-2026.html",
+    "https://www.xoso.net/kqxs/mien-nam/28-11-2026.html",
+    "https://ketqua77.com/xo-so-ngay/mien-nam-xsmn-28-11-2026.html",
+    "https://kqxs.wiki/xsmn-28-11-2026"
+  ],
+  "capture_methods": {
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html": "browser_failed",
+    "https://xosodaiphatvn.com/kqxsmn/28-11-2026": "browser_failed",
+    "https://kqxs.wiki/xsmn-28-11-2026": "browser_failed"
+  }
+}
