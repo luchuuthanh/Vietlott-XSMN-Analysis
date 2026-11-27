@@ -1,0 +1,78 @@
+name: XSMN isolated OCR acceptance
+on:
+  push:
+    paths:
+      - '.github/workflows/xsmn-ocr-acceptance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install pandas requests beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-vie
+      - name: Force screenshot OCR without HTML number extraction
+        run: |
+          python - <<'PY'
+          import csv,json,html,subprocess
+          from pathlib import Path
+          from collections import defaultdict,Counter
+          from playwright.sync_api import sync_playwright
+          from scripts.archive_xsmn_from_primary_sources import parse_minhngoc_station_blocks,normalize_station_key,COUNTS
+          day="2026-11-27"
+          expected={"vinhlong","binhduong","travinh"}
+          ref=defaultdict(list)
+          with open(f"data/xsmn_daily_verified_{day}.csv",encoding="utf-8-sig") as f:
+              for r in csv.DictReader(f):
+                  ref[(normalize_station_key(r["province"]),r["prize"].replace("ĐB","DB"))].append(r["number"])
+          assert sum(map(len,ref.values()))==54
+          folder=Path("ocr-test");folder.mkdir(exist_ok=True)
+          results=[]
+          sources={"minhngoc":"https://www.minhngoc.net.vn/free/kqxs/mien-nam/27-11-2026.html","daiphat":"https://xosodaiphatvn.com/kqxsmn/27-11-2026","wiki":"https://kqxs.wiki/xsmn-27-11-2026"}
+          with sync_playwright() as p:
+              browser=p.chromium.launch()
+              for name,url in sources.items():
+                  report={"source":url,"method":"forced_ocr"}
+                  page=browser.new_page(viewport={"width":1440,"height":1000},device_scale_factor=2,locale="vi-VN")
+                  try:
+                      page.goto(url,wait_until="domcontentloaded",timeout=30000)
+                      page.wait_for_timeout(2000)
+                      image=folder/f"{name}.png"
+                      page.screenshot(path=str(image),full_page=True,timeout=30000)
+                      raw=subprocess.run(["tesseract",str(image),"stdout","-l","vie+eng","--psm","6"],capture_output=True,text=True,timeout=90,check=True).stdout
+                      (folder/f"{name}.txt").write_text(raw)
+                      parsed=parse_minhngoc_station_blocks("<pre>"+html.escape(raw)+"</pre>",expected)
+                      correct=wrong=missing=extra=0
+                      for (st,pr),nums in ref.items():
+                          got=parsed.get(st,{}).get(pr,[])
+                          match=sum((Counter(nums)&Counter(got)).values())
+                          correct+=match
+                          wrong+=min(len(nums),len(got))-match
+                          missing+=max(0,len(nums)-len(got))
+                          extra+=max(0,len(got)-len(nums))
+                      date_ok="27/11/2026" in raw or "27-11-2026" in raw
+                      report.update(correct=correct,wrong=wrong,missing=missing,extra=extra,date_ok=date_ok,status="PASS" if correct==54 and not wrong and not missing and not extra and date_ok else "FAIL")
+                  except Exception as e:
+                      report.update(status="FAIL",error=str(e))
+                  finally:
+                      page.close()
+                  results.append(report)
+              browser.close()
+          (folder/"report.json").write_text(json.dumps(results,ensure_ascii=False,indent=2))
+          print(json.dumps(results,ensure_ascii=False))
+          if sum(r["status"]=="PASS" for r in results)<2:
+              raise SystemExit("OCR acceptance requires two matching sources")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xsmn-forced-ocr-evidence
+          path: ocr-test/
