@@ -592,7 +592,7 @@
     ]
   },
   "source_errors": [
-    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/www.minhngoc.net.vn-6f871eebef.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html: browser fallback incomplete: screenshot_ocr",
     "https://xosodaiphatvn.com/kqxsmn/28-11-2026: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/xosodaiphatvn.com-cdc6309872.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
     "https://kqxs.wiki/xsmn-28-11-2026: browser fallback incomplete: Command '['tesseract', 'xsmn_independent_audit/2026-11-28/kqxs.wiki-cd739a460d.png', 'stdout', '-l', 'vie+eng', '--psm', '6']' timed out after 25 seconds",
     "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html: incomplete station/prize parse []",
@@ -621,7 +621,7 @@
     "https://kqxs.wiki/xsmn-28-11-2026"
   ],
   "capture_methods": {
-    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html": "browser_failed",
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html": "screenshot_ocr",
     "https://xosodaiphatvn.com/kqxsmn/28-11-2026": "browser_failed",
     "https://kqxs.wiki/xsmn-28-11-2026": "browser_failed"
   }
