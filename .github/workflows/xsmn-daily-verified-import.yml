@@ -43,6 +43,7 @@ jobs:
       XSMN_REQUIRE_TODAY: "0"
       XSMN_DAILY_ONLY: "0"
       XSMN_BACKFILL: "1"
+      XSMN_BROWSER_FALLBACK: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,6 +55,12 @@ jobs:
         run: |
           export PIP_DEFAULT_TIMEOUT=10 PIP_RETRIES=1
           timeout 120s python -m pip install --no-cache-dir --upgrade pandas requests beautifulsoup4
+      - name: Install browser and OCR fallback
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-vie
+          python -m py_compile scripts/archive_xsmn_from_primary_sources.py
       - name: Capture and persist today's complete live draw before historical recovery
         shell: bash
         run: |
@@ -61,7 +68,7 @@ jobs:
           # Historical gaps must never prevent capturing the current draw.
           # The archive command can fail verification; its pending snapshot is
           # intentionally retained as UNVERIFIED and never promoted here.
-          timeout 65s python scripts/archive_xsmn_from_primary_sources.py || true
+          XSMN_BROWSER_FALLBACK=0 timeout 65s python scripts/archive_xsmn_from_primary_sources.py || true
           today="$(date +%F)"
           pending="data/xsmn_live_pending_${today}.json"
           if [ ! -f "$pending" ]; then
@@ -93,7 +100,7 @@ jobs:
           today="$(date +%F)"
           # Today's independently verified result takes priority over historical gaps.
           # The verifier requires a complete live result and an agreeing independent publisher.
-          if ! timeout 100s python scripts/archive_xsmn_from_primary_sources.py; then
+          if ! timeout 150s python scripts/archive_xsmn_from_primary_sources.py; then
             echo "::warning::Today's draw not independently verified yet; keeping any pending snapshot and continuing safely."
             exit 0
           fi
@@ -247,7 +254,7 @@ jobs:
           )"
             if [ -z "$target" ]; then echo "History current through today."; exit 0; fi
             echo "Verifying earliest missing draw: $target"
-            if XSMN_TARGET_DATE="$target" timeout 90s python scripts/archive_xsmn_from_primary_sources.py; then
+            if XSMN_TARGET_DATE="$target" timeout 150s python scripts/archive_xsmn_from_primary_sources.py; then
               python scripts/merge_verified_daily_overlays.py
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
