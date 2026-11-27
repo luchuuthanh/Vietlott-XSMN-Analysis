@@ -9,7 +9,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,7 +22,7 @@ jobs:
       - name: Force screenshot OCR without HTML number extraction
         run: |
           python - <<'PY'
-          import csv,json,html,subprocess
+          import csv,json,html,subprocess,re,unicodedata
           from pathlib import Path
           from collections import defaultdict,Counter
           from playwright.sync_api import sync_playwright
@@ -35,6 +35,48 @@ jobs:
                   ref[(normalize_station_key(r["province"]),r["prize"].replace("ĐB","DB"))].append(r["number"])
           assert sum(map(len,ref.values()))==54
           folder=Path("ocr-test");folder.mkdir(exist_ok=True)
+          def norm(s):
+              return re.sub(r"[^a-z0-9]","",unicodedata.normalize("NFKD",s.lower().replace("đ","d")).encode("ascii","ignore").decode())
+          def ocr(image,mode="6",digits=False):
+              args=["tesseract",str(image),"stdout","-l","eng" if digits else "vie+eng","--psm",mode]
+              if digits: args+=["-c","tessedit_char_whitelist=0123456789"]
+              return subprocess.run(args,capture_output=True,text=True,timeout=20,check=True).stdout
+          def read_tables(page,name):
+              # DOM supplies geometry and labels only; winning values come from pixels.
+              out={}
+              aliases={"giaidb":"DB","giaidacbiet":"DB","db":"DB","dacbiet":"DB","gdb":"DB","giainhat":"G1","giainhi":"G2","giaiba":"G3","giaitu":"G4","giainam":"G5","giaisau":"G6","giaibay":"G7"}
+              for i in range(1,9):
+                  aliases.update({f"giai{i}":f"G{i}",f"g{i}":f"G{i}",str(i):f"G{i}"})
+              widths={"DB":6,"G1":5,"G2":5,"G3":5,"G4":5,"G5":4,"G6":4,"G7":3,"G8":2}
+              for ti,table in enumerate(page.locator("table").all()):
+                  if not table.is_visible(): continue
+                  rows=table.locator("tr").all()
+                  if len(rows)<9: continue
+                  columns={}
+                  for row in rows[:4]:
+                      for j,cell in enumerate(row.locator("th,td").all()):
+                          label=norm(cell.inner_text())
+                          for st in expected:
+                              if label==st: columns[j]=st
+                  if not columns: continue
+                  for ri,row in enumerate(rows):
+                      cells=row.locator("th,td").all()
+                      if not cells: continue
+                      prize=aliases.get(norm(cells[0].inner_text()))
+                      if not prize: continue
+                      for j,st in columns.items():
+                          if j==0 or j>=len(cells): continue
+                          image=folder/f"{name}-t{ti}-r{ri}-c{j}.png"
+                          cells[j].screenshot(path=str(image),timeout=5000)
+                          raw=ocr(image,"6",True)
+                          nums=re.findall(r"[0-9]+",raw)
+                          (image.with_suffix(".txt")).write_text(raw)
+                          if len(nums)==COUNTS[prize] and all(len(n)==widths[prize] for n in nums):
+                              dest=out.setdefault(st,{})
+                              if prize in dest and dest[prize]!=nums:
+                                  raise RuntimeError("Conflicting OCR table cells")
+                              dest[prize]=nums
+              return out
           results=[]
           sources={"minhngoc":"https://www.minhngoc.net.vn/free/kqxs/mien-nam/27-11-2026.html","daiphat":"https://xosodaiphatvn.com/kqxsmn/27-11-2026","wiki":"https://kqxs.wiki/xsmn-27-11-2026"}
           with sync_playwright() as p:
@@ -49,7 +91,9 @@ jobs:
                       page.screenshot(path=str(image),full_page=True,timeout=30000)
                       raw=subprocess.run(["tesseract",str(image),"stdout","-l","vie+eng","--psm","6"],capture_output=True,text=True,timeout=90,check=True).stdout
                       (folder/f"{name}.txt").write_text(raw)
-                      parsed=parse_minhngoc_station_blocks("<pre>"+html.escape(raw)+"</pre>",expected)
+                      parsed=read_tables(page,name)
+                      if not parsed:
+                          parsed=parse_minhngoc_station_blocks("<pre>"+html.escape(raw)+"</pre>",expected)
                       correct=wrong=missing=extra=0
                       for (st,pr),nums in ref.items():
                           got=parsed.get(st,{}).get(pr,[])
