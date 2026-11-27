@@ -1,0 +1,938 @@
+{
+  "run_id": "45998820902",
+  "run_attempt": "1",
+  "tested_commit": "ec1ee257372b75a3183c4b6df1e967f4dd850b57",
+  "reported_at": "2026-11-27T19:29:12.367300+07:00",
+  "draw_date": "2026-11-27",
+  "test_outcome": "failure",
+  "status": "FAIL",
+  "sources": [
+    {
+      "source": "https://www.minhngoc.net.vn/free/kqxs/mien-nam/27-11-2026.html",
+      "method": "forced_ocr",
+      "details": [
+        {
+          "station": "binhduong",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "108625"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "51968"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "43989"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "59904",
+            "44373"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "19946",
+            "88374",
+            "26392",
+            "05655",
+            "36528",
+            "25280",
+            "17140"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "6700"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "5261",
+            "2684",
+            "8903"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "468"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "35"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "122039"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "97987"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "19493"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "64192",
+            "20941"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "02645",
+            "29178",
+            "12261",
+            "60987",
+            "95819",
+            "69649",
+            "80692"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "4746"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "6228",
+            "5519",
+            "0171"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "721"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "04"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "830055"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "32740"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "02913"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "08858",
+            "63174"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "48173",
+            "32800",
+            "60783",
+            "00415",
+            "30706",
+            "53293",
+            "17393"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "9165"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "4488",
+            "7254",
+            "8724"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "418"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "92"
+          ],
+          "recognized": []
+        }
+      ],
+      "correct": 0,
+      "wrong": 0,
+      "missing": 54,
+      "extra": 0,
+      "date_ok": true,
+      "status": "FAIL"
+    },
+    {
+      "source": "https://xosodaiphatvn.com/kqxsmn/27-11-2026",
+      "method": "forced_ocr",
+      "details": [
+        {
+          "station": "binhduong",
+          "prize": "DB",
+          "correct": 1,
+          "expected": [
+            "108625"
+          ],
+          "recognized": [
+            "108625"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G1",
+          "correct": 1,
+          "expected": [
+            "51968"
+          ],
+          "recognized": [
+            "51968"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G2",
+          "correct": 1,
+          "expected": [
+            "43989"
+          ],
+          "recognized": [
+            "43989"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G3",
+          "correct": 2,
+          "expected": [
+            "59904",
+            "44373"
+          ],
+          "recognized": [
+            "59904",
+            "44373"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G4",
+          "correct": 7,
+          "expected": [
+            "19946",
+            "88374",
+            "26392",
+            "05655",
+            "36528",
+            "25280",
+            "17140"
+          ],
+          "recognized": [
+            "19946",
+            "88374",
+            "26392",
+            "05655",
+            "36528",
+            "25280",
+            "17140"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G5",
+          "correct": 1,
+          "expected": [
+            "6700"
+          ],
+          "recognized": [
+            "6700"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G6",
+          "correct": 3,
+          "expected": [
+            "5261",
+            "2684",
+            "8903"
+          ],
+          "recognized": [
+            "5261",
+            "2684",
+            "8903"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G7",
+          "correct": 1,
+          "expected": [
+            "468"
+          ],
+          "recognized": [
+            "468"
+          ]
+        },
+        {
+          "station": "binhduong",
+          "prize": "G8",
+          "correct": 1,
+          "expected": [
+            "35"
+          ],
+          "recognized": [
+            "35"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "DB",
+          "correct": 1,
+          "expected": [
+            "122039"
+          ],
+          "recognized": [
+            "122039"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G1",
+          "correct": 1,
+          "expected": [
+            "97987"
+          ],
+          "recognized": [
+            "97987"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G2",
+          "correct": 1,
+          "expected": [
+            "19493"
+          ],
+          "recognized": [
+            "19493"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G3",
+          "correct": 2,
+          "expected": [
+            "64192",
+            "20941"
+          ],
+          "recognized": [
+            "64192",
+            "20941"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G4",
+          "correct": 7,
+          "expected": [
+            "02645",
+            "29178",
+            "12261",
+            "60987",
+            "95819",
+            "69649",
+            "80692"
+          ],
+          "recognized": [
+            "02645",
+            "29178",
+            "12261",
+            "60987",
+            "95819",
+            "69649",
+            "80692"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G5",
+          "correct": 1,
+          "expected": [
+            "4746"
+          ],
+          "recognized": [
+            "4746"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G6",
+          "correct": 3,
+          "expected": [
+            "6228",
+            "5519",
+            "0171"
+          ],
+          "recognized": [
+            "6228",
+            "5519",
+            "0171"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G7",
+          "correct": 1,
+          "expected": [
+            "721"
+          ],
+          "recognized": [
+            "721"
+          ]
+        },
+        {
+          "station": "travinh",
+          "prize": "G8",
+          "correct": 1,
+          "expected": [
+            "04"
+          ],
+          "recognized": [
+            "04"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "DB",
+          "correct": 1,
+          "expected": [
+            "830055"
+          ],
+          "recognized": [
+            "830055"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G1",
+          "correct": 1,
+          "expected": [
+            "32740"
+          ],
+          "recognized": [
+            "32740"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G2",
+          "correct": 1,
+          "expected": [
+            "02913"
+          ],
+          "recognized": [
+            "02913"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G3",
+          "correct": 2,
+          "expected": [
+            "08858",
+            "63174"
+          ],
+          "recognized": [
+            "08858",
+            "63174"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G4",
+          "correct": 7,
+          "expected": [
+            "48173",
+            "32800",
+            "60783",
+            "00415",
+            "30706",
+            "53293",
+            "17393"
+          ],
+          "recognized": [
+            "48173",
+            "32800",
+            "60783",
+            "00415",
+            "30706",
+            "53293",
+            "17393"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G5",
+          "correct": 1,
+          "expected": [
+            "9165"
+          ],
+          "recognized": [
+            "9165"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G6",
+          "correct": 3,
+          "expected": [
+            "4488",
+            "7254",
+            "8724"
+          ],
+          "recognized": [
+            "4488",
+            "7254",
+            "8724"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G7",
+          "correct": 1,
+          "expected": [
+            "418"
+          ],
+          "recognized": [
+            "418"
+          ]
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G8",
+          "correct": 1,
+          "expected": [
+            "92"
+          ],
+          "recognized": [
+            "92"
+          ]
+        }
+      ],
+      "correct": 54,
+      "wrong": 0,
+      "missing": 0,
+      "extra": 0,
+      "date_ok": true,
+      "status": "PASS"
+    },
+    {
+      "source": "https://kqxs.wiki/xsmn-27-11-2026",
+      "method": "forced_ocr",
+      "details": [
+        {
+          "station": "binhduong",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "108625"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "51968"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "43989"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "59904",
+            "44373"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "19946",
+            "88374",
+            "26392",
+            "05655",
+            "36528",
+            "25280",
+            "17140"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "6700"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "5261",
+            "2684",
+            "8903"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "468"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "binhduong",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "35"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "122039"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "97987"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "19493"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "64192",
+            "20941"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "02645",
+            "29178",
+            "12261",
+            "60987",
+            "95819",
+            "69649",
+            "80692"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "4746"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "6228",
+            "5519",
+            "0171"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "721"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "travinh",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "04"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "DB",
+          "correct": 0,
+          "expected": [
+            "830055"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G1",
+          "correct": 0,
+          "expected": [
+            "32740"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G2",
+          "correct": 0,
+          "expected": [
+            "02913"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G3",
+          "correct": 0,
+          "expected": [
+            "08858",
+            "63174"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G4",
+          "correct": 0,
+          "expected": [
+            "48173",
+            "32800",
+            "60783",
+            "00415",
+            "30706",
+            "53293",
+            "17393"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G5",
+          "correct": 0,
+          "expected": [
+            "9165"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G6",
+          "correct": 0,
+          "expected": [
+            "4488",
+            "7254",
+            "8724"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G7",
+          "correct": 0,
+          "expected": [
+            "418"
+          ],
+          "recognized": []
+        },
+        {
+          "station": "vinhlong",
+          "prize": "G8",
+          "correct": 0,
+          "expected": [
+            "92"
+          ],
+          "recognized": []
+        }
+      ],
+      "correct": 0,
+      "wrong": 0,
+      "missing": 54,
+      "extra": 0,
+      "date_ok": true,
+      "status": "FAIL"
+    }
+  ]
+}
