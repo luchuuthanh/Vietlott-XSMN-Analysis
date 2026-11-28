@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "date": "2026-11-28",
+  "rows": 72,
+  "stations": 4,
+  "sources": [
+    "https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html",
+    "https://kqxs.wiki/xsmn-28-11-2026"
+  ],
+  "official": false,
+  "verification": "Manual comparison of two published text tables, all numbers in prize order match; isolated OCR reference only, not canonical verification."
+}
