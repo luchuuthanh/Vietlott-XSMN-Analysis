@@ -1,0 +1,10 @@
+{
+  "run_id": "46132594005",
+  "run_attempt": "1",
+  "tested_commit": "a6d59f855afd9152776556cf98007e87805e74c7",
+  "reported_at": "2026-11-28T16:54:23.407826+07:00",
+  "draw_date": "2026-11-28",
+  "test_outcome": "failure",
+  "status": "NO_RESULT",
+  "sources": []
+}
