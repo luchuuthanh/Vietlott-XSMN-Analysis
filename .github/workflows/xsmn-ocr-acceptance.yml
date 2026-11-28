@@ -28,13 +28,18 @@ jobs:
           from collections import defaultdict,Counter
           from playwright.sync_api import sync_playwright
           from scripts.archive_xsmn_from_primary_sources import parse_minhngoc_station_blocks,normalize_station_key,COUNTS
-          day="2026-11-27"
-          expected={"vinhlong","binhduong","travinh"}
+          day="2026-11-28"
+          expected={"tphcm","longan","haugiang","binhphuoc"}
           ref=defaultdict(list)
-          with open(f"data/xsmn_daily_verified_{day}.csv",encoding="utf-8-sig") as f:
+          reference=Path(f"data/xsmn_daily_verified_{day}.csv")
+          evidence=Path(f"data/xsmn_daily_verified_{day}.json")
+          assert evidence.exists() and json.loads(evidence.read_text()).get("status")=="PASS", "Verified reference unavailable"
+          with reference.open(encoding="utf-8-sig") as f:
               for r in csv.DictReader(f):
                   ref[(normalize_station_key(r["province"]),r["prize"].replace("ĐB","DB"))].append(r["number"])
-          assert sum(map(len,ref.values()))==54
+          assert sum(map(len,ref.values()))==72
+          assert {st for st,pr in ref}==expected
+          assert all(len(ref[(st,pr)])==n for st in expected for pr,n in COUNTS.items())
           folder=Path("ocr-test");folder.mkdir(exist_ok=True)
           def norm(s):
               return re.sub(r"[^a-z0-9]","",unicodedata.normalize("NFKD",s.lower().replace("đ","d")).encode("ascii","ignore").decode())
@@ -69,7 +74,10 @@ jobs:
                           if j==0 or j>=len(cells): continue
                           image=folder/f"{name}-t{ti}-r{ri}-c{j}.png"
                           cells[j].screenshot(path=str(image),timeout=5000)
-                          raw=ocr(image,"6",True)
+                          try:
+                              raw=ocr(image,"6",True)
+                          except subprocess.TimeoutExpired:
+                              continue
                           nums=re.findall(r"[0-9]+",raw)
                           (image.with_suffix(".txt")).write_text(raw)
                           if len(nums)==COUNTS[prize] and all(len(n)==widths[prize] for n in nums):
@@ -79,7 +87,7 @@ jobs:
                               dest[prize]=nums
               return out
           results=[]
-          sources={"minhngoc":"https://www.minhngoc.net.vn/free/kqxs/mien-nam/27-11-2026.html","daiphat":"https://xosodaiphatvn.com/kqxsmn/27-11-2026","wiki":"https://kqxs.wiki/xsmn-27-11-2026"}
+          sources={"minhngoc":"https://www.minhngoc.net.vn/free/kqxs/mien-nam/28-11-2026.html","daiphat":"https://xosodaiphatvn.com/kqxsmn/28-11-2026","wiki":"https://kqxs.wiki/xsmn-28-11-2026"}
           with sync_playwright() as p:
               browser=p.chromium.launch()
               for name,url in sources.items():
@@ -89,12 +97,12 @@ jobs:
                       page.goto(url,wait_until="domcontentloaded",timeout=30000)
                       page.wait_for_timeout(2000)
                       image=folder/f"{name}.png"
-                      page.screenshot(path=str(image),full_page=True,timeout=30000)
-                      raw=subprocess.run(["tesseract",str(image),"stdout","-l","vie+eng","--psm","6"],capture_output=True,text=True,timeout=90,check=True).stdout
+                      page.screenshot(path=str(image),full_page=False,timeout=15000)
+                      raw=ocr(image)
+                      # Date must be visible in the captured viewport; fail closed otherwise.
                       (folder/f"{name}.txt").write_text(raw)
                       parsed=read_tables(page,name)
-                      if not parsed:
-                          parsed=parse_minhngoc_station_blocks("<pre>"+html.escape(raw)+"</pre>",expected)
+                      # No full-page OCR fallback in this isolated test.
                       correct=wrong=missing=extra=0
                       details=[]
                       for (st,pr),nums in ref.items():
@@ -105,8 +113,8 @@ jobs:
                           wrong+=min(len(nums),len(got))-match
                           missing+=max(0,len(nums)-len(got))
                           extra+=max(0,len(got)-len(nums))
-                      date_ok="27/11/2026" in raw or "27-11-2026" in raw
-                      report.update(details=details,correct=correct,wrong=wrong,missing=missing,extra=extra,date_ok=date_ok,status="PASS" if correct==54 and not wrong and not missing and not extra and date_ok else "FAIL")
+                      date_ok="28/11/2026" in raw or "28-11-2026" in raw
+                      report.update(details=details,correct=correct,wrong=wrong,missing=missing,extra=extra,date_ok=date_ok,status="PASS" if correct==72 and not wrong and not missing and not extra and date_ok else "FAIL")
                   except Exception as e:
                       report.update(status="FAIL",error=str(e))
                   finally:
@@ -135,7 +143,7 @@ jobs:
           from zoneinfo import ZoneInfo
           source=Path("ocr-test/report.json")
           results=json.loads(source.read_text()) if source.exists() else []
-          report={"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"tested_commit":os.environ["GITHUB_SHA"],"reported_at":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),"draw_date":"2026-11-27","test_outcome":os.environ.get("OCR_OUTCOME"),"status":"PASS" if sum(r.get("status")=="PASS" for r in results)>=2 and os.environ.get("OCR_OUTCOME")=="success" else "FAIL" if results else "NO_RESULT","sources":results}
+          report={"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"tested_commit":os.environ["GITHUB_SHA"],"reported_at":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),"draw_date":"2026-11-28","test_outcome":os.environ.get("OCR_OUTCOME"),"status":"PASS" if sum(r.get("status")=="PASS" for r in results)>=2 and os.environ.get("OCR_OUTCOME")=="success" else "FAIL" if results else "NO_RESULT","sources":results}
           folder=Path("reports/ocr");folder.mkdir(parents=True,exist_ok=True)
           (folder/f'{report["run_id"]}-{report["run_attempt"]}.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
           PY
