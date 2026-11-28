@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - '.github/workflows/xsmn-ocr-acceptance.yml'
+      - 'reports/ocr/reference-*.json'
+      - 'reports/ocr/reference-*.csv'
   workflow_dispatch:
 permissions:
   contents: write
@@ -66,7 +68,7 @@ jobs:
                       for j,cell in enumerate(row.locator("th,td").all()):
                           label=norm(cell.inner_text())
                           for st in expected:
-                              if label==st: columns[j]=st
+                              if label==st or label.startswith(st+"xs"): columns[j]=st
                   if not columns: continue
                   for ri,row in enumerate(rows):
                       cells=row.locator("th,td").all()
