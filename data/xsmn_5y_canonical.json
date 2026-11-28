@@ -1,22 +1,20 @@
 {
   "status": "PASS",
-  "updated_at_vietnam": "2026-11-28T05:31:59.938721+07:00",
+  "updated_at_vietnam": "2026-11-28T16:53:58.261191+07:00",
   "window_start": "2021-11-05",
-  "window_end": "2026-11-27",
-  "rows": 104598,
+  "window_end": "2026-11-28",
+  "rows": 104670,
   "source": "audited quarterly archive + 383 supplement + multi-source daily overlays",
   "independent_check": "Daily results compared against at least two independent published sources; secondary-source agreement, not official issuer certification.",
   "note": "Kho lịch sử XSMN 5 năm đã tích hợp đầy đủ các kỳ đến 17/11/2026: 104040 dòng dữ liệu từ 2021-11-05. Ngày 16 và 17/11 đã được bổ sung 108 dòng, kiểm tra không trùng khóa. Ngày 18/11 vẫn chờ đủ kết quả và đối chiếu chéo.",
-  "last_draw_import": "2026-11-27",
-  "last_draw_rows": 54,
-  "last_draw_source": "manual_multi_source_verified",
+  "last_draw_import": "2026-11-28",
+  "last_draw_rows": 72,
+  "last_draw_source": "mixed_verified_sources",
   "last_draw_source_ids": [
-    "sxmn.com.vn",
-    "www.minhngoc.net.vn",
-    "xosodaiphatvn.com",
-    "kqxs.wiki"
+    "live_sxmn_com_vn_validated",
+    "live_sxmn_com_vn_validated_after_issuer_check"
   ],
-  "last_draw_verification": "All winning numbers matched two independent publisher pages; no official issuer certification.",
+  "last_draw_verification": "18-row structure validated; selected issuer stations compared exactly with secondary source before sync.",
   "verified_daily_overlays": [
     {
       "date": "2026-11-14",
