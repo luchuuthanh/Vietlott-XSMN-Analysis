@@ -31,8 +31,11 @@ jobs:
           day="2026-11-28"
           expected={"tphcm","longan","haugiang","binhphuoc"}
           ref=defaultdict(list)
-          reference=Path(f"data/xsmn_daily_verified_{day}.csv")
-          evidence=Path(f"data/xsmn_daily_verified_{day}.json")
+          reference=Path(f"reports/ocr/reference-{day}.csv")
+          evidence=Path(f"reports/ocr/reference-{day}.json")
+          if not evidence.exists():
+              reference=Path(f"data/xsmn_daily_verified_{day}.csv")
+              evidence=Path(f"data/xsmn_daily_verified_{day}.json")
           assert evidence.exists() and json.loads(evidence.read_text()).get("status")=="PASS", "Verified reference unavailable"
           with reference.open(encoding="utf-8-sig") as f:
               for r in csv.DictReader(f):
@@ -46,7 +49,7 @@ jobs:
           def ocr(image,mode="6",digits=False):
               args=["tesseract",str(image),"stdout","-l","eng" if digits else "vie+eng","--psm",mode]
               if digits: args+=["-c","tessedit_char_whitelist=0123456789"]
-              return subprocess.run(args,capture_output=True,text=True,timeout=20,check=True).stdout
+              return subprocess.run(args,capture_output=True,text=True,timeout=8,check=True).stdout
           def read_tables(page,name):
               # DOM supplies geometry and labels only; winning values come from pixels.
               out={}
@@ -146,6 +149,7 @@ jobs:
           report={"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"tested_commit":os.environ["GITHUB_SHA"],"reported_at":datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).isoformat(),"draw_date":"2026-11-28","test_outcome":os.environ.get("OCR_OUTCOME"),"status":"PASS" if sum(r.get("status")=="PASS" for r in results)>=2 and os.environ.get("OCR_OUTCOME")=="success" else "FAIL" if results else "NO_RESULT","sources":results}
           folder=Path("reports/ocr");folder.mkdir(parents=True,exist_ok=True)
           (folder/f'{report["run_id"]}-{report["run_attempt"]}.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          (folder/"latest.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
